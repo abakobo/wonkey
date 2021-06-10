@@ -36,8 +36,8 @@ __NEWPAGES__/
 
 /modules/module-manager/downloads/*.zip
 
-/modules/box2d24
-/modules/b2djson24
+/modules/box2d
+/modules/b2djson
 
 # Stuff in module manager (TODO: install to different modules dir)
 # /modules/html-ws
