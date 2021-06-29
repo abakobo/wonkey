@@ -199,7 +199,9 @@ Class Parser
 				Case "using"
 					If Not fileScope Or decls.Length Error( "Usings must appear before any declarations in a file" )
 					Bump()
-					_usings.Push( ParseUsingIdent() )
+					Repeat
+						_usings.Push( ParseUsingIdent() )
+					Until CParse( "," )=False
 					ParseEol()
 					Continue
 				Case "public","private","protected","internal","extern"
@@ -942,22 +944,27 @@ Class Parser
 	
 		Local srcpos:=SrcPos
 		Local cond:Expr
+		Local block:Bool
 		
 		Try
 			Parse( "while" )
 			cond=ParseExpr()
-			ParseEol()
+			CParse( "do" )
+			block=CParseEol()
 		Catch ex:ParseEx
 			SkipToNextLine()
+			If Not block Return New WhileStmtExpr( cond,Null,srcpos,EndPos )
 		End
 		
-		Local stmts:=ParseStmts( True )
+		Local stmts:=ParseStmts( block )
 		
 		Try
-			If CParse( "end" )
-			    CParse( "while" )
-			Else
-				If Not CParse( "endwhile" ) Then Parse( "wend" )
+			If block
+				If CParse( "end" )
+				    CParse( "while" )
+				Else
+					If Not CParse( "endwhile" ) Then Parse( "wend" )
+				Endif
 			Endif
 			ParseEol()
 		Catch ex:ParseEx
@@ -971,16 +978,17 @@ Class Parser
 	
 		Local srcpos:=SrcPos
 		Local cond:Expr
-		Local block:=False
+		Local block:Bool
 		
 		Try
 			Parse( "repeat" )
-			ParseEol()
+			block = CParseEol()
 		Catch ex:ParseEx
 			SkipToNextLine()
+			If Not block Return New RepeatStmtExpr( Null,Null,srcpos,EndPos )
 		End
 		
-		Local stmts:=ParseStmts( True )
+		Local stmts:=ParseStmts( block )
 		
 		Try
 			If CParse( "until" ) 
@@ -1005,6 +1013,7 @@ Class Parser
 		Local init:Expr
 		Local cond:Expr
 		Local incr:Expr
+		Local block:Bool
 		
 		Local srcpos:=SrcPos
 		
@@ -1054,24 +1063,29 @@ Class Parser
 				If CParse( "step" ) incr=ParseExpr()
 			
 			Endif
-			
-			ParseEol()
-			
+
+			CParse( "do" )
+			block=CParseEol()
+						
 		Catch ex:ParseEx
 		
 			SkipToNextLine()
+
+			If Not block Then New ForStmtExpr( varIdent,varType,varExpr,kind,init,cond,incr,Null,srcpos,EndPos,vsrcpos,SrcPos )
 			
 		End
 		
 		Local vendpos:=SrcPos
 		
-		Local stmts:=ParseStmts( True )
-		
+		Local stmts:=ParseStmts( block )
+
 		Try
-			If CParse( "end" )
-				CParse( "for" )
-			Else
-				If Not CParse( "endfor" ) Then Parse( "next" )
+			If block
+				If CParse( "end" )
+					CParse( "for" )
+				Else
+					If Not CParse( "endfor" ) Then Parse( "next" )
+				Endif
 			Endif
 			ParseEol()
 		Catch ex:ParseEx
@@ -2109,6 +2123,7 @@ Class Parser
 				
 				If _doccing
 					Local text:=_toker.Text.Slice( pos,_toker.TokePos )
+					If Not text Then text += _toker.LineComment
 					_docs.Push( text )
 				Endif
 
@@ -2283,9 +2298,11 @@ Class Parser
 					p.Bump()
 					If p.EvalBool() _cc.Push( 1 ) Else _cc.Push( 0 )
 				Else
+					If _doccing Then _docs.Push( "#"+p._toker.Text.Trim() )
+					
 					_cc.Push( -1 )
 				Endif
-				
+
 			Case "else","elseif"
 			
 				If _cc.Top=1
@@ -2308,7 +2325,9 @@ Class Parser
 						_cc.Pop()
 						_cc.Push( 1 )
 					Endif
-				
+
+				Elseif _doccing
+					_docs.Push( "#"+p._toker.Text.Trim() )
 				Endif
 				
 			Case "end","endif"
@@ -2316,14 +2335,18 @@ Class Parser
 				If _cc.Length=1 p.Error( "#end without matching #if or #rem" )
 			
 				If p.CParse( "end" )
-					p.CParse( "if" )
+					 p.CParse( "if" )
 				Else
 					p.Bump()
 				End
 				
 				_cc.Pop()
 				
-				If _cc.Top=1 _doccing=False
+				If _cc.Top=1
+					_doccing=False
+				Elseif _doccing
+					_docs.Push( "#"+p._toker.Text.Trim() )
+				Endif
 				
 			Case "rem"
 			
@@ -2334,6 +2357,8 @@ Class Parser
 					_docs.Push( qhelp )
 					_doccing=True
 
+				Elseif _doccing
+					_docs.Push( "#"+p._toker.Text.Trim() )
 				Endif
 				
 				_cc.Push( -1 )
@@ -2359,6 +2384,9 @@ Class Parser
 					Endif
 						
 					_imports.Push( path )
+
+				Elseif _doccing
+					_docs.Push( "#"+p._toker.Text.Trim() )
 				Endif
 				
 			Case "reflect"
@@ -2380,6 +2408,9 @@ Class Parser
 					p.ParseEol()
 					
 					_reflects.Push( path )
+
+				Elseif _doccing
+					_docs.Push( "#"+p._toker.Text.Trim() )
 				Endif
 				
 			Case "print"
@@ -2387,12 +2418,16 @@ Class Parser
 				If _cc.Top=1
 					p.Bump()				
 					Print p.Eval()
+				Elseif _doccing
+					_docs.Push( "#"+p._toker.Text.Trim() )
 				Endif
 				
 			Default
 				
 				If _cc.Top=1
 					p.Error( "Unrecognized preprocessor directive '"+p.Toke+"'" )
+				Elseif _doccing
+					_docs.Push( "#"+p._toker.Text.Trim() )
 				Endif
 			End
 			

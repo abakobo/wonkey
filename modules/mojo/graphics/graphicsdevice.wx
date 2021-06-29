@@ -5,30 +5,59 @@ Namespace mojo.graphics
 
 Blend modes are used with the [[Canvas.BlendMode]] property.
 
-| BlendMode	| Description
-|:----------|:-----------
-| Opaque	| Blending disabled.
-| Alpha		| Alpha blending.
-| Alpha3d	| Alpha blending in 3D mode.
-| Multiply	| Multiply blending.
-| Additive	| Additive blending.
+Only one BlendMode from the following table can be used at a time:
+
+| BlendMode   | Description
+|:------------|:-----------
+| None        | 0 = Invalid blend mode.
+| Opaque      | Blending disabled. Alpha channel is supported.
+| Alpha       | Alpha blending. Blend into the target by using the source alpha channel only.
+| Alpha3d     | [deprecated] - use AlphaBlend
+| AlphaBlend  | Alpha blending. Blend into the target by combining the source and target alpha channels.
+| AlphaClip   | Alpha blending with clipping the alpha channel values using the destination alpha channel values. Transparent areas in the target remain transparent. The destination is basically used as an alpha mask.
+| Additive    | Additive blending.
+| Subtractive | Subtractive blending. The paint color is subtracted from the canvas.
+| Multiply    | Multiply blending.
+
+@example
+'
+' Use subtractive blending
+'
+canvas.BlendMode = BlendMode.Subtractive
+'
+' Use alpha blending
+'
+canvas.BlendMode = BlendMode.Alpha
+
+@end
 
 #end
 Enum BlendMode
-	None=0
-	Opaque=1
-	Alpha=2
-	Additive=3
-	Multiply=4
+	None        = 0
+	Opaque      = 1
+	Alpha       = 2
+	Additive    = 3
+	Multiply    = 4
 'jl added
 '------------------------------------------------------------	
-	Alpha3d = 5
-'------------------------------------------------------------	
+	Alpha3d     = 5
+	AlphaBlend  = 5
+'------------------------------------------------------------
+
+' added by Danilo, 2021/06/22
+'------------------------------------------------------------
+	Subtractive = 6
+	AlphaClip   = 7
+'------------------------------------------------------------
 End
 
-#rem wonkeydoc @hidden Color mask values.
+#rem wonkeydoc Color masks.
 
 Color masks are used with the [[Canvas.ColorMask]] property.
+
+Color masks are used to exclude specific color channels when drawing.
+
+You can combine several ColorMask members using the '|' (binary Or) operator.
 
 | ColorMask	| Descripten
 |:----------|:----------
@@ -36,6 +65,25 @@ Color masks are used with the [[Canvas.ColorMask]] property.
 | Green		| Green color mask.
 | Blue		| Blue color mask.
 | Alpha		| Alpha color mask.
+| Color     | Color channel mask (Red + Green + Blue).
+| All       | All channels (Red + Green + Blue + Alpha).
+
+@example
+'
+' Draw to Alpha color channel only
+'
+canvas.ColorMask = ColorMask.Alpha
+'
+' Draw to Alpha, Red, and Green color channels.
+'
+' The Blue color channel is excluded from drawing operations.
+'
+canvas.ColorMask = ColorMask.Alpha | ColorMask.Red | ColorMask.Green
+'
+' Draw to R,G,B color channels, excluding the Alpha color channel.
+'
+canvas.ColorMask = ColorMask.Color
+@end
 #end
 Enum ColorMask
 	None=0
@@ -44,6 +92,7 @@ Enum ColorMask
 	Blue=4
 	Alpha=8
 	All=15
+	Color=Red|Green|Blue
 End
 
 Enum DepthFunc
@@ -180,9 +229,9 @@ Class GraphicsDevice
 	
 	Setter( blendMode:BlendMode )
 		If blendMode=_blendMode Return
-	
+
 		_blendMode=blendMode
-		
+
 		_dirty2|=Dirty.BlendMode
 	End
 	
@@ -593,23 +642,32 @@ Class GraphicsDevice
 		Endif
 		
 		If _dirty2 & Dirty.BlendMode
-			
+						
 			If _blendMode=BlendMode.Opaque
 				glDisable( GL_BLEND )
 			Else
 				glEnable( GL_BLEND )
+				glBlendEquation(GL_FUNC_ADD)
+
 				Select _blendMode
-				Case BlendMode.Alpha
+				Case BlendMode.Alpha                                                           ' Alpha
 					glBlendFunc( GL_ONE,GL_ONE_MINUS_SRC_ALPHA )
 'jl added
 '------------------------------------------------------------
-				Case BlendMode.Alpha3d
+				Case BlendMode.AlphaBlend                                                      ' AlphaBlend
+
 					glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) 'alphablend
 '------------------------------------------------------------
-				Case BlendMode.Additive
+				Case BlendMode.Additive                                                        ' Additive
 					glBlendFunc( GL_ONE,GL_ONE )
-				Case BlendMode.Multiply
+				Case BlendMode.Multiply                                                        ' Multiply
 					glBlendFunc( GL_DST_COLOR,GL_ONE_MINUS_SRC_ALPHA )
+				Case BlendMode.Subtractive                                                     ' Subtractive
+					glBlendEquation(GL_FUNC_REVERSE_SUBTRACT)
+					glBlendFunc( GL_ONE,GL_ONE )
+				Case BlendMode.AlphaClip                                                       ' AlphaClip
+					glBlendFunc( GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA )
+					
 				Default
 					RuntimeError( "Invalid BlendMode" )
 				End
