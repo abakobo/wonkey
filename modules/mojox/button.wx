@@ -82,7 +82,6 @@ Class Button Extends Label
 	End
 	
 	Method OnRender( canvas:Canvas ) Override
-	
 		Super.OnRender( canvas )
 	End
 	

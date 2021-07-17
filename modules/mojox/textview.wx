@@ -3,6 +3,8 @@ Namespace mojox
 
 Alias TextHighlighter:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
 
+
+
 #rem wonkeydoc The TextDocument class.
 #end
 Class TextDocument
@@ -11,62 +13,60 @@ Class TextDocument
 	#end
 	Field TextChanged:Void()
 
+
 	#rem wonkeydoc Invoked after lines have been modified.
 	#end
 	Field LinesModified:Void( first:Int,removed:Int,inserted:Int )
+
 	
 	#rem wonkeydoc Creates a new text document.
 	#end
 	Method New()
-
 		_lines.Push( New Line )
 	End
+
 
 	#rem wonkeydoc Document text.
 	#end
 	Property Text:String()
-	
 		Return _text
-		
 	Setter( text:String )
-	
 		text=text.Replace( "~r~n","~n" )
 		text=text.Replace( "~r","~n" )
 	
 		ReplaceText( 0,_text.Length,text )
 	End
+
 	
 	#rem wonkeydoc Length of doucment text.
 	#end
 	Property TextLength:Int()
-	
 		Return _text.Length
 	End
+
 	
 	#rem wonkeydoc Number of lines in document.
 	#end
 	Property NumLines:Int()
-	
 		Return _lines.Length
 	End
+
 
 	#rem wonkeydoc @hidden
 	#end	
 	Property Colors:Byte[]()
-	
 		Return _colors.Data
 	End
+
 	
 	#rem wonkeydoc @hidden
 	#end	
 	Property TextHighlighter:TextHighlighter()
-	
 		Return _highlighter
-	
 	Setter( textHighlighter:TextHighlighter )
-	
 		_highlighter=textHighlighter
 	End
+
 	
 	#rem wonkeydoc @hidden
 	#end	
@@ -74,6 +74,7 @@ Class TextDocument
 		If line>=0 And line<_lines.Length Return _lines[line].state
 		Return -1
 	End
+
 	
 	#rem wonkeydoc Gets the index of the first character on a line.
 	#end	
@@ -82,6 +83,7 @@ Class TextDocument
 		If line<_lines.Length Return _lines[line-1].eol+1
 		Return _text.Length
 	End
+
 	
 	#rem wonkeydoc Gets the index of the last character on a line.
 	#end	
@@ -90,11 +92,11 @@ Class TextDocument
 		If line<_lines.Length Return _lines[line].eol
 		Return _text.Length
 	End
+
 	
 	#rem wonkeydoc Finds the line containing a character.
 	#end
 	Method FindLine:Int( index:Int )
-	
 		If index<=0 Return 0
 		If index>=_text.Length Return _lines.Length-1
 		
@@ -111,27 +113,27 @@ Class TextDocument
 			Endif
 		Forever
 
-		Return 0		
+		Return 0
 	End
+
 
 	#rem wonkeydoc Gets line text.
 	#end
 	Method GetLine:String( line:Int )
-
 		Return _text.Slice( StartOfLine( line ),EndOfLine( line ) )
 	End
+
 
 	#rem wonkeydoc Appends text to the end of the document.
 	#end	
 	Method AppendText( text:String )
-	
 		ReplaceText( _text.Length,_text.Length,text )
 	End
+
 	
 	#rem wonkeydoc Replaces  text in the document.
 	#end	
 	Method ReplaceText( anchor:Int,cursor:Int,text:String )
-	
 		Local min:=Min( anchor,cursor )
 		Local max:=Max( anchor,cursor )
 		
@@ -165,7 +167,6 @@ Class TextDocument
 		'Update lines
 		'
 		If dlines>=0
-		
 			_lines.Resize( _lines.Length+dlines )
 
 			Local i:=_lines.Length
@@ -185,7 +186,6 @@ Class TextDocument
 		Next
 		
 		If dlines<0
-
 			Local i:=line+eols2+1
 			While i<_lines.Length+dlines
 				_lines.Data[i].eol=_lines[i-dlines].eol+dchars
@@ -197,9 +197,7 @@ Class TextDocument
 		Endif
 
 		If _highlighter<>Null
-		
 			'update highlighting
-			'
 			Local state:=-1
 			If line state=_lines[line-1].state
 			
@@ -220,13 +218,15 @@ Class TextDocument
 		
 		TextChanged()
 	End
+
 	
-	Private
+Private
 	
 	Struct Line
 		Field eol:Int
 		Field state:Int
 	End
+
 	
 	Field _text:String
 	
@@ -235,6 +235,8 @@ Class TextDocument
 	Field _highlighter:TextHighlighter
 	
 End
+
+
 
 #rem wonkeydoc Cursor type for textviews.
 
@@ -253,6 +255,7 @@ Enum CursorType
 	IBeam
 End
 
+
 #rem wonkeydoc The TextView class.
 #end
 Class TextView Extends ScrollableView
@@ -260,6 +263,7 @@ Class TextView Extends ScrollableView
 	#rem wonkeydoc Invoked when cursor moves.
 	#end
 	Field CursorMoved:Void()
+
 
 	#rem wonkeydoc Creates a new text view.
 	#end
@@ -274,11 +278,13 @@ Class TextView Extends ScrollableView
 		Document=New TextDocument
 	End
 
+
 	Method New( text:String )
 		Self.New()
 		
 		Document.Text=text
 	End
+
 	
 	Method New( doc:TextDocument )
 		Self.New()
@@ -286,14 +292,12 @@ Class TextView Extends ScrollableView
 		Document=doc
 	End
 
+
 	#rem wonkeydoc Text document.
 	#end	
 	Property Document:TextDocument()
-	
 		Return _doc
-		
 	Setter( doc:TextDocument )
-	
 		If _doc _doc.LinesModified-=LinesModified
 	
 		_doc=doc
@@ -305,219 +309,196 @@ Class TextView Extends ScrollableView
 		
 		UpdateCursor()
 	End
+
 	
-	Public
+Public
+
 	
 	#rem wonkeydoc Text colors.
 	#end
 	Property TextColors:Color[]()
-	
 		Return _textColors
-	
 	Setter( textColors:Color[] )
-	
 		_textColors=textColors
 	End
+
 	
 	#rem wonkeydoc Cursor color.
 	#end
 	Property CursorColor:Color()
-	
 		Return _cursorColor
-	
 	Setter( cursorColor:Color )
-	
 		_cursorColor=cursorColor
 	End
+
 	
 	#rem wonkeydoc Selection color.
 	#end
 	Property SelectionColor:Color()
-	
 		Return _selColor
-		
 	Setter( selectionColor:Color )
-	
 		_selColor=selectionColor
 	End
+
 
 	#rem wonkeydoc Cursor type.
 	#end	
 	Property CursorType:CursorType()
-	
 		Return _cursorType
-
 	Setter( type:CursorType )
-	
 		_cursorType=type
 	End
+
 
 	#rem wonkeydoc @deprecated Use [[CursorType]].
 	#end	
 	Property BlockCursor:Bool()
-	
 		Return _cursorType=CursorType.Block
-	
 	Setter( block:Bool )
-	
 		_cursorType=block ? CursorType.Block Else CursorType.Line
 	End
+
 	
 	#rem wonkeydoc Cursor blink rate.
-	
 	Set to 0 for non-blinking cursor.
-	
 	#end
 	Property CursorBlinkRate:Float()
-	
 		Return _blinkRate
-	
 	Setter( blinkRate:Float )
-	
 		_blinkRate=blinkRate
 		
 		RequestRender()
 	End
 
+
 	#rem wonkeydoc Text.
 	#end
 	Property Text:String()
-	
 		Return _doc.Text
-		
 	Setter( text:String )
-	
 		_doc.Text=text
 	End
-	
+
+
 	#rem wonkeydoc Read only flag.
 	#end
 	Property ReadOnly:Bool()
-	
 		Return _readOnly
-	
 	Setter( readOnly:Bool )
-	
 		_readOnly=readOnly
 	End
+
 	
 	#rem wonkeydoc Tabstop.
 	#end
 	Property TabStop:Int()
-	
 		Return _tabStop
-		
 	Setter( tabStop:Int )
-	
 		_tabStop=tabStop
 		
 		InvalidateStyle()
 	End
+
 	
 	#rem wonkeydoc WordWrap flag.
 	#end
 	Property WordWrap:Bool()
-	
 		Return _wordWrap
-	
 	Setter( wordWrap:Bool )
-	
 		_wordWrap=wordWrap
 		
 		InvalidateStyle()
 	End
+
 	
 	#rem wonkeydoc Cursor character index.
 	#end
 	Property Cursor:Int()
-	
 		Return _cursor
 	End
+
 	
 	#rem wonkeydoc Anchor character index.
 	#end
 	Property Anchor:Int()
-	
 		Return _anchor
 	End
+
 	
 	#rem wonkeydoc Line the cursor is on.
 	#end
 	Property CursorLine:Int()
-	
 		Return _doc.FindLine( _cursor )
 	End
+
 	
 	#rem wonkeydoc Cursor rect.
 	#end
 	Property CursorRect:Recti()
-
 		Return _cursorRect
 	End
+
 	
 	#rem wonkeydoc Approximate character width.
 	#end
 	Property CharWidth:Int()
-	
 		Return _charw
 	End
+
 	
 	#rem wonkeydoc Approximate character height.
 	#end
 	Property CharHeight:Int()
-	
 		Return _charh
 	End
+
 	
 	#rem wonkeydoc Approximate line height.
-	
 	Deprecated! Use [[LineRect]] instead to properly deal with word wrap.
-	
 	#end
 	Property LineHeight:Int()
-	
 		Return _charh
 	End
+
 	
 	#rem wonkeydoc True if undo available.
 	#end	
 	Property CanUndo:Bool()
-	
 		Return Not _readOnly And Not _undos.Empty
 	End
+
 	
 	#rem wonkeydoc True if redo available.
 	#end	
 	Property CanRedo:Bool()
-	
 		Return Not _readOnly And Not _redos.Empty
 	End
+
 	
 	#rem wonkeydoc True if cut available.
 	#end	
 	Property CanCut:Bool()
-	
 		Return Not _readOnly And _anchor<>_cursor
 	End
+
 	
 	#rem wonkeydoc True if copy available.
 	#end	
 	Property CanCopy:Bool()
-	
 		Return _anchor<>_cursor
 	End
+
 	
 	#rem wonkeydoc True if paste available.
 	#end	
 	Property CanPaste:Bool()
-	
 		Return Not _readOnly And Not App.ClipboardTextEmpty
 	End
+
 	
 	#rem wonkeydoc Returns the rect containing a character at a given index.
 	#end
 	Method CharRect:Recti( index:Int )
-	
 		Local line:=_doc.FindLine( index )
 		Local text:=_doc.Text
 		
@@ -527,7 +508,6 @@ Class TextView Extends ScrollableView
 		Local x0:=0,y0:=_lines[line].rect.Top
 		
 		While i0<eol
-		
 			Local w:=WordWidth( text,i0,eol,x0 )
 			
 			If x0+w>_wrapw
@@ -545,7 +525,6 @@ Class TextView Extends ScrollableView
 			
 			x0+=w
 			i0+=l
-		
 		Wend
 		
 		Local w:=_charw
@@ -553,11 +532,11 @@ Class TextView Extends ScrollableView
 		
 		Return New Recti( x0,y0,x0+w,y0+_charh )
 	End
+
 	
 	#rem wonkeydoc Returns the index of the character nearest to a given point.
 	#end
 	Method CharAtPoint:Int( p:Vec2i )
-	
 		Local line:=LineAtPoint( p )
 		Local text:=_doc.Text
 
@@ -567,7 +546,6 @@ Class TextView Extends ScrollableView
 		Local x0:=0,y0:=_lines[line].rect.Top+_charh
 		
 		While i0<eol
-		
 			Local w:=WordWidth( text,i0,eol,x0 )
 			
 			If x0+w>_wrapw
@@ -578,7 +556,7 @@ Class TextView Extends ScrollableView
 			
 			Local l:=WordLength( text,i0,eol )
 			
-			If p.x<x0+w And p.y<y0 
+			If p.x<x0+w And p.y<y0
 				For Local i:=0 Until l
 					x0+=WordWidth( text,i0,i0+1,x0 )
 					If p.x<x0 Exit
@@ -589,17 +567,15 @@ Class TextView Extends ScrollableView
 			
 			x0+=w
 			i0+=l
-			
 		Wend
 		
 		Return i0
-	
 	End
+
 	
 	#rem monkedoc Returns the index of the line nearest to a given point.
 	#end
 	Method LineAtPoint:Int( p:Vec2i )
-	
 		If p.y<=0 Return 0
 		If p.y>=_lines.Top.rect.Top Return _lines.Length-1
 		
@@ -616,17 +592,18 @@ Class TextView Extends ScrollableView
 			Endif
 		Forever
 
-		Return 0		
+		Return 0
 	End
+
 
 	#rem wonkeydoc Gets the bounding rect for a line.
 	#end
 	Method LineRect:Recti( line:Int )
-	
 		If line>=0 And line<_lines.Length Return _lines[line].rect
 		
 		Return New Recti
 	End
+
 	
 	#rem wonkeydoc Clears all text.
 	#end
@@ -634,6 +611,7 @@ Class TextView Extends ScrollableView
 		SelectAll()
 		ReplaceText( "" )
 	End
+
 	
 	#rem wonkeydoc Move cursor to line.
 	#end
@@ -642,6 +620,7 @@ Class TextView Extends ScrollableView
 		_cursor=_anchor
 		UpdateCursor()
 	End
+
 	
 	#rem wonkeydoc Selects a line.
 	#end
@@ -649,28 +628,28 @@ Class TextView Extends ScrollableView
 		SelectText( _doc.StartOfLine( line ),_doc.EndOfLine( line ) )
 	End
 
+
 	#rem wonkeydoc Selects text in a range.
 	#end
 	Method SelectText( anchor:Int,cursor:Int )
-
 		_anchor=Clamp( anchor,0,_doc.TextLength )
 		_cursor=Clamp( cursor,0,_doc.TextLength )
 		
 		UpdateCursor()
 	End
+
 	
 	#rem wonkeydoc Appends text.
 	#end
 	Method AppendText( text:String )
-	
 		SelectText( _doc.TextLength,_doc.TextLength )
 		ReplaceText( text )
 	End
+
 	
 	#rem wonkeydoc Replaces current selection.
 	#end
 	Method ReplaceText( text:String )
-	
 		Local undo:=New UndoOp
 		undo.text=_doc.Text.Slice( Min( _anchor,_cursor ),Max( _anchor,_cursor ) )
 		undo.anchor=Min( _anchor,_cursor )
@@ -679,12 +658,12 @@ Class TextView Extends ScrollableView
 		
 		ReplaceText( _anchor,_cursor,text )
 	End
+
 	
 	'non-undoable
 	#rem wonkeydoc @hidden
 	#end
 	Method ReplaceText( anchor:Int,cursor:Int,text:String )
-			
 		_redos.Clear()
 	
 		_doc.ReplaceText( anchor,cursor,text )
@@ -693,6 +672,7 @@ Class TextView Extends ScrollableView
 		
 		UpdateCursor()
 	End
+
 	
 	#rem wonkeydoc Performs an undo.
 	#end
@@ -718,6 +698,7 @@ Class TextView Extends ScrollableView
 		
 		UpdateCursor()
 	End
+
 	
 	#rem wonkeydoc Performs a redo.
 	#end
@@ -743,12 +724,14 @@ Class TextView Extends ScrollableView
 		
 		UpdateCursor()
 	End
+
 	
 	#rem wonkeydoc Selects all text.
 	#end
 	Method SelectAll()
 		SelectText( 0,_doc.TextLength )
 	End
+
 	
 	#rem wonkeydoc Performs a cut.
 	#end
@@ -757,6 +740,7 @@ Class TextView Extends ScrollableView
 		Copy()
 		ReplaceText( "" )
 	End
+
 	
 	#rem wonkeydoc Performs a copy.
 	#end
@@ -766,11 +750,11 @@ Class TextView Extends ScrollableView
 		Local text:=_doc.Text.Slice( min,max )
 		App.ClipboardText=text
 	End
+
 	
 	#rem wonkeydoc Performs a paste.
 	#end
 	Method Paste()
-	
 		If _readOnly Return
 		
 		If App.ClipboardTextEmpty Return
@@ -781,46 +765,53 @@ Class TextView Extends ScrollableView
 		
 		If text ReplaceText( text )
 	End
+
 	
 	Struct Word
-		
 		Field index:Int
 		Field length:Int
 		field rect:Recti
+
 		
 		Method New( index:Int,length:Int,rect:Recti )
 			Self.index=index
 			Self.length=length
 			Self.rect=rect
 		End
+
 		
 		Property Index:Int()
 			Return index
 		End
+
 		
 		Property Length:Int()
 			Return length
 		End
+
 		
 		Property Rect:Recti()
 			Return rect
 		End
-		
 	End
+
 	
 	Class WordIterator
 		
 		Method New( view:TextView )
 			Init( view,0,view.Text.Length )
 		End
+
 		
 		Property AtEnd:Bool()
 			Return _i0>=_eol
 		End
+
 		
 		Property Current:Word()
 			Return New Word( _i0,_l,_r )
 		End
+
 					
 		Method Bump()
 			_x0+=_w
@@ -838,14 +829,16 @@ Class TextView Extends ScrollableView
 			
 			_r=New Recti( _x0,_y0,_x0+_w,_y0+_h )
 		End
+
 		
 		Function ForLine:WordIterator( view:TextView,line:Int )
 			Local i0:=view._doc.StartOfLine( line )
 			Local eol:=view._doc.EndOfLine( line )
 			Return New WordIterator( view,i0,eol )
 		End
+
 		
-		Private
+	Private
 		
 		Field _view:TextView
 		Field _line:Int
@@ -858,14 +851,14 @@ Class TextView Extends ScrollableView
 		Field _h:Int
 		Field _l:Int
 		Field _r:Recti
+
 		
 		Method New( view:TextView,i0:Int,eol:Int )
-			
 			Init( view,i0,eol )
 		End
+
 		
 		Method Init( view:TextView,i0:Int,eol:Int )
-			
 			_view=view
 			
 			_i0=i0
@@ -882,24 +875,25 @@ Class TextView Extends ScrollableView
 
 			_r=New Recti( _x0,_y0,_x0+_w,_y0+_h )
 		End
-		
 	End
+
 	
 	#rem wonkeydoc @hidden
 	#End
 	Method Words:WordIterator()
 		Return New WordIterator( Self )
 	End
+
 	
-	Protected
+Protected
+
 	
 	Method OnThemeChanged() Override
-	
 		UpdateColors()
 	End
+
 	
 	Method OnValidateStyle() Override
-	
 		Local style:=RenderStyle
 		
 		_font=style.Font
@@ -911,9 +905,9 @@ Class TextView Extends ScrollableView
 		
 		UpdateLines()
 	End
+
 	
 	Method OnMeasureContent:Vec2i() Override
-	
 		If _wordWrap Return New Vec2i( 0,0 )
 		
 		If _wrapw<>$7fffffff
@@ -924,8 +918,8 @@ Class TextView Extends ScrollableView
 		Return New Vec2i( _lines.Top.maxWidth+_charw,_lines.Top.rect.Bottom )
 	End
 
+
 	Method OnMeasureContent2:Vec2i( size:Vec2i ) Override
-	
 		If Not _wordWrap Return New Vec2i( 0,0 )
 		
 		If _wrapw<>size.x
@@ -935,21 +929,20 @@ Class TextView Extends ScrollableView
 				
 		Return New Vec2i( _lines.Top.maxWidth,_lines.Top.rect.Bottom )
 	End
+
 	
 	Method OnRenderContent( canvas:Canvas ) Override
-		
-		OnRenderContent( canvas,VisibleRect )
+		OnRenderContent( canvas, VisibleRect )
 	End
-	
-	Method OnRenderContent( canvas:Canvas,clip:Recti ) Virtual
 
+	
+	Method OnRenderContent( canvas:Canvas, clip:Recti ) Virtual
 		If App.KeyView=Self And Not _blinkTimer RestartBlinkTimer()
 		
-		Local firstLine:=LineAtPoint( New Vec2i( 0,clip.Top ) ) 
+		Local firstLine:=LineAtPoint( New Vec2i( 0,clip.Top ) )
 		Local lastLine:=LineAtPoint( New Vec2i( 0,clip.Bottom-1 ) )+1
 		
 		If _cursor<>_anchor
-		
 			Local min:=CharRect( Min( _anchor,_cursor ) )
 			Local max:=CharRect( Max( _anchor,_cursor ) )
 			
@@ -962,11 +955,9 @@ Class TextView Extends ScrollableView
 				canvas.DrawRect( 0,min.Bottom,clip.Right,max.Top-min.Bottom )
 				canvas.DrawRect( 0,max.Top,max.Left,max.Height )
 			Endif
-		
 		Endif
 			
 		If Not _readOnly And App.KeyView=Self And _blinkOn
-		
 			canvas.Color=_cursorColor
 			
 			Select _cursorType
@@ -979,36 +970,28 @@ Class TextView Extends ScrollableView
 			Default
 				canvas.DrawRect( Max( _cursorRect.X-1,0 ),_cursorRect.Y,2,_cursorRect.Height )
 			End
-			
 		Endif
 
 		_textColors[0]=RenderStyle.TextColor
 		
 		For Local line:=firstLine Until lastLine
-		
 			OnRenderLine( canvas,line )
-			
 		Next
-		
 	End
+
 	
 	Method OnRenderLine( canvas:Canvas,line:Int ) Virtual
-		
 		Local text:=_doc.Text
 		Local colors:=_doc.Colors
 		
 		For local word:=Eachin WordIterator.ForLine( Self,line )
-			
 			If text[word.Index]<=32 Continue
 			
 			Local i0:=word.Index
-
 			Local i1:=i0+word.Length
-			
 			Local x0:=word.Rect.Left,y0:=word.Rect.Top
 			
 			While i0<i1
-			
 				Local start:=i0
 				Local color:=colors[start]
 				i0+=1
@@ -1027,26 +1010,21 @@ Class TextView Extends ScrollableView
 				
 				x0+=_font.TextWidth( str )
 			Wend
-			
 		Next
-		
 	End
+
 	
 	Method OnKeyDown:Bool( key:Key,modifiers:Modifier ) Virtual
-	
 		Select key
 		Case Key.Backspace
-			
 			If _anchor=_cursor And _cursor>0 SelectText( _cursor-1,_cursor )
 			ReplaceText( "" )
 				
 		Case Key.KeyDelete
-			
 			If _anchor=_cursor And _cursor<_doc.Text.Length SelectText( _cursor,_cursor+1 )
 			ReplaceText( "" )
 				
 		Case Key.Tab
-		
 			Local cmin:=Min( _cursor,_anchor )
 			Local cmax:=Max( _cursor,_anchor )
 			
@@ -1058,7 +1036,7 @@ Class TextView Extends ScrollableView
 			Else
 				'select all lines...
 				cmin=_doc.StartOfLine( min )
-				If _doc.StartOfLine( max )<>cmax 
+				If _doc.StartOfLine( max )<>cmax
 					max+=1
 					cmax=_doc.StartOfLine( max )
 				Endif
@@ -1073,15 +1051,13 @@ Class TextView Extends ScrollableView
 				Local go:=True
 				
 				If modifiers & Modifier.Shift
-					
 					For Local i:=0 Until lines.Length
-						
 						If Not lines[i].Trim()
 							lines[i]+="~n"
 							Continue
 						Endif
 							
-						If lines[i][0]=9 
+						If lines[i][0]=9
 							lines[i]=lines[i].Slice( 1 )+"~n"
 							Continue
 						Endif
@@ -1104,7 +1080,6 @@ Class TextView Extends ScrollableView
 			Endif
 				
 		Case Key.Enter,Key.KeypadEnter
-			
 			ReplaceText( "~n" )
 				
 			'auto indent!
@@ -1125,7 +1100,6 @@ Class TextView Extends ScrollableView
 			Endif
 				
 		Case Key.Left
-			
 			If _anchor<>_cursor And Not (modifiers & Modifier.Shift)
 				_cursor=Min( _anchor,_cursor )
 			Else If _cursor
@@ -1135,45 +1109,38 @@ Class TextView Extends ScrollableView
 			Return True
 				
 		Case Key.Right
-		
 			If _anchor<>_cursor And Not (modifiers & Modifier.Shift)
 				_cursor=Max( _anchor,_cursor )
-			Else If _cursor<_doc.Text.Length 
+			Else If _cursor<_doc.Text.Length
 				_cursor+=1
 			Endif
 			UpdateCursor()
 			Return True
 				
 		Case Key.Home
-			
 			_cursor=_doc.StartOfLine( CursorLine )
 			UpdateCursor()
 			Return True
 				
 		Case Key.KeyEnd
-			
 			_cursor=_doc.EndOfLine( CursorLine )
 			UpdateCursor()
 			Return True
 
 		Case Key.Up
-			
 			MoveLine( -1 )
 			Return True
 			
 		Case Key.Down
-			
 			MoveLine( 1 )
 			Return True
 				
 		Case Key.PageUp
-			
 			Local n:=VisibleRect.Height/_charh-1		'shouldn't really use cliprect here...
 			MoveLine( -n )
 			Return True
 				
 		Case Key.PageDown
-			
 			Local n:=VisibleRect.Height/_charh-1
 			MoveLine( n )
 			Return True
@@ -1182,9 +1149,9 @@ Class TextView Extends ScrollableView
 		
 		Return False
 	End
+
 	
 	Method OnControlKeyDown:Bool( key:Key,modifiers:Modifier ) Virtual
-
 		Select key
 		Case Key.A
 			SelectAll()
@@ -1243,25 +1210,23 @@ Class TextView Extends ScrollableView
 		
 		Return False
 	End
+
 	
 	Method OnKeyChar( text:String ) Virtual
-
 		If _undos.Length
-			
 			Local undo:=_undos.Top
 			If Not undo.text And _cursor=undo.cursor
 				ReplaceText( _anchor,_cursor,text )
 				undo.cursor=_cursor
 				Return
 			Endif
-				
 		Endif
 		
 		ReplaceText( text )
 	End
+
 	
 	Method OnKeyEvent( event:KeyEvent ) Override
-	
 		If _readOnly
 			If _macosMode
 				If (event.Modifiers & Modifier.Gui) And (event.Key=Key.C Or event.Key=Key.A)
@@ -1269,7 +1234,7 @@ Class TextView Extends ScrollableView
 				Else
 					Return
 				Endif
-			Else			
+			Else
 				If (event.Modifiers & Modifier.Control) And (event.Key=Key.C Or event.Key=Key.A)
 					'Copy, Select All
 				Else
@@ -1279,9 +1244,7 @@ Class TextView Extends ScrollableView
 		Endif
 	
 		Select event.Type
-		
 		Case EventType.KeyDown,EventType.KeyRepeat
-		
 			Local key:=event.Key
 			Local modifiers:=event.Modifiers
 
@@ -1309,16 +1272,13 @@ Class TextView Extends ScrollableView
 			Local r:=False
 			
 			If _macosMode
-			
 				If modifiers & Modifier.Gui
-				
 					Select key
 					Case Key.A,Key.X,Key.C,Key.V,Key.Z,Key.Y,Key.Left,Key.Right
 						r=OnControlKeyDown( key,modifiers )
 					End
 				
 				Else If modifiers & Modifier.Control
-				
 					Select key
 					Case Key.A
 						r=OnKeyDown( Key.Home,modifiers )
@@ -1327,7 +1287,6 @@ Class TextView Extends ScrollableView
 					End
 					
 				Else
-				
 					Select key
 					Case Key.Home,Key.KeyEnd
 						r=OnControlKeyDown( key,modifiers )
@@ -1338,7 +1297,6 @@ Class TextView Extends ScrollableView
 				Endif
 				
 			Else
-			
 				If modifiers & Modifier.Control
 					r=OnControlKeyDown( key,modifiers )
 				Else
@@ -1350,20 +1308,17 @@ Class TextView Extends ScrollableView
 			If r And Not (modifiers & Modifier.Shift) _anchor=_cursor
 			
 		Case EventType.KeyChar
-		
 			OnKeyChar( event.Text )
 		
 		End
 	End
+
 	
 	Method OnContentMouseEvent( event:MouseEvent ) Override
-	
 		Select event.Type
 		Case EventType.MouseDown
-		
 			Select event.Clicks
 			Case 1
-
 				_cursor=CharAtPoint( event.Location )
 				
 				If Not (event.Modifiers & Modifier.Shift) _anchor=_cursor
@@ -1375,14 +1330,12 @@ Class TextView Extends ScrollableView
 				UpdateCursor()
 			
 			Case 2
-
 				Local term:=New Int[1]
 				Local start:=FindWord( CharAtPoint( event.Location ),term )
 				
 				SelectText( start,term[0] )
 				
 			Case 3
-			
 				SelectLine( LineAtPoint( event.Location ) )
 			
 			End
@@ -1390,11 +1343,9 @@ Class TextView Extends ScrollableView
 			Return
 			
 		Case EventType.MouseUp
-		
 			_dragging=False
 			
 		Case EventType.MouseMove
-		
 			If _dragging
 			
 				_cursor=CharAtPoint( event.Location )
@@ -1404,25 +1355,28 @@ Class TextView Extends ScrollableView
 			Endif
 			
 		Case EventType.MouseWheel
-		
 			Return
 		End
 		
 		event.Eat()
 	End
 	
-	Private
+
+Private
+
 	
 	Struct Line
 		Field rect:Recti
 		Field maxWidth:Int
 	End
+
 	
 	Class UndoOp
 		Field text:String
 		Field anchor:Int
 		Field cursor:Int
 	End
+
 	
 	Field _doc:TextDocument
 	Field _lines:=New Stack<Line>
@@ -1435,7 +1389,7 @@ Class TextView Extends ScrollableView
 	Field _blinkOn:Bool=True
 	Field _blinkTimer:Timer
 	
-#if __HOSTOS__="macos"	
+#if __HOSTOS__="macos"
 	Field _macosMode:Bool=True
 #else
 	Field _macosMode:Bool=False
@@ -1464,8 +1418,8 @@ Class TextView Extends ScrollableView
 	
 	Field _readOnly:Bool
 
+
 	Method UpdateColors()
-		
 		CursorColor=App.Theme.GetColor( "textview-cursor" )
 		
 		SelectionColor=App.Theme.GetColor( "textview-selection" )
@@ -1478,6 +1432,7 @@ Class TextView Extends ScrollableView
 		
 		TextColors=colors
 	End
+
 		
 	Method CancelBlinkTimer()
 		If Not _blinkTimer Return
@@ -1485,6 +1440,7 @@ Class TextView Extends ScrollableView
 		_blinkTimer=Null
 		_blinkOn=True
 	End
+
 	
 	Method RestartBlinkTimer()
 		CancelBlinkTimer()
@@ -1498,17 +1454,15 @@ Class TextView Extends ScrollableView
 			RequestRender()
 		End )
 	End
+
 	
 	Method UpdateCursor()
-	
 		Local rect:=CharRect( _cursor )
 		
 		EnsureVisible( rect )
-
 		_vcursor=rect.Origin
 			
 		If rect<>_cursorRect
-		
 			RestartBlinkTimer()
 		
 			_cursorRect=rect
@@ -1518,9 +1472,9 @@ Class TextView Extends ScrollableView
 		
 		RequestRender()
 	End
+
 	
 	Method FindWord:Int( from:Int,term:Int[] )
-
 		Local text:=Text
 		
 		If from<0
@@ -1562,9 +1516,9 @@ Class TextView Extends ScrollableView
 		term[0]=ends
 		Return start
 	End
+
 	
 	Method WordLength:Int( text:String,i0:Int,eol:Int )
-
 		Local i1:=i0
 		
 		If text[i1]<=32
@@ -1583,9 +1537,9 @@ Class TextView Extends ScrollableView
 		
 		Return i1-i0
 	End
+
 	
 	Method WordWidth:Int( text:String,i0:Int,eol:Int,x0:Int )
-	
 		Local i1:=i0,x1:=x0
 		
 		If text[i0]<=32
@@ -1597,7 +1551,7 @@ Class TextView Extends ScrollableView
 				Endif
 				i1+=1
 			Wend
-		Else 
+		Else
 			If IsIdent( text[i1] )
 				While i1<eol And IsIdent( text[i1] )
 					i1+=1
@@ -1612,9 +1566,9 @@ Class TextView Extends ScrollableView
 		
 		Return x1-x0
 	End
+
 	
 	Method MeasureLine:Vec2i( line:Int )
-	
 		Local text:=_doc.Text
 		Local i0:=_doc.StartOfLine( line )
 		Local eol:=_doc.EndOfLine( line )
@@ -1639,9 +1593,9 @@ Class TextView Extends ScrollableView
 
 		Return New Vec2i( maxw,y0 )
 	End
+
 	
 	Method MoveLine( delta:Int )
-	
 		Local vcursor:=_vcursor
 		
 		_vcursor.y+=delta * _charh
@@ -1652,11 +1606,10 @@ Class TextView Extends ScrollableView
 		
 		_vcursor.x=vcursor.x
 	End
+
 	
 	Method UpdateLines()
-	
 		Local liney:=0,maxWidth:=0
-			
 		For Local i:=0 Until _lines.Length
 			
 			Local size:=MeasureLine( i )
@@ -1672,9 +1625,9 @@ Class TextView Extends ScrollableView
 			
 		UpdateCursor()
 	End
+
 	
 	Method LinesModified( first:Int,removed:Int,inserted:Int )
-	
 '		Print "Lines modified: first="+first+", removed="+removed+", inserted="+inserted+", _charh="+_charh
 
 		ValidateStyle()
@@ -1702,7 +1655,6 @@ Class TextView Extends ScrollableView
 		Endif
 		
 		For Local i:=first Until last
-		
 			Local size:=MeasureLine( i )
 			
 			maxWidth=Max( maxWidth,size.x )
@@ -1714,7 +1666,6 @@ Class TextView Extends ScrollableView
 		Next
 		
 		If dlines<0
-
 			Local i:=last
 			While i<_lines.Length+dlines
 				_lines[i]=_lines[i-dlines]
@@ -1725,7 +1676,6 @@ Class TextView Extends ScrollableView
 		Endif
 		
 		For Local i:=last Until _lines.Length
-		
 			Local size:=_lines[i].rect.Size
 			
 			maxWidth=Max( maxWidth,size.x )

@@ -70,6 +70,9 @@ Class MenuButton Extends Button
 
 End
 
+
+
+
 #rem wonkeydoc The Menu class.
 #end
 Class Menu Extends DockingView
@@ -84,6 +87,7 @@ Class Menu Extends DockingView
 		
 		_text=text
 	End
+
 	
 	#rem wonkeydoc Menu text
 	#end
@@ -91,27 +95,27 @@ Class Menu Extends DockingView
 		Return _text
 	End
 
+
 	#rem wonkeydoc Clears all items from the menu.
 	#end
 	Method Clear()
 		Super.RemoveAllViews()
 	End
 
+
 	#rem wonkeydoc Adds a view to the menu.
 	#end	
 	Method AddView( view:View )
-	
 		AddView( view,"top" )
 	End
+
 	
 	#rem wonkeydoc Adds an action to the menu.
 	#end	
 	Method AddAction( action:Action )
-	
 		Local button:=New MenuButton( action )
 		
 		button.Clicked=Lambda()
-		
 			CloseAll()
 			'
 			'a bit gnarly, but makes sure menu is *really* closed...
@@ -122,23 +126,25 @@ Class Menu Extends DockingView
 		
 		AddView( button )
 	End
+
 	
 	Method AddAction:Action( text:String )
 		Local action:=New Action( text )
 		AddAction( action )
 		Return action
 	End
+
 	
 	#rem wonkeydoc Adds a separator to the menu.
 	#end
 	Method AddSeparator()
 		AddView( New MenuSeparator,"top" )
 	End
+
 	
 	#rem wonkeydoc Adds a submenu to the menu.
 	#end
 	Method AddSubMenu( menu:Menu )
-	
 		Local button:=New MenuButton( menu.Text )
 
 		button.Clicked=Lambda()
@@ -152,18 +158,18 @@ Class Menu Extends DockingView
 		
 		AddView( button,"top" )
 	End
+
 	
 	#rem wonkeydoc Opens the menu.
 	#end
 	Method Open()
-	
 		Open( App.MouseLocation,App.ActiveWindow,Null )
 	End
+
 	
 	#rem wonkeydoc @hidden
 	#end
 	Method Open( location:Vec2i,view:View,owner:View )
-	
 		Assert( Not Visible )
 		
 		While Not _open.Empty And _open.Top<>owner
@@ -186,15 +192,14 @@ Class Menu Extends DockingView
 
 		_open.Push( Self )
 	End
+
 	
 	#rem wonkeydoc @hidden
 	#end	
 	Method Close()
-	
 		Assert( Visible )
 		
 		While Not _open.Empty
-		
 			Local menu:=_open.Pop()
 			menu.Parent.RemoveChildView( menu )
 			menu.Visible=False
@@ -210,42 +215,36 @@ Class Menu Extends DockingView
 		_filter=Null
 	End
 	
-	Private
-	
+Private
 	Field _text:String
 	Field _owner:View
 	
 	Global _open:=New Stack<Menu>
 	
 	Global _filter:Void( MouseEvent )
+
 	
 	Function CloseAll()
-		
 		_open[0].Close()
 	End
+
 	
 	Function MouseEventFilter( event:MouseEvent )
-	
 		If event.Eaten Return
 		
 		Local view:=event.View
-			
 		For Local menu:=Eachin _open
-		
 			If view.IsChildOf( menu ) Return
-			
 		Next
 		
 		If _open[0]._owner
-		
 			If view<>_open[0]._owner And view.IsChildOf( _open[0]._owner ) Return
 			
-			If event.Type=EventType.MouseDown 
+			If event.Type=EventType.MouseDown
 				CloseAll()
 			Else
 '				event.Eat()
 			Endif
-		
 		Else
 			
 			If event.Type=EventType.MouseDown
@@ -258,6 +257,10 @@ Class Menu Extends DockingView
 	End
 		
 End
+
+
+
+
 
 Class MenuBar Extends ToolBar
 

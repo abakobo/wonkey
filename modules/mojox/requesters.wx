@@ -9,7 +9,6 @@ If this function is called from the main fiber, a new fiber is created to the al
 
 #end
 Function Alert( message:String,title:String="Alert!" )
-
 	Local alert:=Lambda()
 		TextDialog.Run( title,message,New String[]( "Okay" ),0,0 )
 	End
