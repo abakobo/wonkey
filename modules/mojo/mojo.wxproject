@@ -1,0 +1,4 @@
+{
+	"hidden":[".wx",".git",".github",".gitignore",".gitattributes",".travis.yml",".DS_Store"],
+	"mainFile":"mojo.wxproject"
+}

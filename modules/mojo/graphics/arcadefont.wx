@@ -5,24 +5,24 @@ Namespace mojo
 Using std..
 
 
-Class ArcadeFont
-	Const PI:float = 3.14159265359
-	Const PIHALF:float = PI * 0.5
-	Const PITHIRD:float = PI + (PI * 0.5)
-	Const PIHALFISH:float = PI * 0.44
-	Const PIQUARTER:float = PI * 0.25
+class ArcadeFont
+	const PI:float = 3.14159265359
+	const PIHALF:float = PI * 0.5
+	const PITHIRD:float = PI + (PI * 0.5)
+	const PIHALFISH:float = PI * 0.44
+	const PIQUARTER:float = PI * 0.25
 
 
-	Method New()
-	End Method
+	method New()
+	End method
 	
 	
-	Method New( img:Image )
+	method New( img:Image )
 		Load( img )
-	End Method
+	End method
 
 
-	Method Load( img:Image )
+	method Load( img:Image )
 		_image = img
 '		if _pixmap <> Null then _pixmap.Discard()
 '		_pixmap = New Pixmap( _image.Width, _image.Height, PixelFormat.RGB24 )
@@ -30,7 +30,7 @@ Class ArcadeFont
 
 		_filePath = img.FilePath
 		_fileTime = GetFileTime( img.FilePath )
-    			
+				
 		_charWidth = _image.Width / 16
 		_charHeight = _image.Height / 16
 		
@@ -43,21 +43,21 @@ Class ArcadeFont
 			sy[k] = (k / 16) * _charHeight
 			sx1[k] = sx[k] + chw
 			sy1[k] = sy[k] + chh
-		Next	
-	End Method
+		next
+	End method
 
 
-	Method Reload:bool()
-		'Print "reload file:"+_image.FilePath+" time:"+GetFileTime( _image.FilePath )
+	method Reload:bool()
+		Print "reload file:"+_image.FilePath+" time:"+GetFileTime( _image.FilePath )
 		
 		Local time:long = GetFileTime( _image.FilePath )
 		If time <= _fileTime Then Return False
 		
-		Return True
-	End Method
+		Return true
+	End method
 
 
-	Property Image:Image()
+	property Image:Image()
 		Return _image
 	End
 	
@@ -89,24 +89,24 @@ Class ArcadeFont
 	End
 
 
-	Method GetY:int( xx:int, yy:int, frame:float, width:float, height:float )
+	method GetY:int( xx:int, yy:int, frame:float, width:float, height:float )
 		Return yy + ( Sin( (xx + frame) * width ) * height )
-	End Method
+	End method
 	
 
-	Method DrawTextSin( canvas:Canvas, text:string,  xx:int, yy:int, size:int,  frame:float, width:float, height:float )
+	method DrawTextSin( canvas:Canvas, text:string,	xx:int, yy:int, size:int,	frame:float, width:float, height:float )
 		Local k:int
-		Local y:int
+		local y:int
 		For k = 0 Until text.Length
 			y = GetY( xx, yy, frame, width, height )
-			DrawChar( canvas, text[k],  xx, y, size )
+			DrawChar( canvas, text[k],	xx, y, size )
 			xx += size
 '			Print text.Mid( k, 1 )
 		Next
-	End Method
+	End method
 	
 
-	Method DrawChar( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawChar( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -118,10 +118,10 @@ Class ArcadeFont
 		Local y3:float = y + scale
 
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharS( canvas:Canvas, char:Int, x:float, y:float, scale:float, shader:Shader )
+	method DrawCharS( canvas:Canvas, char:Int, x:float, y:float, scale:float, shader:Shader )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scale
@@ -132,15 +132,15 @@ Class ArcadeFont
 		Local y3:float = y + scale
 
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx[char], sy[char], sx1[char], sy1[char], shader )
-	End Method
+	End method
 
 
-	Method DrawChar180( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawChar180( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
 		DrawCharIR( canvas, char, x, y, scale, italic )
-	End Method
+	End method
 
 
-	Method DrawChar90( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawChar90( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -152,10 +152,10 @@ Class ArcadeFont
 		Local y3:float = y + scale
 
 		canvas.DrawImageQuad( x3, y3, x0, y0, x1, y1, x2, y2, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawChar270( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawChar270( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -167,10 +167,10 @@ Class ArcadeFont
 		Local y3:float = y + scale
 
 		canvas.DrawImageQuad( x1, y1, x2, y2, x3, y3, x0, y0, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharI( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharI( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -182,10 +182,10 @@ Class ArcadeFont
 		Local y3:float = y + scale
 
 		canvas.DrawImageQuad( x3, y3, x2, y2, x1, y1, x0, y0, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharIR( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharIR( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -197,10 +197,10 @@ Class ArcadeFont
 		Local y3:float = y + scale
 
 		canvas.DrawImageQuad( x2, y2, x3, y3, x0, y0, x1, y1, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharR( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharR( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -212,50 +212,50 @@ Class ArcadeFont
 		Local y3:float = y + scale
 
 		canvas.DrawImageQuad( x1, y1, x0, y0, x3, y3, x2, y2, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharQuadSize( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x0:float, y0:float, x1:float, y1:float, x2:float, y2:float, x3:float, y3:float )
+	method DrawCharQuadSize( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x0:float, y0:float, x1:float, y1:float, x2:float, y2:float, x3:float, y3:float )
 		Local sx:int = (char mod 16) * _charWidth
 		Local sy:int = (char / 16) * _charHeight
 		Local sx1:int = sx + (_charWidth * charWidth)
 		Local sy1:int = sy + (_charHeight * charHeight)
 		
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharQuad( canvas:Canvas, char:Int, x0:float, y0:float, x1:float, y1:float, x2:float, y2:float, x3:float, y3:float )
+	method DrawCharQuad( canvas:Canvas, char:Int, x0:float, y0:float, x1:float, y1:float, x2:float, y2:float, x3:float, y3:float )
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharRQuad( canvas:Canvas, char:Int, x0:float, y0:float, x1:float, y1:float, x2:float, y2:float, x3:float, y3:float )
+	method DrawCharRQuad( canvas:Canvas, char:Int, x0:float, y0:float, x1:float, y1:float, x2:float, y2:float, x3:float, y3:float )
 		canvas.DrawImageQuad( x1, y1, x0, y0, x3, y3, x2, y2, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharQuad2Size( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x0:float, y0:float, x1:float, y1:float, x2:float, y2:float, x3:float, y3:float )
+	method DrawCharQuad2Size( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x0:float, y0:float, x1:float, y1:float, x2:float, y2:float, x3:float, y3:float )
 		Local sx:int = (char mod 16) * _charWidth
 		Local sy:int = (char / 16) * _charHeight
 		Local sx1:int = sx + (_charWidth * charWidth)
 		Local sy1:int = sy + (_charHeight * charHeight)
 		
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharQuad2( canvas:Canvas, char:Int, x0:float, y0:float, x1:float, y1:float, x2:float, y2:float, x3:float, y3:float )
+	method DrawCharQuad2( canvas:Canvas, char:Int, x0:float, y0:float, x1:float, y1:float, x2:float, y2:float, x3:float, y3:float )
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharRQuad2( canvas:Canvas, char:Int, x0:float, y0:float, x1:float, y1:float, x2:float, y2:float, x3:float, y3:float )
+	method DrawCharRQuad2( canvas:Canvas, char:Int, x0:float, y0:float, x1:float, y1:float, x2:float, y2:float, x3:float, y3:float )
 		canvas.DrawImageQuad( x1, y1, x0, y0, x3, y3, x2, y2, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharPure( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharPure( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -267,10 +267,10 @@ Class ArcadeFont
 		Local y3:float = y + scale
 
 		canvas.DrawImageQuadPure( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharPureShader( canvas:Canvas, char:Int, x:float, y:float, scale:float, fx:Shader, mat:UniformBlock )
+	method DrawCharPureShader( canvas:Canvas, char:Int, x:float, y:float, scale:float, fx:Shader, mat:UniformBlock )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scale
@@ -281,10 +281,10 @@ Class ArcadeFont
 		Local y3:float = y + scale
 
 		canvas.DrawImageQuadPure( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx[char], sy[char], sx1[char], sy1[char], fx, mat )
-	End Method
+	End method
 
 
-	Method DrawCharRPureSize( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharRPureSize( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -301,10 +301,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 
 		canvas.DrawImageQuadPure( x1, y1, x0, y0, x3, y3, x2, y2, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharPureSize( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharPureSize( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -321,10 +321,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 
 		canvas.DrawImageQuadPure( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharPureWH( canvas:Canvas, char:Int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawCharPureWH( canvas:Canvas, char:Int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -340,10 +340,10 @@ Class ArcadeFont
 		Local sy1:int = sy + _charHeight
 
 		canvas.DrawImageQuadPure( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawChar90PureSizeWH( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawChar90PureSizeWH( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -359,10 +359,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 
 		canvas.DrawImageQuadPure( x3, y3, x0, y0, x1, y1, x2, y2, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharPureSizeWH( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawCharPureSizeWH( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -378,10 +378,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 
 		canvas.DrawImageQuadPure( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharPureSizeWH( canvas:Canvas, char:Int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawCharPureSizeWH( canvas:Canvas, char:Int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -392,10 +392,10 @@ Class ArcadeFont
 		Local y3:float = y + scaleY
 		
 		canvas.DrawImageQuadPure( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharRPureSizeWH( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawCharRPureSizeWH( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -411,10 +411,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 
 		canvas.DrawImageQuadPure( x1, y1, x0, y0, x3, y3, x2, y2, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharRPureSizeWH( canvas:Canvas, char:Int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawCharRPureSizeWH( canvas:Canvas, char:Int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -425,10 +425,10 @@ Class ArcadeFont
 		Local y3:float = y + scaleY
 		
 		canvas.DrawImageQuad( x1, y1, x0, y0, x3, y3, x2, y2, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharVPureSizeWH( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawCharVPureSizeWH( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -444,10 +444,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 
 		canvas.DrawImageQuadPure( x3, y3, x2, y2, x1, y1, x0, y0, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharVPureSizeWH( canvas:Canvas, char:Int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawCharVPureSizeWH( canvas:Canvas, char:Int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -458,10 +458,10 @@ Class ArcadeFont
 		Local y3:float = y + scaleY
 		
 		canvas.DrawImageQuadPure( x3, y3, x2, y2, x1, y1, x0, y0, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharRPure( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharRPure( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -473,10 +473,10 @@ Class ArcadeFont
 		Local y3:float = y + scale
 
 		canvas.DrawImageQuadPure( x1, y1, x0, y0, x3, y3, x2, y2, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharIPure( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharIPure( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -488,11 +488,11 @@ Class ArcadeFont
 		Local y3:float = y + scale
 
 		canvas.DrawImageQuadPure( x3, y3, x2, y2, x1, y1, x0, y0, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharWH( canvas:Canvas, char:Int, x:float, y:float, scalex:float, scaley:int )
-		If char > 255 Then Return
+	method DrawCharWH( canvas:Canvas, char:Int, x:float, y:float, scalex:float, scaley:int )
+		If char > 255 Then return
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scalex
@@ -503,11 +503,11 @@ Class ArcadeFont
 		Local y3:float = y + scaley
 		
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharWH( canvas:Canvas, char:Int, x:float, y:float, scalex:float, scaley:int, shader:Shader, mat:UniformBlock )
-		If char > 255 Then Return
+	method DrawCharWH( canvas:Canvas, char:Int, x:float, y:float, scalex:float, scaley:int, shader:Shader, mat:UniformBlock )
+		If char > 255 Then return
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scalex
@@ -518,10 +518,10 @@ Class ArcadeFont
 		Local y3:float = y + scaley
 		
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx[char], sy[char], sx1[char], sy1[char], shader, mat )
-	End Method
+	End method
 
 
-	Method DrawCharRWH( canvas:Canvas, char:Int, x:float, y:float, scalex:float, scaley:int )
+	method DrawCharRWH( canvas:Canvas, char:Int, x:float, y:float, scalex:float, scaley:int )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scalex
@@ -532,10 +532,10 @@ Class ArcadeFont
 		Local y3:float = y + scaley
 
 		canvas.DrawImageQuad( x1, y1, x0, y0, x3, y3, x2, y2, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharRWH( canvas:Canvas, char:Int, x:float, y:float, scalex:float, scaley:int, shader:Shader, mat:UniformBlock )
+	method DrawCharRWH( canvas:Canvas, char:Int, x:float, y:float, scalex:float, scaley:int, shader:Shader, mat:UniformBlock )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scalex
@@ -546,10 +546,10 @@ Class ArcadeFont
 		Local y3:float = y + scaley
 
 		canvas.DrawImageQuad( x1, y1, x0, y0, x3, y3, x2, y2, _image, sx[char], sy[char], sx1[char], sy1[char], shader, mat )
-	End Method
+	End method
 
 
-	Method DrawCharSize( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharSize( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -566,10 +566,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 		
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharSizeRot( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scale:float,  rot:float = 0 )
+	method DrawCharSizeRot( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scale:float,	rot:float = 0 )
 		Local sc2:float = scale * 0.5
 		sc2 = Sqrt( sc2*sc2 + sc2*sc2 )
 		rot -= PIHALF
@@ -589,10 +589,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 		
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharRSize( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharRSize( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -609,15 +609,15 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 		
 		canvas.DrawImageQuad( x1, y1, x0, y0, x3, y3, x2, y2, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawChar180Size( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
-		DrawCharIRSize( canvas, char, charWidth,  charHeight, x, y, scale, italic )
-	End Method
+	method DrawChar180Size( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
+		DrawCharIRSize( canvas, char, charWidth,	charHeight, x, y, scale, italic )
+	End method
 
 
-	Method DrawChar90Size( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawChar90Size( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -634,10 +634,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 
 		canvas.DrawImageQuad( x3, y3, x0, y0, x1, y1, x2, y2, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawChar270Size( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawChar270Size( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -654,10 +654,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 
 		canvas.DrawImageQuad( x1, y1, x2, y2, x3, y3, x0, y0, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharISize( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharISize( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -674,10 +674,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 
 		canvas.DrawImageQuad( x3, y3, x2, y2, x1, y1, x0, y0, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharIRSize( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharIRSize( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -694,10 +694,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 
 		canvas.DrawImageQuad( x2, y2, x3, y3, x0, y0, x1, y1, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharSizePure( canvas:Canvas, char:Int, charWidth:float,  charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharSizePure( canvas:Canvas, char:Int, charWidth:float,	charHeight:int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -714,10 +714,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 		
 		canvas.DrawImageQuadPure( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharFrame( canvas:Canvas, char:Int, frame:int, charWidth:float,  charHeight:int, x:float, y:float, scale:float )
+	method DrawCharFrame( canvas:Canvas, char:Int, frame:int, charWidth:float,	charHeight:int, x:float, y:float, scale:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scale
@@ -737,10 +737,10 @@ Class ArcadeFont
 		sx1 += fw
 		
 		canvas.DrawImageQuadPure( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharRSizeWH( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawCharRSizeWH( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -756,10 +756,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 		
 		canvas.DrawImageQuad( x1, y1, x0, y0, x3, y3, x2, y2, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharRSizeWH( canvas:Canvas, char:Int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawCharRSizeWH( canvas:Canvas, char:Int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -770,10 +770,10 @@ Class ArcadeFont
 		Local y3:float = y + scaleY
 		
 		canvas.DrawImageQuad( x1, y1, x0, y0, x3, y3, x2, y2, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharSizeWHOffset( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, scaleX:float, scaleY:float,  x:float, y:float, xoff:float, yoff:float, rot:float = 0 )
+	method DrawCharSizeWHOffset( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, scaleX:float, scaleY:float,	x:float, y:float, xoff:float, yoff:float, rot:float = 0 )
 		Local rs:float = Sin( -rot )
 		Local rc:float = Cos( -rot )
 		
@@ -821,10 +821,10 @@ Class ArcadeFont
 		x3 -= xoff
 		y3 -= yoff
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharSizeWHOffset( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, scaleX:float, scaleY:float,  x:float, y:float, xoff:float, yoff:float, rot:float, shader:Shader )
+	method DrawCharSizeWHOffset( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, scaleX:float, scaleY:float,	x:float, y:float, xoff:float, yoff:float, rot:float, shader:Shader )
 		Local rs:float = Sin( -rot )
 		Local rc:float = Cos( -rot )
 		
@@ -872,10 +872,10 @@ Class ArcadeFont
 		x3 -= xoff
 		y3 -= yoff
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1, shader )
-	End Method
+	End method
 
 
-	Method DrawCharSizeWHOffset( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, scaleX:float, scaleY:float,  x:float, y:float, xoff:float, yoff:float, rot:float, shader:Shader, mat:UniformBlock )
+	method DrawCharSizeWHOffset( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, scaleX:float, scaleY:float,	x:float, y:float, xoff:float, yoff:float, rot:float, shader:Shader, mat:UniformBlock )
 		Local rs:float = Sin( -rot )
 		Local rc:float = Cos( -rot )
 		
@@ -923,10 +923,10 @@ Class ArcadeFont
 		x3 -= xoff
 		y3 -= yoff
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1, shader, mat )
-	End Method
+	End method
 
 
-	Method DrawChar90SizeWH( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawChar90SizeWH( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -942,10 +942,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 		
 		canvas.DrawImageQuad( x1, y1, x2, y2, x3, y3, x0, y0, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawChar180SizeWH( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawChar180SizeWH( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -961,10 +961,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 		
 		canvas.DrawImageQuad( x2, y2, x3, y3, x0, y0, x1, y1, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawChar270SizeWH( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawChar270SizeWH( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -980,10 +980,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 		
 		canvas.DrawImageQuad( x3, y3, x0, y0, x1, y1, x2, y2, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 
-	Method DrawCharSizeWH( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawCharSizeWH( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -999,10 +999,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 		
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1 )
-	End Method
+	End method
 
 	
-	Method DrawCharSizeWH( canvas:Canvas, char:Int, charWidth:int,  charHeight:int, x:float, y:float, scaleX:float, scaleY:float, shader:Shader, mat:UniformBlock )
+	method DrawCharSizeWH( canvas:Canvas, char:Int, charWidth:int,	charHeight:int, x:float, y:float, scaleX:float, scaleY:float, shader:Shader, mat:UniformBlock )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -1018,10 +1018,10 @@ Class ArcadeFont
 		Local sy1:int = sy + (_charHeight * charHeight)
 		
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx, sy, sx1, sy1, shader, mat )
-	End Method
+	End method
 	
 	
-	Method DrawCharSizeWH( canvas:Canvas, char:Int, x:float, y:float, scaleX:float, scaleY:float )
+	method DrawCharSizeWH( canvas:Canvas, char:Int, x:float, y:float, scaleX:float, scaleY:float )
 		Local x0:float = x
 		Local y0:float = y
 		Local x1:float = x + scaleX
@@ -1032,10 +1032,10 @@ Class ArcadeFont
 		Local y3:float = y + scaleY
 		
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharBold( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharBold( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -1055,10 +1055,10 @@ Class ArcadeFont
 		x3 += offset
 
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 
 
-	Method DrawCharBlock( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
+	method DrawCharBlock( canvas:Canvas, char:Int, x:float, y:float, scale:float, italic:float = 0 )
 		Local it:float = scale * italic
 		Local x0:float = x +it
 		Local y0:float = y
@@ -1096,90 +1096,90 @@ Class ArcadeFont
 		x2 -= offset2
 		x3 -= offset2
 		canvas.DrawImageQuad( x0, y0, x1, y1, x2, y2, x3, y3, _image, sx[char], sy[char], sx1[char], sy1[char] )
-	End Method
+	End method
 	
 	
-	Method DrawCharCenteredWHScale( canvas:Canvas, char:Int, charWidth:int,  charHeight:int,  cx:float, cy:float, yp:float,  width:float, height:int,  scale:float = 1 )
+	method DrawCharCenteredWHScale( canvas:Canvas, char:Int, charWidth:int,	charHeight:int,	cx:float, cy:float, yp:float,	width:float, height:int,	scale:float = 1 )
 		Local textWidth:float = charWidth * width * scale
-		Local x:int = cx - textWidth * .5
-		Local y:float =  cy + (charHeight-cy) * scale
+		local x:int = cx - textWidth * .5
+		local y:float =	cy + (charHeight-cy) * scale
 
 		DrawCharPureSizeWH( canvas, char, charWidth, charHeight, x, y, width*scale*charWidth, height*scale*charHeight )
-	End Method
+	End method
 	
 
-	Method DrawCharCenteredWH( canvas:Canvas, char:Int, charWidth:int,  charHeight:int,  cx:float, cy:float,  width:float, height:int )
+	method DrawCharCenteredWH( canvas:Canvas, char:Int, charWidth:int,	charHeight:int,	cx:float, cy:float,	width:float, height:int )
 		Local textWidth:float = charWidth * width
-		Local x:int = cx - textWidth * .5
-		Local y:float =  cy - height
+		local x:int = cx - textWidth * .5
+		local y:float =	cy - height
 
 		DrawCharPureSizeWH( canvas, char, charWidth, charHeight, x, y, width*charWidth, height*charHeight )
-	End Method
+	End method
 
 
-	Method DrawTextWHScale( canvas:Canvas, text:String, cx:float, cy:float, y:float, width:float, height:int, padding:float = 1, scale:float = 1 )
+	method DrawTextWHScale( canvas:Canvas, text:String, cx:float, cy:float, y:float, width:float, height:int, padding:float = 1, scale:float = 1 )
 		Local textWidth:float = text.Length * width * padding * scale
-		y =  cy + (y-cy) * scale
+		y =	cy + (y-cy) * scale
 
 		DrawTextWH( canvas, text, int(cx), int(y), width*scale, height*scale, padding )
-	End Method
+	End method
 
 
-	Method DrawTextCenteredWHScale( canvas:Canvas, text:String, cx:float, cy:float, y:float, width:float, height:int, padding:float = 1, scale:float = 1 )
+	method DrawTextCenteredWHScale( canvas:Canvas, text:String, cx:float, cy:float, y:float, width:float, height:int, padding:float = 1, scale:float = 1 )
 		Local textWidth:float = text.Length * width * padding * scale
-		Local x:int = cx - textWidth * .5
-		y =  cy + (y-cy) * scale
+		local x:int = cx - textWidth * .5
+		y =	cy + (y-cy) * scale
 
 		DrawTextWH( canvas, text, int(x), int(y), width*scale, height*scale, padding )
-	End Method
+	End method
 
 
-	Method DrawTextCenteredWH( canvas:Canvas, text:String, x:float, y:float, width:float, height:int, padding:float = 1, scale:float = 1 )
+	method DrawTextCenteredWH( canvas:Canvas, text:String, x:float, y:float, width:float, height:int, padding:float = 1, scale:float = 1 )
 		Local textWidth:float = text.Length * width * padding
 		x -= textWidth * .5
 
 		DrawTextWH( canvas, text, int(x), int(y), width, height, padding )
-	End Method
+	End method
 
 
-	Method DrawTextCentered( canvas:Canvas, text:String, x:int, y:Int, scale:float, padding:float = 1, italic:float = 0 )
+	method DrawTextCentered( canvas:Canvas, text:String, x:int, y:Int, scale:float, padding:float = 1, italic:float = 0 )
 		Local textWidth:float = text.Length * scale * padding
 		x -= textWidth * .5
 
 		DrawText( canvas, text, x, y, scale, padding, italic )
-	End Method
+	End method
 	
 	
-	Method DrawTextCenteredSurround( canvas:Canvas, text:String, x:int, y:Int, scale:float, padding:float = 1, italic:float = 0 )
+	method DrawTextCenteredSurround( canvas:Canvas, text:String, x:int, y:Int, scale:float, padding:float = 1, italic:float = 0 )
 		Local textWidth:float = text.Length * scale * padding
 		x -= textWidth * .5
 
 		DrawTextSurround( canvas, text, x, y, scale, padding, italic )
-	End Method
+	End method
 
-	Method DrawTextCenteredFX( canvas:Canvas, fx:int, text:String, x:int, y:Int, scale:float, padding:float = 1, italic:float = 0 )
+	method DrawTextCenteredFX( canvas:Canvas, fx:int, text:String, x:int, y:Int, scale:float, padding:float = 1, italic:float = 0 )
 		Local textWidth:float = text.Length * scale * padding
 		x -= textWidth * .5
 
 		DrawTextFX( canvas, fx, text, x, y, scale, padding*scale, italic )
-	End Method
+	End method
 
 
-	Method DrawTextLeftFX( canvas:Canvas, fx:int, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
+	method DrawTextLeftFX( canvas:Canvas, fx:int, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
 		Local k:Int
-		Local c:int
+		local c:int
 		
 		padding *= scale
 		
 		x -= text.Length * padding
 		
 		DrawTextFX( canvas, fx, text, x, y, scale, padding, italic )
-	End Method
+	End method
 
 
-	Method DrawTextFX( canvas:Canvas, fx:int, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
+	method DrawTextFX( canvas:Canvas, fx:int, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
 		Local k:Int
-		Local c:int
+		local c:int
 		
 		Select fx
 			Case 0
@@ -1196,12 +1196,12 @@ Class ArcadeFont
 					x += padding
 				Next
 		End select
-	End Method
+	End method
 
 
-	Method DrawText( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
+	method DrawText( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
 		Local k:Int
-		Local c:int
+		local c:int
 		
 		padding *= scale
 		
@@ -1209,12 +1209,12 @@ Class ArcadeFont
 			DrawChar( canvas, text.Mid( k, 1 )[0], x, y, scale, italic )
 			x += padding
 		Next
-	End Method
+	End method
 
 
-	Method DrawTextSurround( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
+	method DrawTextSurround( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
 		Local k:Int
-		Local c:int
+		local c:int
 		
 		padding *= scale
 		
@@ -1225,12 +1225,12 @@ Class ArcadeFont
 			DrawChar( canvas, text.Mid( k, 1 )[0], x, y+1, scale, italic )
 			x += padding
 		Next
-	End Method
+	End method
 
 
-	Method DrawTextWH( canvas:Canvas, text:String, x:float, y:float, width:float, height:int, padding:float = 1 )
+	method DrawTextWH( canvas:Canvas, text:String, x:float, y:float, width:float, height:int, padding:float = 1 )
 		Local k:Int
-		Local c:int
+		local c:int
 		
 		padding *= width
 		
@@ -1238,12 +1238,12 @@ Class ArcadeFont
 			DrawCharWH( canvas, text.Mid( k, 1 )[0], int(x), int(y), width, height )
 			x += padding
 		Next
-	End Method
+	End method
 
 
-	Method DrawTextBoldWH( canvas:Canvas, text:String, x:float, y:float, width:float, height:int, padding:float = 1 )
+	method DrawTextBoldWH( canvas:Canvas, text:String, x:float, y:float, width:float, height:int, padding:float = 1 )
 		Local k:Int
-		Local c:int
+		local c:int
 		
 		padding *= width
 		
@@ -1252,12 +1252,12 @@ Class ArcadeFont
 			DrawCharWH( canvas, text.Mid( k, 1 )[0], x+1, y, width, height )
 			x += width
 		Next
-	End Method
+	End method
 
 
-	Method DrawTextOutline( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
+	method DrawTextOutline( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
 		Local k:Int
-		Local c:int
+		local c:int
 		
 		padding *= scale
 		
@@ -1274,12 +1274,12 @@ Class ArcadeFont
 			DrawChar( canvas, text.Mid( k, 1 )[0], x+offset, y+offset, scale, italic )
 			x += padding
 		Next
-	End Method
+	End method
 
 
-	Method DrawTextLeft( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
+	method DrawTextLeft( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
 		Local k:Int
-		Local c:int
+		local c:int
 		
 		padding *= scale
 		
@@ -1289,12 +1289,12 @@ Class ArcadeFont
 			DrawChar( canvas, text.Mid( k, 1 )[0], x, y, scale, italic )
 			x += padding
 		Next
-	End Method
+	End method
 
 
-	Method DrawTextBlock( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
+	method DrawTextBlock( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
 		Local k:Int
-		Local c:int
+		local c:int
 		
 		padding *= scale
 		
@@ -1302,28 +1302,28 @@ Class ArcadeFont
 			DrawCharBlock( canvas, text.Mid( k, 1 )[0], x, y, scale, italic )
 			x += padding
 		Next
-	End Method
+	End method
 
 
-	Method DrawTextCenteredBlock( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
+	method DrawTextCenteredBlock( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
 		Local textWidth:int = text.Length * scale * padding
 		x -= textWidth * .5
 
 		DrawTextBlock( canvas, text, x, y, scale, padding, italic )
-	End Method
+	End method
 
 
-	Method DrawTextCenteredBold( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
+	method DrawTextCenteredBold( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
 		Local textWidth:int = text.Length * scale * padding
 		x -= textWidth * .5
 
 		DrawTextBold( canvas, text, x, y, scale, padding, italic )
-	End Method
+	End method
 	
 	
-	Method DrawTextBold( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
+	method DrawTextBold( canvas:Canvas, text:String, x:float, y:float, scale:float, padding:float = 1, italic:float = 0 )
 		Local k:Int
-		Local c:int
+		local c:int
 		
 		padding *= scale
 		
@@ -1331,25 +1331,25 @@ Class ArcadeFont
 			DrawCharBold( canvas, text.Mid( k, 1 )[0], x, y, scale, italic )
 			x += padding
 		Next
-	End Method
+	End method
 
 
-	Method TextWidth:float(text:String, scale:float, padding:float = 1 )
-		Return text.Length * scale * padding
-	End Method
+	method TextWidth:float(text:String, scale:float, padding:float = 1 )
+		return text.Length * scale * padding
+	End method
 
 
 private
-	Field _image:Image
+	field _image:Image
 
-	Field _filePath:string
-	Field _fileTime:Long = 0
+	field _filePath:string
+	field _fileTime:Long = 0
 
-	Field _charWidth:int
-	Field _charHeight:int
+	field _charWidth:int
+	field _charHeight:int
 
-	Field sx:int[] = New int[257]
-	Field sy:int[] = New int[257]
-	Field sx1:int[] = new int[257]
-	Field sy1:int[] = new int[257]
+	field sx:int[] = New int[257]
+	field sy:int[] = New int[257]
+	field sx1:int[] = new int[257]
+	field sy1:int[] = new int[257]
 End
