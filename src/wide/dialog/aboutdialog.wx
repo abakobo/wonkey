@@ -1,0 +1,203 @@
+Namespace wide
+
+
+#Import "../storm.wx"
+
+
+#Import "../assets/wonkey.png"
+#Import "../assets/icon4.png"
+
+#Import "../assets/star.png"
+
+
+Function AboutDialog:bool()
+	local aboutView:AboutView = New AboutView()
+
+	Local dialog:AboutDlg = New AboutDlg( aboutView )
+
+	dialog.ShowModal()
+	Return dialog.OK
+End function
+
+
+class AboutDlg Extends DialogExt
+	field OK:bool = False
+	
+	Method New( contentView:AboutView = Null )
+		Super.New( "", contentView )
+
+		MinSize = New Vec2i( 640, 600 )
+		FadeEnabled = True 'faded
+
+		contentView.Close = lambda()
+			OK = True
+			Hide()
+			contentView.tmr.Suspended = True
+		End
+	End
+End
+
+
+class AboutView Extends View
+	field Close:Void()
+	
+	field ctrls:MiniUI = New MiniUI()
+	field storm:StormSystem = New StormSystem()
+
+	field _wideImage:Image
+	field _wonkeyImage:Image
+
+	field _particleImage:Image
+
+	field ButtonOK:int
+	field ctrlTab:int
+	field lst:string[]
+	field ctrlList:int = -1
+	field ctrlColorList:int = -1
+	field syntaxList:string[]
+	
+	field tmr:Timer
+	
+	method New()
+		tmr = New Timer( 40, Render )
+		
+		_wideImage = Image.Load( "asset::wonkey.png" )
+		_wonkeyImage = Image.Load( "asset::icon4.png" )
+		
+		_particleImage = Image.Load( "asset::star.png" )
+
+
+		ctrls.OverColor = Color.UIBlue
+		ctrls.SetGrid( 20, 20 )
+
+		Local scale:int = App.Theme.Scale.x
+
+		lst = New string[]( "About Wide", "About Wonkey", "Thanks" )
+		ctrlList = ctrls.AddCustomList( 0.5,0.5,6,17, Color.Black* 0.2, lst.Length, 40, True )
+		ctrls.SetBorder( ctrlList, 6 )
+		ctrls.SetSelected( ctrlList, 0 )
+
+'		ButtonCancel = ctrls.AddButton( 13,18.25, 3, 1.25, Color.DarkGrey, "Cancel", True )
+		ButtonOK = ctrls.AddButton( 16.5,18.25, 3, 1.25, Color.UIBlue* 0.8, "OK", True )
+
+		'----------------------------
+		ctrls.Page = 1
+
+		ctrls.AddImage( 8.5,0, 10, 10, Color.White, _wideImage )
+		ctrls.AddTextBold( 8.5,10, 10, 1, Color.White, "Wide Ver 1.0", ALIGN_CENTER )
+
+		'----------------------------
+		ctrls.Page = 2
+
+		ctrls.AddImage( 8.5,0, 10, 10, Color.White, _wonkeyImage )
+		ctrls.AddTextBold( 8.5,10, 10, 1, Color.White, "Wonkey Ver 1.0", ALIGN_CENTER )
+
+		'----------------------------
+		ctrls.Page = 3
+		
+		syntaxList = New string[](
+			"Mark Sibly - Monkey2 & Blitz Creator", "Nerobot - Ted2Go/Wide", "Danilo - Compiler Core", "Seyhajin - Compiler Core", "CallMeAdam - Wide2",
+			"SyntaxBomb Users - for support", "Abakabo - Testing", "Prior Monkey2 community",
+			"-", "-", "-", "-", "-", "-",
+			"-", "-", "-", "-", "-" )
+		ctrls.AddTextBold( 7,0.5, 10, 1, Color.White, "Special thanks go to:" )
+		ctrlColorList = ctrls.AddCustomList( 7,2, 12.5,15.5, Color.Black* 0.2, syntaxList.Length, 20, True )
+		ctrls.SetBorder( ctrlColorList, 6 )
+
+		
+
+		ctrls.Page = 1
+
+
+		ctrls.Clicked = lambda( ctrl:int )
+			Select ctrl
+				Case ctrlTab
+					ctrls.Page = ctrls.GetSelected( ctrl )+1
+
+				Case ctrlColorList
+					Particles( _xamCol[ ctrls.GetSelected( ctrl ) ] )
+
+				Case ButtonOK
+					Close()
+
+				Default
+					Print "ctrl clicked: "+ctrl
+			End Select
+		end
+
+		'used in example 1
+		ctrls.OnDraw = lambda( canvas:Canvas, ctrl:int, x:int, y:int, width:int, height:int, color:Color, border:int )
+			Select ctrl
+				Case ctrlList, ctrlColorList
+					canvas.Color = Color.Grey * 0.5
+					canvas.DrawFrameRoundedRect( x, y, width, height, 5 )
+			End Select
+		End
+
+		'used in example 1
+		ctrls.OnDrawItem = lambda( canvas:Canvas, ctrl:int, item:int, selected:bool, x:int, y:int, width:int, height:int, border:int )
+			Select ctrl
+				Case ctrlList
+					If selected Then
+						canvas.Color = Color.LightGrey
+					Else
+						canvas.Color = Color.Grey
+					End If
+					canvas.DrawText( lst[item], x+border, y+height*0.5, 0,0.5 )
+					canvas.DrawText( lst[item], x+border+1, y+height*0.5, 0,0.5 )
+
+				Case ctrlColorList
+					If selected Then
+						canvas.Color = Color.LightGrey
+					Else
+						canvas.Color = Color.Grey
+					End If
+					canvas.DrawText( syntaxList[item], x+border, y )
+					canvas.Color = _xamCol[item]
+					canvas.DrawRect( x+width-border, y+2, -height-height, height-4 )
+			End Select
+		End
+
+	End method
+	
+
+	method OnThemeChanged() Override
+	End Method
+	
+	
+	method Particles( col:Color )
+		local k:int
+		For k = 1 To 15
+			storm.AddGravity2d( 2.5, Rnd(70,140), 0, col, _mouseX, _mouseY, Rnd(-0.5,0.3),Rnd(-1,-3), 0.1,0.005 )
+		Next
+	End method
+
+
+	method Render()
+		App.RequestRender()
+	End Method
+	
+	
+	Method OnRender( canvas:Canvas ) Override
+		If tmr.Suspended Then tmr.Suspended = False
+		
+		ctrls.DrawControls( canvas, _mouseX, _mouseY, _mouseDown )
+
+		storm.Update()
+		local k:int
+		For k = 0 to storm.Count
+			If storm._stormLife[k] > 0 and storm._stormScale[k] > 0 Then
+				canvas.Color = storm._stormColor[k]
+				canvas.DrawImage( _particleImage, storm._stormX[k], storm._stormY[k],0, storm._stormScale[k], storm._stormScale[k] )
+			End if
+		Next
+	End method
+
+
+	method OnMouseMove() Override
+'		App.RequestRender()
+		If ctrls.Over( _mouseX, _mouseY ) Then
+			App.RequestRender()
+		End If
+	End method
+End class

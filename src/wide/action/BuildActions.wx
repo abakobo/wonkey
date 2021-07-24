@@ -3,17 +3,18 @@ Namespace wide
 
 
 Class BuildError
-
 	Field path:String
 	Field line:Int
 	Field msg:String
 	Field removed:Bool
+
 	
 	Method New( path:String,line:Int,msg:String )
 		Self.path=path
 		Self.line=line
 		Self.msg=msg
 	End
+
 
 	Operator<=>:Int( err:BuildError )
 		If line<err.line Return -1
@@ -25,7 +26,6 @@ End
 
 
 Interface IModuleBuilder
-	
 	' cleanState: 
 	' -1: don't clean
 	' 0: use previous
@@ -36,9 +36,9 @@ End
 
 
 Class BuildActions Implements IModuleBuilder
-
 	Field buildAndRun:Action
 	Field debugApp:Action
+	Field stopApp:Action
 	Field build:Action
 	Field semant:Action
 	Field buildSettings:Action
@@ -56,9 +56,9 @@ Class BuildActions Implements IModuleBuilder
 	Field PreSemant:Void()
 	Field PreBuildModules:Void()
 	Field ErrorsOccured:Void(errors:BuildError[])
+
 	
 	Method New( docs:DocumentManager,console:ConsoleExt,debugView:DebugView )
-	
 		_docs=docs
 		_console=console
 		_debugView=debugView
@@ -68,6 +68,9 @@ Class BuildActions Implements IModuleBuilder
 		
 		debugApp=ActionById( ActionId.Debug )
 		debugApp.Triggered=OnDebugApp
+
+		stopApp=ActionById( ActionId.ForceStop )
+		stopApp.Triggered=OnForceStop
 
 		build=ActionById( ActionId.Build )
 		build.Triggered=OnBuild
@@ -140,11 +143,8 @@ Class BuildActions Implements IModuleBuilder
 		targetMenu.AddView( _verboseMode )
 		
 		'check valid targets...WIP...
-		
 		_validTargets=EnumValidTargets( _console )
-		
 		If _validTargets _buildTarget=_validTargets[0].ToLower()
-		
 		If _validTargets.Contains( "desktop" )
 			_desktopTarget.Clicked+=Lambda()
 				_buildTarget="desktop"
@@ -177,23 +177,21 @@ Class BuildActions Implements IModuleBuilder
 			_iosTarget.Enabled=False
 		Endif
 	End
+
 	
 	Property Verbosed:Bool()
-	
 		Return _verboseMode.Checked
 	End
+
 	
 	Method SaveState( jobj:JsonObject )
-		
 		jobj["buildConfig"]=New JsonString( _buildConfig )
-		
 		jobj["buildTarget"]=New JsonString( _buildTarget )
-		
 		jobj["buildVerbose"]=New JsonBool( _verboseMode.Checked )
 	End
+
 	
 	Method LoadState( jobj:JsonObject )
-	
 		If jobj.Contains( "buildConfig" )
 			_buildConfig=jobj["buildConfig"].ToString()
 			Select _buildConfig
@@ -206,36 +204,30 @@ Class BuildActions Implements IModuleBuilder
 		Endif
 		
 		If jobj.Contains( "buildTarget" )
-			
 			local target:=jobj["buildTarget"].ToString()
-			
 			If _validTargets.Contains( target )
-				
 				_buildTarget=target
 				
 				Select _buildTarget
-				Case "desktop"
-					_desktopTarget.Checked=True
-				Case "emscripten"
-					_emscriptenTarget.Checked=True
-				Case "android"
-					_androidTarget.Checked=True
-				Case "ios"
-					_iosTarget.Checked=True
+					Case "desktop"
+						_desktopTarget.Checked=True
+					Case "emscripten"
+						_emscriptenTarget.Checked=True
+					Case "android"
+						_androidTarget.Checked=True
+					Case "ios"
+						_iosTarget.Checked=True
 				End
-			
 			Endif
-			
 		Endif
 		
 		If jobj.Contains( "buildVerbose" )
 			_verboseMode.Checked=jobj.GetBool( "buildVerbose" )
 		Endif
-		
 	End
+
 	
 	Method Update()
-	
 		While Not _errors.Empty And _errors.First.removed
 			_errors.RemoveFirst()
 		Wend
@@ -252,18 +244,18 @@ Class BuildActions Implements IModuleBuilder
 		rebuildHelp.Enabled=idle
 		moduleManager.Enabled=idle
 	End
+
 	
 	Method BuildModules:Bool( modules:String="",configs:String="",cleanState:Int=0 )
-		
 		If Not modules Then modules=_storedModules
 		
-		If Not configs
+		If Not configs Then
 			configs=_storedConfigs
 			If Not configs Then configs="debug release"
 		Endif
 		
 		Local clean:Bool
-		If cleanState=0
+		If cleanState=0 Then
 			clean=_storedClean
 		Else
 			clean=(cleanState=1)
@@ -271,11 +263,11 @@ Class BuildActions Implements IModuleBuilder
 		
 		Local selTargets:=(_storedTargets ?Else "desktop")
 		
-		Local dialog:=New UpdateModulesDialog( _validTargets,selTargets,modules,configs,clean )
+		Local dialog:UpdateModulesDialog = New UpdateModulesDialog( _validTargets, selTargets, modules, configs, clean )
 		dialog.Title="Update / Rebuild modules"
 		
 		Local ok:=dialog.ShowModal()
-		If Not ok Return False
+		If Not ok Then Return False
 		
 		Local result:Bool
 		
@@ -309,9 +301,9 @@ Class BuildActions Implements IModuleBuilder
 		
 		Return result
 	End
+
 	
 	Method GotoError( err:BuildError )
-		
 		Local targetPath:=GetCaseSensitivePath( err.path )
 		Local doc:=_docs.OpenDocument( targetPath,True,True )
 		If doc
@@ -320,8 +312,7 @@ Class BuildActions Implements IModuleBuilder
 	End
 	
 	
-	Private
-	
+Private
 	Field _docs:DocumentManager
 	Field _console:ConsoleExt
 	Field _debugView:DebugView
@@ -346,19 +337,19 @@ Class BuildActions Implements IModuleBuilder
 	Field _storedConfigs:String
 	Field _storedTargets:String
 	Field _storedClean:Bool
+
 	
 	Property FilePathToBuild:String()
-	
 		Return PathsProvider.GetActiveMainFilePath()
 	End
+
 	
 	Property FilePathToBuildWithPrompt:String()
-	
 		Return PathsProvider.GetActiveMainFilePath( True,True )
 	End
+
 	
 	Method SaveAll:Bool( buildFile:String )
-		
 		Local proj:="" 'ProjectView.FindProjectByFile( buildFile )
 		
 		For Local doc:=Eachin _docs.OpenDocuments
@@ -369,26 +360,24 @@ Class BuildActions Implements IModuleBuilder
 		
 		Return True
 	End
+
 	
 	Method ClearErrors()
-	
 		_errors.Clear()
 	
 		For Local doc:=Eachin _docs.OpenDocuments
 			Local wxDoc:=Cast<CodeDocument>( doc )
 			If wxDoc wxDoc.Errors.Clear()
 		Next
-
 	End
 
+
 	Method BuildWx:Bool( cmd:String,progressText:String,action:String="build",buildFile:String="",showElapsedTime:Bool=False )
-	
 		ClearErrors()
 		
 		_console.Clear()
 		
 		MainWindow.StoreConsoleVisibility()
-		
 		MainWindow.ShowBuildConsole()
 		
 		If Not SaveAll( buildFile ) Return False
@@ -411,16 +400,13 @@ Class BuildActions Implements IModuleBuilder
 		Local hasErrors:=False
 		
 		Repeat
-		
 			Local result:=_console.ReadStdoutWithErrors()
 			Local stdout:=result.stdout
 			If Not stdout Exit
 			
 			If stdout.StartsWith( "Application built:" )
-
 '				_appFile=stdout.Slice( stdout.Find( ":" )+1 ).Trim()
 			Else
-				
 				Local err:=result.error
 				If err
 					hasErrors=True
@@ -447,7 +433,6 @@ Class BuildActions Implements IModuleBuilder
 			Endif
 			
 			_console.Write( stdout )
-		
 		Forever
 		
 		If Not _errors.Empty
@@ -480,15 +465,14 @@ Class BuildActions Implements IModuleBuilder
 		Return _console.ExitCode=0
 	End
 
+
 	Method BuildModules:Bool( target:String,modules:String,configs:String,clean:Bool )
-		
 		PreBuildModules()
 		
 		Local msg:=(clean ? "Rebuilding ~ " Else "Updating ~ ")+target
 		
 		Local arr:=configs.Split( " " )
 		For Local cfg:=Eachin arr
-		
 			'Local cfg:=(config ? "debug" Else "release")
 			
 			Local cmd:=MainWindow.WakePath+" mods -target="+target
@@ -505,14 +489,14 @@ Class BuildActions Implements IModuleBuilder
 		
 		Return True
 	End
+
 	
 	Method MakeDocs:Bool()
-	
 		Return BuildWx( MainWindow.WakePath+" docs","Rebuilding documentation...","build","",True )
 	End
+
 	
 	Method BuildApp:Bool( config:String,target:String,sourceAction:String )
-	
 		Local buildDocPath:=FilePathToBuildWithPrompt
 		If Not buildDocPath Return False
 		
@@ -548,67 +532,64 @@ Class BuildActions Implements IModuleBuilder
 		If Not exeFile Return True
 		
 		Select target
-		Case "desktop"
-			
-			MainWindow.ShowStatusBarText( "   App is running now...",True )
-			MainWindow.SetStatusBarActive( True )
-			MainWindow.ShowStatusBarProgress( MainWindow.OnForceStop,True )
-			
-			_debugView.DebugApp( exeFile,config )
-
-		Case "emscripten"
-		
-			Local mserver:=GetEnv( "WX_MSERVER" )
-			If mserver _console.Run( mserver+" ~q"+exeFile+"~q" )
-		
+			Case "desktop"
+				MainWindow.ShowStatusBarText( "   App is running now...",True )
+				MainWindow.SetStatusBarActive( True )
+				MainWindow.ShowStatusBarProgress( MainWindow.OnForceStop,True )
+				
+				_debugView.DebugApp( exeFile,config )
+	
+			Case "emscripten"
+				Local mserver:=GetEnv( "WX_MSERVER" )
+				If mserver _console.Run( mserver+" ~q"+exeFile+"~q" )
 		End
 		
 		Return True
 	End
+
 	
 	Method OnBuildAndRun()
-		
 		PreBuild()
 		
 		If _console.Running Return
 		
 		BuildApp( _buildConfig,_buildTarget,"run" )
 	End
+
 	
 	Method OnDebugApp()
-	
 		PreBuild()
 	
 		If _console.Running Return
 	
 		BuildApp( "debug",_buildTarget,"run" )
 	End
+
 	
 	Method OnBuild()
-		
 		PreBuild()
 		
 		If _console.Running Return
 	
 		BuildApp( _buildConfig,_buildTarget,"build" )
 	End
+
 	
 	Method OnSemant()
-	
 		PreSemant()
 		
 		If _console.Running Return
 	
 		BuildApp( _buildConfig,_buildTarget,"semant" )
 	End
+
 	
 	Method OnForceStop()
-	
 		MainWindow.OnForceStop()
 	End
+
 	
 	Method OnNextError()
-	
 		While Not _errors.Empty And _errors.First.removed
 			_errors.RemoveFirst()
 		Wend
@@ -616,36 +597,35 @@ Class BuildActions Implements IModuleBuilder
 		If _errors.Empty Return
 		
 		_errors.AddLast( _errors.RemoveFirst() )
-		
 		GotoError( _errors.First )
 	End
+
 	
 	Method OnBuildFileSettings()
-
 		Local path:=FilePathToBuild
 		If Not path Return
 		
 		Local product:=BuildProduct.GetBuildProduct( path,_buildTarget,True )
 	End
+
 	
 	Method OnUpdateModules()
-		
 		If _console.Running Return
 	
 		BuildModules()
 	End
+
 	
 	Method OnModuleManager()
-	
 		If _console.Running Return
 	
 		Local modman:=New ModuleManager( _console )
 		
 		modman.Open()
 	End
+
 	
 	Method OnRebuildHelp()
-	
 		If _console.Running Return
 	
 		MakeDocs()

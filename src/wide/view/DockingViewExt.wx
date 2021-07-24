@@ -3,13 +3,12 @@ Namespace wide
 
 
 Class DockingViewExt Extends DockingView
-	
 	Field Rendered:Void( canvas:Canvas )
 	
-	Protected
+Protected
+
 	
 	Method OnRender( canvas:Canvas ) Override
-		
 		Super.OnRender( canvas )
 		
 		Rendered( canvas )

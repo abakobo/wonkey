@@ -1,0 +1,360 @@
+
+Namespace wide
+
+#Import "../assets/node_open.png"
+#Import "../assets/node_closed.png"
+
+
+	global _coreOpen:bool = True
+	global _coreText:String[] = New string[]( "Black", "DarkGrey", "Grey", "LightGrey", "White", "Red", "Blood",
+		"Brown", "Orange", "Yellow", "Lime", "Green", "SeaGreen", "Pine", "Aqua", "Cyan",
+		"Sky", "Blue", "Steel", "Violet", "Magenta", "Puce", "Skin", "Coal", "Rubber", "Asphalt",
+		"Concrete", "Paint", "Snow", "Mud", "Grass", "Brick", "Wood", "ClayTile", "DrySand",
+		"Pink", "HotPink", "Silver", "Aluminum", "Brass", "Iron", "Gold", "Copper", "Chromium",
+		"Nickel", "Titanium", "Cobalt", "Platinum" )
+	global _coreCol:Color[] = New Color[]( Color.Black, Color.DarkGrey, Color.Grey, Color.LightGrey, Color.White, Color.Red, Color.Blood,
+		Color.Brown, Color.Orange, Color.Yellow, Color.Lime, Color.Green, Color.SeaGreen, Color.Pine, Color.Aqua, Color.Cyan,
+		Color.Sky, Color.Blue, Color.Steel, Color.Violet, Color.Magenta, Color.Puce, Color.Skin, Color.Coal, Color.Rubber, Color.Asphalt,
+		Color.Concrete, Color.Paint, Color.Snow, Color.Mud, Color.Grass, Color.Brick, Color.Wood, Color.ClayTile, Color.DrySand,
+		Color.Pink, Color.HotPink, Color.Silver, Color.Aluminum, Color.Brass, Color.Iron, Color.Gold, Color.Copper, Color.Chromium,
+		Color.Nickel, Color.Titanium, Color.Cobalt, Color.Platinum )
+		
+	global _uiOpen:bool = False
+	global _uiText:string[] = New string[]( "UIDarkGrey", "UICharcoal", "UISilver", "UITeal", "UILightGreen",
+		"UIVibrantGreen", "UIGreen", "UILeaf", "UILime", "UIOrange", "UIBurntOrange", "UIDarkOrange",
+		"UIBrown", "UIMango", "UIYellow", "UIRed", "UIMagenta", "UIPink", "UIPurple",
+		"UILavender", "UICyan", "UIBlue", "UIFontBlue", "UIPaleBlue" )
+	global _uiCol:Color[] = New Color[]( Color.UIDarkGrey, Color.UICharcoal, Color.UISilver, Color.UITeal, Color.UILightGreen,
+		Color.UIVibrantGreen, Color.UIGreen, Color.UILeaf, Color.UILime, Color.UIOrange, Color.UIBurntOrange, Color.UIDarkOrange,
+		Color.UIBrown, Color.UIMango, Color.UIYellow, Color.UIRed, Color.UIMagenta, Color.UIPink, Color.UIPurple,
+		Color.UILavender, Color.UICyan, Color.UIBlue, Color.UIFontBlue, Color.UIPaleBlue )
+	
+	global _picoOpen:bool = False
+	global _picoText:string[] = New string[]( "PicoBlack", "PicoBrown", "PicoRed", "PicoCyan", "PicoBlue", "PicoDirt",
+		"PicoOrange", "PicoPurple", "PicoMaroon", "PicoSilver", "PicoYellow", "PicoPink",
+		"PicoGreen", "PicoWhite", "PicoLime", "PicoSkin" )
+	global _picoCol:Color[] = New Color[]( Color.PicoBlack, Color.PicoBrown, Color.PicoRed, Color.PicoCyan, Color.PicoBlue,
+		Color.PicoOrange, Color.PicoPurple, Color.PicoMaroon, Color.PicoSilver, Color.PicoYellow, Color.PicoPink,
+		Color.PicoGreen, Color.PicoWhite, Color.PicoLime, Color.PicoSkin )
+		
+	global _xamOpen:bool = True
+	global _xamText:string[] = New string[]( "XamCoral", "XamPink", "XamPurple", "XamViolet", "XamBlue",
+		"XamSky", "XamWater", "XamAqua", "XamPine", "XamGreen", "XamMint", "XamLime",
+		"XamYellow", "XamPeach", "XamOrange", "XamEmber", "XamBrown", "XamSilver", "XamSteel" )
+	global _xamCol:Color[] = New Color[]( Color.XamCoral, Color.XamPink, Color.XamPurple, Color.XamViolet, Color.XamBlue,
+		Color.XamSky, Color.XamWater, Color.XamAqua, Color.XamPine, Color.XamGreen, Color.XamMint, Color.XamLime,
+		Color.XamYellow, Color.XamPeach, Color.XamOrange, Color.XamEmber, Color.XamBrown, Color.XamSilver, Color.XamSteel )
+		
+	global _c64Open:bool = False
+	global _c64Text:string[] = New string[]( "C64Black", "C64White", "C64Liver", "C64Cyan", "C64Purple",
+		"C64Green", "C64Blue", "C64Yellow", "C64Brown", "C64DarkBrown", "C64Pink", "C64Charcoal",
+		"C64Grey", "C64Lime", "C64Morello", "C64Silver" )
+	global _c64Col:Color[] = New Color[]( Color.C64Black, Color.C64White, Color.C64Liver, Color.C64Cyan, Color.C64Purple,
+		Color.C64Green, Color.C64Blue, Color.C64Yellow, Color.C64Brown, Color.C64DarkBrown, Color.C64Pink, Color.C64Charcoal,
+		Color.C64Grey, Color.C64Lime, Color.C64Morello, Color.C64Silver )
+		
+	global _vicOpen:bool = True
+	global _vicText:string[] = New string[]( "VicBlack", "VicGrey", "VicWhite", "VicRed", "VicLiver",
+		"VicBlush", "VicPink", "VicDirt", "VicBrown", "VicKhaki", "VicOrange", "VicFire", "VicLemon",
+		"VicPeach", "VicPine", "VicGreen", "VicLime", "VicOil", "VicSea", "VicAqua", "VicRoyal",
+		"VicBlue", "VicSky", "VicSteel", "VicPurple", "VicViolet", "VicCandy", "VicSkin" )
+	global _vicCol:Color[] = New Color[]( Color.VicBlack, Color.VicGrey, Color.VicWhite, Color.VicRed, Color.VicLiver,
+		Color.VicBlush, Color.VicPink, Color.VicDirt, Color.VicBrown, Color.VicKhaki, Color.VicOrange, Color.VicFire, Color.VicLemon,
+		Color.VicPeach, Color.VicPine, Color.VicGreen, Color.VicLime, Color.VicOil, Color.VicSea, Color.VicAqua, Color.VicRoyal,
+		Color.VicBlue, Color.VicSky, Color.VicSteel, Color.VicPurple, Color.VicViolet, Color.VicCandy, Color.VicSkin )
+		
+	global _exOpen:bool = False
+	global _exText:String[] = New string[]( "ExLightGrey", "ExDarkGrey", "ExBrown", "ExTreeTrunk", "ExLime",
+		"ExMango", "ExOrange", "ExPink", "ExPurple", "ExLeaf", "ExYolk", "ExPeach", "ExSand",
+		"ExWetSand", "ExNavy", "ExMorello", "ExTeal", "ExSky", "ExSlime", "ExMint", "ExSilver",
+		"ExGold", "ExForest", "ExPlum", "ExWatermellon", "ExAvocado", "ExBubblegum",
+		"ExMaroon", "ExCoffee", "ExLavender", "ExPowder", "ExPigeon", "ExUmber", "ExBuff",
+		"ExCobble", "ExAqua", "ExSewer", "ExDragon", "ExEmber", "ExOlive", "ExCorn",
+		"ExHoney", "ExPhlox", "ExKhaki", "ExNougat" )
+	global _exCol:Color[] = New Color[]( Color.ExLightGrey, Color.ExDarkGrey, Color.ExBrown, Color.ExTreeTrunk, Color.ExLime,
+		Color.ExMango, Color.ExOrange, Color.ExPink, Color.ExPurple, Color.ExLeaf, Color.ExYolk, Color.ExPeach, Color.ExSand,
+		Color.ExWetSand, Color.ExNavy, Color.ExMorello, Color.ExTeal, Color.ExSky, Color.ExSlime, Color.ExMint, Color.ExSilver,
+		Color.ExGold, Color.ExForest, Color.ExPlum, Color.ExWatermellon, Color.ExAvocado, Color.ExBubblegum,
+		Color.ExMaroon, Color.ExCoffee, Color.ExLavender, Color.ExPowder, Color.ExPigeon, Color.ExUmber, Color.ExBuff,
+		Color.ExCobble, Color.ExAqua, Color.ExSewer, Color.ExDragon, Color.ExEmber, Color.ExOlive, Color.ExCorn,
+		Color.ExHoney, Color.ExPhlox, Color.ExKhaki, Color.ExNougat )
+
+	global _labOpen:bool = False
+	global _labText:string[] = New string[]( "LabWhite", "LabNeutral8", "LabNeutral65", "LabNeutral5", "LabNeutral36",
+		"LabBlack", "LabBlue", "LabGreen", "LabRed", "LabYellow", "LabMagenta", "LabCyan", "LabOrange",
+		"LabPurpleRed", "LabModerateRed", "LabPurple", "LabYellowGreen", "LabOrangeYellow", "LabDarkSkin",
+		"LabLightSkin", "LabBlueSky", "LabFoliage", "LabBlueFlower", "LabBluishGreen" )
+	global _labCol:Color[] = New Color[]( Color.LabWhite, Color.LabNeutral8, Color.LabNeutral65, Color.LabNeutral5, Color.LabNeutral36,
+		Color.LabBlack, Color.LabBlue, Color.LabGreen, Color.LabRed, Color.LabYellow, Color.LabMagenta, Color.LabCyan, Color.LabOrange,
+		Color.LabPurpleRed, Color.LabModerateRed, Color.LabPurple, Color.LabYellowGreen, Color.LabOrangeYellow, Color.LabDarkSkin,
+		Color.LabLightSkin, Color.LabBlueSky, Color.LabFoliage, Color.LabBlueFlower, Color.LabBluishGreen )
+
+
+Class ColorView Extends DockingView
+	field _openImage:Image
+	field _closedImage:Image
+	
+	field _sectionOver:int = -1
+
+	field _col:Color = Color.Puce
+	field _colText:string = "Puce"
+	
+	field _colorPicked:int = 5
+	 
+	 
+	Method New( docs:DocumentManager )
+		Super.New()
+	End
+
+	
+	Method Init()
+	End
+	
+
+	Method OnRender( canvas:Canvas ) Override
+		If Not _openImage Then
+			_openImage = Image.Load( "asset::node_open.png" )
+			_closedImage = Image.Load( "asset::node_closed.png" )
+		End If
+		
+		canvas.Color = MainWindow._theme.IDE[0]
+		canvas.DrawRect( 0,0, Width, Height )
+
+		Local sc:float = App.Theme.Scale.x
+		
+		If _colorPicked < 100 Then
+			_col = _coreCol[_colorPicked]
+			_colText = _coreText[_colorPicked]
+
+		Else If _colorPicked < 200 Then
+			_col = _uiCol[_colorPicked-100]
+			_colText = _uiText[_colorPicked-100]
+
+		Else If _colorPicked < 300 Then
+			_col = _picoCol[_colorPicked-200]
+			_colText = _picoText[_colorPicked-200]
+
+		Else If _colorPicked < 400 Then
+			_col = _xamCol[_colorPicked-300]
+			_colText = _xamText[_colorPicked-300]
+
+		Else If _colorPicked < 500 Then
+			_col = _c64Col[_colorPicked-400]
+			_colText = _c64Text[_colorPicked-400]
+
+		Else If _colorPicked < 600 Then
+			_col = _vicCol[_colorPicked-500]
+			_colText = _vicText[_colorPicked-500]
+
+		Else If _colorPicked < 700 Then
+			_col = _exCol[_colorPicked-600]
+			_colText = _exText[_colorPicked-600]
+
+		Else If _colorPicked < 800 Then
+			_col = _labCol[_colorPicked-700]
+			_colText = _labText[_colorPicked-700]
+		End If
+		canvas.Color = _col
+		canvas.DrawRect( 0,0, Width, 60*sc )
+
+		DrawColor( canvas, _col, 5,5+35*sc )
+
+		DrawMCol( canvas, _col, .6, 0,65*sc, 25*sc )
+		DrawMCol( canvas, _col, .44, 0,90*sc, 25*sc )
+		DrawMCol( canvas, _col, .3, 0,115*sc, 25*sc )
+		DrawMCol( canvas, _col, .15, 0,140*sc, 25*sc )
+		DrawMCol( canvas, _col, 0, 0,165*sc, 25*sc )
+		canvas.DrawText( _colText, 5,5 )
+		canvas.DrawText( _colText, Width-15*sc,165*sc+5, 1 )
+		DrawMCol( canvas, _col, -0.15, 0,190*sc, 25*sc )
+		DrawMCol( canvas, _col, -0.3, 0,215*sc, 25*sc )
+		DrawMCol( canvas, _col, -0.44, 0,240*sc, 25*sc )
+		DrawMCol( canvas, _col, -0.6, 0,265*sc, 25*sc )
+		
+		local y:int = 290*sc
+		
+		canvas.Color = MainWindow._theme.IDE[0]
+		canvas.DrawRect( 0,y, Width, Height )
+		
+		y = DrawColors( canvas, "Core Colors", y, sc,  0,  _coreOpen )
+		y = DrawColors( canvas, "User Interface", y, sc,  100,  _uiOpen )
+		y = DrawColors( canvas, "Pico", y, sc,  200,  _picoOpen )
+		y = DrawColors( canvas, "Xamaran", y, sc,  300,  _xamOpen )
+		y = DrawColors( canvas, "C64", y, sc,  400,  _c64Open )
+		y = DrawColors( canvas, "Vic20", y, sc,  500,  _vicOpen )
+		y = DrawColors( canvas, "Extended", y, sc,  600,  _exOpen )
+		y = DrawColors( canvas, "CIE Lab", y, sc,  700,  _labOpen )
+	End method
+	
+	
+	method DrawColors:int( canvas:Canvas, title:string, y:int, sc:float, offset:int, open:int = True )
+		y += 3
+		canvas.Color = GetNewColor( MainWindow._theme.IDE[0], 0.06 )
+'		canvas.Color = Color.Coal
+		canvas.DrawRect( 0,y, Width, 20*sc )
+
+		local xi:int = Width-20*sc
+		local yi:int = y+2*sc
+		local wd:int = 16*sc
+		If _mouseX > 0 And _mouseY > yi And _mouseX < xi+wd And _mouseY < yi+wd Then
+			canvas.Color = MainWindow._theme.IDE[3] * 0.5
+			canvas.DrawRect( 0,y, Width, 20*sc )
+			RequestRender()
+			_sectionOver = offset
+		End If
+
+		canvas.Color = Color.White
+		If open Then
+			canvas.DrawRect( 5,yi+3 ,wd-3, wd-3, _openImage )
+		Else
+			canvas.DrawRect( 5,yi+3 ,wd-3, wd-3, _closedImage )
+		End If
+		
+		canvas.Color = MainWindow._theme.IDE[1]
+		y += 5*sc
+		canvas.DrawText( title, 10+wd, y )
+		local k:int
+		local x:int = 2
+		y += 20*sc
+		local ln:int = _coreText.Length-1
+		Select offset
+			Case 100
+				ln = _uiText.Length-1
+				
+			Case 200
+				ln = _picoText.Length-1
+
+			Case 300
+				ln = _xamText.Length-1
+
+			Case 400
+				ln = _c64Text.Length-1
+
+			Case 500
+				ln = _vicText.Length-1
+
+			Case 600
+				ln = _exText.Length-1
+
+			Case 700
+				ln = _labText.Length-1
+		End Select
+
+		If Not open Then Return y
+
+		local cl:Color
+		For k = 0 To ln
+			Select offset
+				Case 0
+					cl = _coreCol[k]
+				Case 100
+					cl = _uiCol[k]
+				Case 200
+					cl = _picoCol[k]
+				Case 300
+					cl = _xamCol[k]
+				Case 400
+					cl = _c64Col[k]
+				Case 500
+					cl = _vicCol[k]
+				Case 600
+					cl = _exCol[k]
+				Case 700
+					cl = _labCol[k]
+			End Select
+			
+			If x + 23*sc > Width Then
+				x = 2
+				y += 19 * sc
+			End If
+			If k+offset = _colorPicked Then
+				canvas.Color = MainWindow._theme.IDE[3]
+				canvas.DrawRect( x-3, y-3, 23*sc+6, 15*sc+6 )
+				canvas.Color = cl
+				canvas.DrawRect( x+1, y+1, 23*sc-2, 15*sc-2 )
+			Else
+				canvas.Color = cl
+				canvas.DrawRect( x, y, 23*sc, 15*sc )
+			End If
+			If Mouse.ButtonDown( MouseButton.Left ) Then
+				If _mouseX > x And _mouseY > y And _mouseX < x+26*sc And _mouseY < y+19*sc Then
+					_colorPicked = k+offset
+					RequestRender()
+				End If
+			End If
+			x += 26 * sc
+		Next
+
+		y += 19 * sc
+		Return y
+	End Method
+	
+
+	method OnMouseDown() Override
+		RequestRender()
+		Select _sectionOver
+			Case 0
+				_coreOpen = Not _coreOpen
+			Case 100
+				_uiOpen = Not _uiOpen
+			Case 200
+				_picoOpen = Not _picoOpen
+			Case 300
+				_xamOpen = Not _xamOpen
+			Case 400
+				_c64Open = Not _c64Open
+			Case 500
+				_vicOpen = Not _vicOpen
+			Case 600
+				_exOpen = Not _exOpen
+			Case 700
+				_labOpen = Not _labOpen
+		End Select
+	End Method
+	
+	
+	method OnMouseMove() Override
+		_sectionOver = -1
+	End method
+	
+	
+	method DrawMCol( canvas:Canvas, col:Color, m:float, x:int, y:int, ht:int )
+		local ncol:Color = New Color( Clamp(col.R+m, 0,1), Clamp(col.G+m, 0,1), Clamp(col.B+m, 0,1) )
+		canvas.Color = ncol
+		canvas.DrawRect( x,y , Width, ht )
+
+		DrawColor( canvas, ncol, x+5,y+5 )
+	End Method
+	
+	
+	method DrawColor( canvas:Canvas, col:Color, x:int, y:int )
+		local cl:float = col.R + col.G + col.B
+		If cl < 1.5 Then
+			canvas.Color = Color.White
+		Else
+			canvas.Color = Color.Black * 0.8
+		End If
+		local r:string = col.R
+		local g:string = col.G
+		local b:string = col.B
+
+		r = r.Left(4)
+		g = g.Left(4)
+		b = b.Left(4)
+		If r.Left(1) = "0" Then r = r.Right( r.Length-1 )
+		If g.Left(1) = "0" Then g = g.Right( g.Length-1 )
+		If b.Left(1) = "0" Then b = b.Right( b.Length-1 )
+
+		If r.Right(1) = "0" Then r = r.Left( r.Length-1 )
+		If g.Right(1) = "0" Then g = g.Left( g.Length-1 )
+		If b.Right(1) = "0" Then b = b.Left( b.Length-1 )
+		
+		If r = "" Then r = "0"
+		If g = "" Then g = "0"
+		If b = "" Then b = "0"
+
+		canvas.DrawText( r+",  "+g+",  "+b, x,y )
+	End method
+	
+End
+

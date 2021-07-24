@@ -39,6 +39,7 @@ file.png
 flv.png
 gif.png
 gz.png
+h.png
 hlp.png
 htm.png
 html.png
@@ -50,13 +51,16 @@ java.png
 jpg.png
 js.png
 jsp.png
+json.png
 lua.png
 m.png
+md.png
 mm.png
 mov.png
 mp3.png
 mpg.png
 msi.png
+o.png
 odc.png
 odf.png
 odg.png
@@ -65,6 +69,7 @@ odp.png
 ods.png
 odt.png
 ogg.png
+otf.png
 pdf.png
 perl.png
 pgp.png

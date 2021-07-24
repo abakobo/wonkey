@@ -15,9 +15,9 @@ Class FileActions
 	Field saveAll:Action
 	Field quit:Action
 	Field prefs:Action
+
 	
 	Method New( docs:DocumentManager )
-		
 		_docs=docs
 		
 		new_=ActionById( ActionId.NewFile )
@@ -55,9 +55,9 @@ Class FileActions
 		prefs=ActionById( ActionId.Preferences )
 		prefs.Triggered=OnPrefs
 	End
+
 	
 	Method Update()
-	
 		Local docs:=_docs.OpenDocuments
 
 		Local n:=0
@@ -77,9 +77,9 @@ Class FileActions
 		saveAs.Enabled=doc
 		saveAll.Enabled=anyDirty
 	End
+
 	
 	Method CloseFiles( docs:WideDocument[] )
-		
 		If Not docs.Length Return
 		
 		_saveAllFlag=False
@@ -96,29 +96,32 @@ Class FileActions
 	End
 	
 	
-	Private
+Private
 	
 	Field _docs:DocumentManager
 	Field _saveAllFlag:Bool,_discardAllFlag:Bool
 	Field _quit:Bool
+
+	Field _prefsDialog:PrefsDialog
 	
 	
 	Method SaveAs:WideDocument()
-	
 		Local doc:=_docs.CurrentDocument
 		If Not doc Return Null
 		
-		Local name:=StripDir( doc.Path )
-		Local path:=MainWindow.RequestFile( "Save As",name,True )
-		If Not path Return Null
+		Local name:string = StripDir( doc.Path )
+		Local path:string = MainWindow.RequestFile( "Save As",name,True )
+		If Not path Then Return Null
 		
-		If Not ExtractExt( path ) path+=ExtractExt( doc.Path )
+		If Not ExtractExt( path ) Then path += ExtractExt( doc.Path )
+
+		MainWindow.AddRecentFile( path )
 		
 		Return _docs.RenameDocument( doc,path )
 	End
 
+
 	Method CanClose:WideDocument( doc:WideDocument,manyFiles:Bool=False )
-	
 		If Not doc.Dirty Return doc
 		
 		'_docs.CurrentDocument=doc
@@ -141,34 +144,38 @@ Class FileActions
 		If result = -1 Then result=TextDialog.Run( "Close File","File '"+doc.Path+"' has been modified.",buttons )
 		
 		Select result
-		Case 0 'save
-			If MainWindow.IsTmpPath( doc.Path )
-				Return SaveAs()
-			Else
-				If Not doc.Save() Return Null
-			Endif
-		Case 1 'saveAll or discard
-			If manyFiles
+			Case 0 'save
 				If MainWindow.IsTmpPath( doc.Path )
 					Return SaveAs()
 				Else
 					If Not doc.Save() Return Null
 				Endif
-				_saveAllFlag=True
-			Endif
-		Case 2 'discard or cancel
-			Return manyFiles ? doc Else Null
-		Case 3 'discardAll
-			_discardAllFlag=True
-		Case 4 'cancel
-			Return Null
+				
+			Case 1 'saveAll or discard
+				If manyFiles
+					If MainWindow.IsTmpPath( doc.Path )
+						Return SaveAs()
+					Else
+						If Not doc.Save() Return Null
+					Endif
+					_saveAllFlag=True
+				Endif
+				
+			Case 2 'discard or cancel
+				Return manyFiles ? doc Else Null
+				
+			Case 3 'discardAll
+				_discardAllFlag=True
+				
+			Case 4 'cancel
+				Return Null
 		End
 		
 		Return doc
 	End
+
 	
 	Method OnNew()
-	
 		Local path:=MainWindow.AllocTmpPath( "untitled",".wx" )
 		If Not path
 			Alert( "Can't allocate temporary file" )
@@ -179,19 +186,19 @@ Class FileActions
 		
 		_docs.OpenDocument( path,True )
 	End
+
 		
 	Method OnOpen()
-	
 		Local path:=MainWindow.RequestFile( "Open File","",False )
 		If Not path Return
 		
 		path=RealPath( path )
 		
-		_docs.OpenDocument( path,True )
+		_docs.OpenDocument( path, True )
 	End
+
 	
 	Method OnClose()
-	
 		Local doc:=_docs.CurrentDocument
 		If Not doc Return
 		
@@ -200,9 +207,9 @@ Class FileActions
 		
 		doc.Close()
 	End
+
 	
 	Method OnCloseOthers()
-	
 		Local current:=_docs.CurrentDocument
 		If Not current Return
 	
@@ -219,9 +226,9 @@ Class FileActions
 			If doc<>current doc.Close()
 		Next
 	End
+
 	
 	Method OnCloseToRight()
-	
 		Local current:=_docs.CurrentDocument
 		If Not current Return
 	
@@ -249,9 +256,9 @@ Class FileActions
 		Next
 		
 	End
+
 	
 	Method OnSave()
-	
 		Local doc:=_docs.CurrentDocument
 		If Not doc Return
 		
@@ -261,16 +268,15 @@ Class FileActions
 			doc.Save()
 		Endif
 	End
+
 	
 	Method OnSaveAs()
-	
 		SaveAs()
 	End
+
 	
 	Method OnSaveAll()
-	
 		For Local doc:=Eachin _docs.OpenDocuments
-
 			If MainWindow.IsTmpPath( doc.Path )
 				_docs.CurrentDocument=doc
 				If Not SaveAs() Return
@@ -279,9 +285,9 @@ Class FileActions
 			Endif
 		Next
 	End
+
 	
 	Method OnQuit()
-		
 		If _quit Return
 		_quit=True
 		
@@ -289,7 +295,6 @@ Class FileActions
 		_discardAllFlag=False
 		
 		For Local doc:=Eachin _docs.OpenDocuments
-		
 			If MainWindow.IsTmpPath( doc.Path )
 				If Not doc.Save() Then _quit=False ; Return
 			Else
@@ -299,11 +304,9 @@ Class FileActions
 		
 		MainWindow.Terminate()
 	End
-	
-	Field _prefsDialog:PrefsDialog
-	
+
+
 	Method OnPrefs()
-		
 		If _prefsDialog Then _prefsDialog.Hide()
 		
 		LiveTemplates.Load()
@@ -311,9 +314,7 @@ Class FileActions
 		_prefsDialog=New PrefsDialog
 		
 		' not good place for subscribing, but it's simplier than proper one...
-		'
 		_prefsDialog.Apply+=Lambda()
-		
 			For Local d:=Eachin _docs.OpenDocuments
 				Local tv:=Cast<CodeDocumentView>( d.TextView )
 				If tv Then tv.UpdatePrefs()
@@ -323,9 +324,7 @@ Class FileActions
 		End
 		
 		' analyze opened docs to show prompt "fix indentation?"
-		'
 		_prefsDialog.TabulationChanged+=Lambda()
-			
 			For Local d:=Eachin _docs.OpenDocuments
 				Local codeDoc:=Cast<CodeDocument>( d )
 				If codeDoc Then codeDoc.AnalyzeIndentation()

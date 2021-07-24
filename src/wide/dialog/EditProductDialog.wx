@@ -7,61 +7,56 @@ Class ProductVar
 	Field name:String
 	Field value:String
 	Field type:String
+
 		
 	Method New( name:String,value:String,type:String="string" )
 		Self.name=name
 		Self.value=value
 		Self.type=type
 	End
+
 	
 	Method CreateFieldView:View()
-	
 		Local fieldView:View
 		
 		Select type
-		Case "string"
-		
-			Local view:=New TextFieldExt( value )
+			Case "string"
+				Local view:=New TextFieldExt( value )
 			
-			view.TextChanged+=Lambda()
-				value=view.Text
-			End
-			
-			fieldView=view
-			
-		Case "directory"
-		
-			Local view:=New FilePathField( value,FileType.Directory )
-			
-			view.FilePathChanged=Lambda()
-				value=view.FilePath
-			End
-			
-			fieldView=view
-			
-		Default
-		
-			If type.StartsWith( "options:" )
-
-				Local opts:=type.Slice( 8 ).Split( "|" )
-				
-				Local current:=0
-				For Local i:=0 Until opts.Length
-					If value<>opts[i] Continue
-					current=i
-					Exit
-				Next
-
-				Local view:=New OptionsField( opts,current )
-
-				view.CurrentChanged+=Lambda()
-
-					value=opts[view.Current]
+				view.TextChanged+=Lambda()
+					value=view.Text
 				End
 			
 				fieldView=view
+			
+			Case "directory"
+				Local view:=New FilePathField( value,FileType.Directory )
+			
+				view.FilePathChanged=Lambda()
+					value=view.FilePath
+				End
+			
+				fieldView=view
+			
+			Default
+				If type.StartsWith( "options:" ) Then
+					Local opts:=type.Slice( 8 ).Split( "|" )
+				
+					Local current:=0
+					For Local i:=0 Until opts.Length
+						If value<>opts[i] Continue
+						current=i
+						Exit
+					Next
 
-			Endif
+					Local view:=New OptionsField( opts,current )
+
+					view.CurrentChanged+=Lambda()
+						value=opts[view.Current]
+					End
+			
+					fieldView=view
+				Endif
 		End
 		
 		Return fieldView
@@ -69,10 +64,11 @@ Class ProductVar
 		
 End
 
-Class EditProductDialog Extends Dialog
+
+
+Class EditProductDialog Extends DialogExt
 
 	Method New( title:String,vars:Stack<ProductVar> )
-	
 		Title=title
 		
 		_vars=vars
@@ -104,9 +100,9 @@ Class EditProductDialog Extends Dialog
 		End
 		SetKeyAction( Key.Escape,cancel )
 	End
+
 	
 	Method Run:Bool()
-	
 		Open()
 		
 		App.BeginModal( Self )
@@ -119,13 +115,12 @@ Class EditProductDialog Extends Dialog
 		
 		Return result
 	End
+
 	
-	Private
+Private
 	
 	Field _table:TableView
-	
 	Field _vars:Stack<ProductVar>
-	
 	Field _result:=New Future<Bool>
 
 End

@@ -1,40 +1,39 @@
 
 Namespace mojox
 
+
 Class ViewCell
+
 
 	Method New()
 	End
+
 
 	Method New( text:String,icon:Image=null )
 		_text=text
 		_icon=icon
 	End
+
 	
 	Property Text:String()
-		
 		Return _text
-		
 	Setter( text:String )
-		
 		_text=text
 		
 		OnModified()
 	End
+
 		
 	Property Icon:Image()
-		
 		Return _icon
-		
 	Setter( icon:Image )
-		
 		_icon=icon
 		
 		OnModified()
 	End
+
 	
 	Method Measure:Vec2i( style:Style ) Virtual
-	
 		Local size:=style.MeasureText( _text )
 		
 		If _icon
@@ -46,9 +45,9 @@ Class ViewCell
 		
 		Return size
 	End
+
 	
 	Method Render( canvas:Canvas,rect:Recti,style:Style,textGravity:Vec2f ) Virtual
-	
 		style.Render( canvas,rect )
 		
 		rect-=style.Bounds
@@ -61,16 +60,16 @@ Class ViewCell
 
 		style.DrawText( canvas,_text,rect,textGravity )
 	End
+
 	
-	Protected
+Protected
+
 	
 	Method OnModified() Virtual
 	End
-		
-	Private
-	
+
+Private
+
 	Field _text:String
-	
 	Field _icon:Image
-	
 End

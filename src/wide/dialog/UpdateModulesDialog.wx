@@ -1,10 +1,11 @@
-
 Namespace wide
 
+
+
 Class UpdateModulesDialog Extends DialogExt
+
 	
-	Method New( targets:StringStack,selectedTargets:String,selectedModules:String,configs:String,clean:Bool )
-		
+	Method New( targets:StringStack, selectedTargets:String, selectedModules:String, configs:String, clean:Bool )
 		_modsNames.Clear()
 		GetModulesNames( _modsNames )
 		
@@ -40,7 +41,6 @@ Class UpdateModulesDialog Extends DialogExt
 		table.Rows=(_modsNames.Length/cols)+1
 		Local r:=0,c:=0,i:=0
 		For Local m:=Eachin _modsNames
-		
 			r=i/cols
 			c=i Mod cols
 			i+=1
@@ -88,7 +88,6 @@ Class UpdateModulesDialog Extends DialogExt
 		
 		Local actUpdate:=New Action( "Update" )
 		actUpdate.Triggered+=Lambda()
-			
 			If Not SelectedModules
 				ShowMessage( "","Please, select at least one module to update." )
 				Return
@@ -114,12 +113,12 @@ Class UpdateModulesDialog Extends DialogExt
 		
 		ContentView=dock
 		
-		SetKeyAction( Key.Enter,actUpdate )
-		SetKeyAction( Key.Escape,actCancel )
+		SetKeyAction( Key.Enter, actUpdate )
+		SetKeyAction( Key.Escape, actCancel )
 	End
+
 	
 	Property SelectedModules:String()
-		
 		Local out:=""
 		Local list:=_modulesViews
 		For Local v:=Eachin list
@@ -128,9 +127,9 @@ Class UpdateModulesDialog Extends DialogExt
 		Next
 		Return out
 	End
+
 	
 	Property SelectedTargets:StringStack()
-	
 		Local out:=New StringStack
 		Local list:=_targetsViews
 		For Local v:=Eachin list
@@ -139,9 +138,9 @@ Class UpdateModulesDialog Extends DialogExt
 		Next
 		Return out
 	End
+
 	
 	Property SelectedConfigs:String()
-	
 		Local out:=""
 		If _releaseView.Checked Then out="release"
 		If _debugView.Checked
@@ -150,45 +149,29 @@ Class UpdateModulesDialog Extends DialogExt
 		Endif
 		Return out
 	End
+
 	
 	Property NeedClean:Bool()
-	
 		Return _cleanView.Checked
 	End
 	
-	#rem MARK WAS HERE!!!!!
 	
-	EnumModules code lifted from wake.wx
+Private
+	Field _modulesViews:=New Stack<CheckButton>
+	Field _targetsViews:=New Stack<CheckButton>
+	Field _releaseView:CheckButton,_debugView:CheckButton
+	Field _cleanView:CheckButton
 	
-	This sorts modules into dependancy order.
-	
-	#end
-	Function EnumModules( out:StringStack,cur:String,src:String,deps:StringMap<StringStack> )
-		
-		If Not deps.Contains( cur )
-'			Print "Can't find module dependancy '"+cur+"' - check module.json file for '"+src+"'"
-			Return
-		End
-		
-		If out.Contains( cur ) Return
+	Global _modsNames:=New StringStack
+	global moduleFolders:StringMap<StringStack>
 
-		For Local dep:=Eachin deps[cur]
-			EnumModules( out,dep,cur,deps )
-		Next
-		
-		out.Push( cur )
-	End
-	
-	Function EnumModules:String[]()
-	
+
+	function GetFolders()
 		LoadEnv()
 		
-		Local mods:=New StringMap<StringStack>
-		
+		moduleFolders = New StringMap<StringStack>
 		For Local moddir:=Eachin ModuleDirs
-	
 			For Local f:=Eachin LoadDir( moddir )
-			
 				Local dir:=moddir+f+"/"
 				If GetFileType( dir )<>FileType.Directory Continue
 				
@@ -214,30 +197,79 @@ Class UpdateModulesDialog Extends DialogExt
 					Next
 				Endif
 				
-				mods[name]=deps
+				moduleFolders[name]=deps
 			Next
 		Next
-				
+	End Function
+	
+	
+	#rem MARK WAS HERE!!!!!
+	EnumModules code lifted from wake.wx
+	This sorts modules into dependancy order.
+	#end
+	Function EnumSubModules( input:StringStack, out:StringStack, cur:String, src:String, deps:StringMap<StringStack> )
+		If Not deps.Contains( cur )
+'			Print "Can't find module dependancy '"+cur+"' - check module.json file for '"+src+"'"
+			Return
+		End
+		
+		If input.Contains( cur ) Return
+		If out.Contains( cur ) Return
+		
+'		If src = "" Then
+'			Print "module:"+cur
+'		End If
+		
+		out.Push( cur )
+
+		For Local dep:=Eachin deps[cur]
+'			Print "  "+dep
+			EnumSubModules( input, out, dep, cur, deps )
+		Next
+	End
+
+
+	Function EnumModules:String[]( input:StringStack )
 		Local out:=New StringStack
-		For Local cur:=Eachin mods.Keys
-			EnumModules( out,cur,"",mods )
+		For Local cur:string = Eachin moduleFolders.Keys
+			EnumSubModules( input, out, cur, "", moduleFolders )
 		Next
 		
 		Return out.ToArray()
 	End
-	
-	Function GetModulesNames( out:StringStack )
+
+
+	Function AddSubModule( out:StringStack, cur:String, src:String, deps:StringMap<StringStack> )
+		If Not deps.Contains( cur )
+'			Print "Can't find module dependancy '"+cur+"' - check module.json file for '"+src+"'"
+			Return
+		End
 		
-		out.AddAll( EnumModules() )
+		If out.Contains( cur ) Return
+		
+		out.Push( cur )
 	End
 
-	Private
-	
-	Field _modulesViews:=New Stack<CheckButton>
-	Field _targetsViews:=New Stack<CheckButton>
-	Field _releaseView:CheckButton,_debugView:CheckButton
-	Field _cleanView:CheckButton
-	
-	Global _modsNames:=New StringStack
-	
+
+	Function ParseModule:String[]( module:string )
+		Local out:=New StringStack
+		For Local cur:string = Eachin moduleFolders.Keys
+			If cur = module Then
+				AddSubModule( out, cur, "", moduleFolders )
+			End If
+		Next
+		
+		Return out.ToArray()
+	End
+
+
+	Function GetModulesNames( out:StringStack )
+		GetFolders()
+		
+		out.AddAll( ParseModule( "wonkey" ) )
+		out.AddAll( ParseModule( "std" ) )
+		out.AddAll( ParseModule( "mojo" ) )
+		out.AddAll( EnumModules( out ) )
+	End
+
 End

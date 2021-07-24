@@ -1,0 +1,751 @@
+Namespace MiniRa
+Using MiniRa
+
+
+Class Point2D
+	field _h:int
+	field _v:int
+
+	method New( hh:int, vv:int )
+		_h = hh
+		_v = vv
+	End method
+
+	method new()
+		_h = 0
+		_v = 0
+	End method
+End class
+
+
+Class Point3D
+	field _x:double
+	field _y:double
+	field _z:double
+
+	field _h:int
+	field _v:int
+	
+	field _visible:bool
+
+	method New( xx:double, yy:double, zz:double )
+		_x = xx
+		_y = yy
+		_z = zz
+
+		_h = 0
+		_v = 0
+		
+		_visible = true
+	End method
+
+	method New()
+		_x = 0
+		_y = 0
+		_z = 0
+
+		_h = 0
+		_v = 0
+		
+		_visible = True
+	End method
+End class
+
+
+Class Screen
+	field _center:Point2D
+	field _size:Point2D
+
+	field _ratio:float
+	field _ratioh:float
+	field _ratiov:float
+	
+	field _x:int
+	field _y:int
+	field _w:int
+	field _h:int
+
+	
+	method New( x:float, y:float, w:float, h:float )
+		_x = x
+		_y = y
+		_w = w
+		_h = h
+		
+		_center = new Point2D( x + w * 0.5, y + h * 0.5 )
+		_size = new Point2D( w, h )
+		
+		_ratio = float(w) / h
+
+		_ratioh = 2 / w
+		_ratiov = (2 / _ratio) / h
+	End method
+End Class
+
+
+Class srCamera
+	field _from:Point3D
+	field _to:Point3D
+	field _normal:Point3D
+	field _up:Point3D
+	field _length:float
+	field _angleh:double
+	field _anglev:double
+	field _zoom:double
+	field _front:double
+	field _back:double
+	field _projection:short
+	
+	field _orbitXAngle:float = 0
+	field _orbitZAngle:float = 0
+
+
+	method New()
+		_from = new Point3D( 0, -5, 0 )
+		_to = New Point3D( 0, 5, 0 )
+		_normal = New Point3D( 0, 0, 0 )
+		SetLength()
+
+		Init()
+	End method
+
+
+	method New(xp:float, yp:float, zp:float, xe:float,  ye:float, ze:float )
+		_from = New Point3D( xp, yp, zp )
+		_to = New Point3D( xe, ye, ze )
+		_normal = New Point3D( 0, 0, 0 )
+		SetLength()
+
+		Init()
+	End method
+
+	
+	property Zoom:float()
+		Return _zoom
+	Setter( zoom:float )
+		_zoom = zoom
+	End
+
+
+	method SetLength()
+'		_normal._x = _to._x - _from._x
+'		_normal._y = _to._y - _from._y
+'		_normal._z = _to._z - _from._z
+		_normal._x = _from._x - _to._x
+		_normal._y = _from._y - _to._y
+		_normal._z = _from._z - _to._z
+		_length = Length( _normal._x, _normal._y, _normal._z )
+		
+		_normal._x /= _length
+		_normal._y /= _length
+		_normal._z /= _length
+'		print _normal._x+" "+_normal._y+" "+_normal._z
+	End method
+
+
+	method Init()
+		_up = new Point3D( 0, 0, 1 )
+		_angleh = 30.0
+		_anglev = 30.0
+		_zoom = 1.0
+		_front = 1.0
+		_back = 200.0
+		_projection = 0
+	End method
+
+
+	method Eye( x:float, y:float, z:float )
+		_to._x = x
+		_to._y = y
+		_to._z = z
+		SetLength()
+	End method
+
+	
+	method Position( x:float, y:float, z:float )
+		_from._x = x
+		_from._y = y
+		_from._z = z
+		SetLength()
+	End method
+
+
+	method OrbitZ( angle:float )
+		_from._x = _to._x + Sin( angle ) * _length
+		_from._y = _to._y + Cos( angle ) * _length
+		SetLength()
+	End method
+
+	
+	method RotateZ( angle:float )
+		_to._x = _from._x + Sin( angle ) * _length
+		_to._y = _from._y + Cos( angle ) * _length
+		SetLength()
+	End method
+
+
+	method RotateY( angle:float )
+		_to._x = _from._x + Sin( angle ) * _length
+		_to._y = _from._y + Cos( angle ) * _length
+		SetLength()
+	End method
+
+
+	method OrbitX( angle:float )
+		_from._z = _to._z + Cos( angle ) * _length
+		_from._y = _to._y + Sin( angle ) * _length
+		SetLength()
+	End method
+
+	
+	method Orbit( x:float, y:float, z:float, angleX:float, angleZ:float, dist:float = 10 )
+		_orbitXAngle = Clamp( _orbitXAngle + angleX, -1.55, 1.55 )
+'		Print _orbitXAngle
+		local sn:float = Sin( _orbitXAngle ) * dist
+		local cs:float = Cos( _orbitXAngle ) * dist
+		_from._y = y + cs
+		_from._z = z + sn
+		
+''		Print x+" "+y+" "+z+"    "+angleX+" "+angleZ+"   "+dist+"   "+sn+" "+cs
+
+		_orbitZAngle += angleZ
+		_from._x = x + Cos( _orbitZAngle ) * cs
+		_from._y = y + Sin( _orbitZAngle ) * cs
+		SetLength()
+	End method
+
+
+	method OrbitTo( x:float, y:float, z:float, angleX:float, angleZ:float, dist:float = 10 )
+		_orbitXAngle = Clamp( angleX, -1.55, 1.55 )
+'		Print _orbitXAngle
+		local sn:float = Sin( _orbitXAngle ) * dist
+		local cs:float = Cos( _orbitXAngle ) * dist
+		_from._y = y + cs
+		_from._z = z + sn
+		
+''		Print x+" "+y+" "+z+"    "+angleX+" "+angleZ+"   "+dist+"   "+sn+" "+cs
+
+		_orbitZAngle = angleZ
+		_from._x = x + Cos( _orbitZAngle ) * cs
+		_from._y = y + Sin( _orbitZAngle ) * cs
+		SetLength()
+	End method
+
+
+	method MoveTo( x:float, y:float, z:float )
+		local xx:float = _to._x - _from._x
+		local yy:float = _to._y - _from._y
+		local zz:float = _to._z - _from._z
+		
+		_from._x = x
+		_from._y = y
+		_from._z = z
+		
+		_to._x = x + xx
+		_to._y = y + yy
+		_to._z = z + zz
+	End method
+
+
+	method Set( x:float, y:float, z:float, xeye:float, yeye:float, zeye:float )
+		_from._x = x
+		_from._y = y
+		_from._z = z
+		
+		_to._x = xeye
+		_to._y = yeye
+		_to._z = zeye
+		SetLength()
+	End method
+
+
+	method DrawTop( canvas:Canvas, x:float, y:float, w:float, h:float, scale:float, mdx:float = 0.5, mdy:float = 0.5 )
+		local mx:float = x + w * mdx
+		local my:float = y + h * mdy
+
+		local xpos:float = mx + _from._x * scale
+		local ypos:float = my - _from._y * scale
+		local xeye:float = mx + _to._x * scale
+		local yeye:float = my - _to._y * scale
+		
+		canvas.Color = Color.Sky
+		canvas.DrawLine( xpos, ypos, xeye, yeye )
+		canvas.DrawFrameSquare( xpos, ypos, 3 )
+		canvas.DrawTarget( xpos, ypos, 3, 8 )
+		canvas.DrawFrameSquare( xeye, yeye, 2 )
+'		canvas.DrawTarget( xeye, yeye, 3, 6 )
+	End method
+End Class
+
+
+Class Projection
+	field _origin:Point3D
+	field _e1:Point3D
+	field _e2:Point3D
+	field _n1:Point3D
+	field _n2:Point3D
+	field _light:Point3D
+	field _camera:srCamera
+	field _screen:Screen
+	field _tanthetah:double
+	field _tanthetav:double
+	field _basisa:Point3D
+	field _basisb:Point3D
+	field _basisc:Point3D
+	field EPSILON:double
+	field DTOR:double
+	field DTOR2:double
+	field _p1:Point2D
+	field _p2:Point2D
+
+	
+	method New( x:int, y:int, w:int, h:int )
+		Init( x, y, w, h )
+	End method
+
+	
+	method Init( x:int, y:int, w:int, h:int )
+'		Print "projection Init:"+x+" "+y+" "+w+" "+h
+		EPSILON = 0.001
+		DTOR = 0.01745329252
+		_camera = new srCamera( 0, 3, 0,  0, 0, 0 )
+		_screen = new Screen( x, y, w, h )
+		DTOR2 = DTOR * 0.5 * _screen._ratio
+		_light = new Point3D()
+		_origin = new Point3D()
+		_basisa = new Point3D()
+		_basisb = new Point3D()
+		_basisc = new Point3D()
+		_p1 = new Point2D()
+		_p2 = new Point2D()
+		
+		_e1 = new Point3D()
+		_e2 = new Point3D()
+		_n1 = new Point3D()
+		_n2 = new Point3D()
+
+		if Not CameraInit() Then
+			Print "Error in initializing camera"
+		End If
+
+		CameraOrbit( Pi*0.25, -Pi * 0.25 ) 'up, round
+	End method
+
+
+	property Camera:srCamera()
+		Return _camera
+	Setter( camera:srCamera )
+		_camera = camera
+		CameraInit()
+	End
+
+
+	property CameraX:float()
+		Return _camera._from._x
+	Setter( cameraX:float )
+		_camera._from._x = cameraX
+		CameraInit()
+	End
+
+
+	property CameraY:float()
+		Return _camera._from._y
+	Setter( cameraY:float )
+		_camera._from._y = cameraY
+		CameraInit()
+	End
+
+
+	property CameraZ:float()
+		Return _camera._from._z
+	Setter( cameraZ:float )
+		_camera._from._z = cameraZ
+		CameraInit()
+	End
+
+	
+	property EyeX:float()
+		Return _camera._to._x
+	Setter( eyeX:float )
+		_camera._from._x = eyeX
+		CameraInit()
+	End
+
+
+	property EyeY:float()
+		Return _camera._to._y
+	Setter( eyeY:float )
+		_camera._to._y = eyeY
+		CameraInit()
+	End
+
+
+	property EyeZ:float()
+		Return _camera._to._z
+	Setter( eyeZ:float )
+		_camera._to._z = eyeZ
+		CameraInit()
+	End
+
+	
+	property CameraZoom:float()
+		Return _camera.Zoom
+	Setter( cameraZoom:float )
+		_camera.Zoom = Clamp( cameraZoom, 0.1, 100 )
+		CameraInit()
+	End
+
+
+	property CameraOrbitZ:float()
+		Return ATan2( _camera._from._x - _camera._to._x, _camera._from._y - _camera._to._y )
+	Setter( cameraOrbitZ:float )
+		_camera.OrbitZ( cameraOrbitZ )
+		CameraInit()
+	End
+
+
+	property CameraOrbitX:float()
+		Return ATan2( _camera._from._y - _camera._to._y, _camera._from._z - _camera._to._z )
+	Setter( cameraOrbitX:float )
+		_camera.OrbitX( cameraOrbitX )
+		CameraInit()
+	End
+
+
+	property CameraRotateZ:float()
+		Return ATan2( _camera._to._x - _camera._from._x, _camera._to._y - _camera._from._y )
+	Setter( cameraRotateZ:float )
+		_camera.RotateZ( cameraRotateZ )
+		CameraInit()
+	End
+
+
+	method CameraOrbit( angleX:float, angleZ:float )
+		_camera.Orbit( _camera._to._x, _camera._to._y, _camera._to._z, angleX, angleZ )
+		CameraInit()
+	End method
+
+
+	method CameraOrbitTo( angleX:float, angleZ:float )
+		_camera.OrbitTo( _camera._to._x, _camera._to._y, _camera._to._z, angleX, angleZ )
+		CameraInit()
+	End method
+
+
+	method CameraSet( x:float, y:float, z:float, xeye:float, yeye:float, zeye:float )
+		_camera.Set( x, y, z, xeye, yeye, zeye )
+		CameraInit()
+	End method
+
+
+	method CameraPosition( x:float, y:float, z:float )
+		_camera.Position( x, y, z )
+		CameraInit()
+	End method
+
+
+	method CameraMoveTo( x:float, y:float, z:float )
+		_camera.MoveTo( x, y, z )
+		CameraInit()
+	End method
+
+
+	method CameraEye( x:float, y:float, z:float )
+		_camera.Eye( x, y, z )
+		CameraInit()
+	End method
+
+
+	method Trans_Point:bool( w1:Point3D )
+		Trans_World2Eye( w1, _e1 )
+
+		Trans_Visible( _e1 )
+'		If _e1._visible Then Print "ok"
+		
+		Trans_Eye2Norm( _e1, _n1 )
+		Trans_Norm2Screen( _n1, _p1 )
+		Return _e1._visible
+	End method
+
+
+'protected
+	method CameraInit:bool()
+		'/* Is the camera position and view vector coincident ? */
+		if EqualVertex( _camera._to, _camera._from ) Then
+			return False
+		End If
+
+		'/* Is there a legal camera up vector ? */
+		if EqualVertex( _camera._up, _origin ) Then
+			return False
+		End If
+
+		_basisb._x = _camera._to._x - _camera._from._x
+		_basisb._y = _camera._to._y - _camera._from._y
+		_basisb._z = _camera._to._z - _camera._from._z
+		Normalise( _basisb )
+
+		_basisa = CrossProduct( _camera._up, _basisb )
+		Normalise( _basisa )
+
+		'/* Are the up vector and view direction colinear */
+		if EqualVertex( _basisa, _origin ) Then
+			return False
+		End If
+
+		_basisc = CrossProduct( _basisb, _basisa )
+
+		'/* Do we have legal camera apertures ? */
+		if _camera._angleh < EPSILON or _camera._anglev < EPSILON Then
+			return false
+		End If
+
+		'/* Calculate camera aperture statics, note: angles in degrees */
+		_tanthetah = Tan( _camera._angleh * DTOR2 )
+		_tanthetav = Tan( _camera._anglev * DTOR2 )
+
+		'/* Do we have a legal camera zoom ? */
+		if _camera._zoom < EPSILON Then
+			return False
+		End if
+
+		'/* Are the clipping planes legal ? */
+		if _camera._front < 0 or _camera._back < 0 or _camera._back <= _camera._front Then
+			return False
+		End If
+
+		return True
+	End method
+
+
+	method Trans_World2Eye( w:Point3D,  e:Point3D )
+		'/* Translate world so that the camera is at the origin */
+		w._x -= _camera._from._x
+		w._y -= _camera._from._y
+		w._z -= _camera._from._z
+		
+		'/* Convert to eye coordinates using basis vectors */
+		e._x = w._x * _basisa._x + w._y * _basisa._y + w._z * _basisa._z
+		e._y = w._x * _basisb._x + w._y * _basisb._y + w._z * _basisb._z
+		e._z = w._x * _basisc._x + w._y * _basisc._y + w._z * _basisc._z
+	End method
+
+
+	method Trans_ClipEye:bool( e1:Point3D, e2:Point3D )
+		local mu:double
+
+		'/* Is the vector totally in front of the front cutting plane ? */
+		if e1._y <= _camera._front And e2._y <= _camera._front Then
+			return False
+		End If
+
+		'/* Is the vector totally behind the back cutting plane ? */
+		if e1._y >= _camera._back And e2._y >= _camera._back Then
+			Return False
+		End If
+
+		'/* Is the vector partly in front of the front cutting plane ? */
+		if (e1._y < _camera._front And e2._y > _camera._front) or (e1._y > _camera._front And e2._y < _camera._front) then
+			mu = (_camera._front - e1._y) / (e2._y - e1._y)
+			if e1._y < _camera._front Then
+				e1._x = e1._x + mu * (e2._x - e1._x)
+				e1._z = e1._z + mu * (e2._z - e1._z)
+				e1._y = _camera._front
+			Else
+				e2._x = e1._x + mu * (e2._x - e1._x)
+				e2._z = e1._z + mu * (e2._z - e1._z)
+				e2._y = _camera._front
+			End If
+		End If
+		
+		'/* Is the vector partly behind the back cutting plane ? */
+		if (e1._y < _camera._back And e2._y > _camera._back) or (e1._y > _camera._back And e2._y < _camera._back) Then
+			mu = (_camera._back - e1._y) / (e2._y - e1._y)
+			if e1._y < _camera._back Then
+				e2._x = e1._x + mu * (e2._x - e1._x)
+				e2._z = e1._z + mu * (e2._z - e1._z)
+				e2._y = _camera._back
+			Else
+				e1._x = e1._x + mu * (e2._x - e1._x)
+				e1._z = e1._z + mu * (e2._z - e1._z)
+				e1._y = _camera._back
+			End If
+		End If
+
+		return true
+	End method
+	
+	
+	method Trans_Eye2Norm( e:Point3D, n:Point3D )
+		local d:double
+
+		if _camera._projection = 0 Then
+			d = _camera._zoom / e._y
+			n._x = d * e._x / _tanthetah
+			n._y = e._y
+			n._z = d * e._z / _tanthetav
+		Else
+			n._x = _camera._zoom * e._x / _tanthetah
+			n._y = e._y
+			n._z = _camera._zoom * e._z / _tanthetav
+		End If
+	End method
+
+	
+	method Trans_ClipNorm:bool( n1:Point3D, n2:Point3D )
+		local mu:double
+
+		'/* Is the line segment totally right of x = 1 ? */
+		if n1._x >= 1 And n2._x >= 1 Then
+			return False
+		End If
+
+		'/* Is the line segment totally left of x = -1 ? */
+		if n1._x <= -1 And n2._x <= -1 Then
+			return False
+		End If
+
+		'/* Does the vector cross x = 1 ? */
+		if (n1._x > 1 And n2._x < 1) or (n1._x < 1 And n2._x > 1) Then
+			mu = (1 - n1._x) / (n2._x - n1._x)
+			if n1._x < 1 Then
+				n2._z = n1._z + mu * (n2._z - n1._z)
+				n2._x = 1
+			Else
+				n1._z = n1._z + mu * (n2._z - n1._z)
+				n1._x = 1
+			End If
+		End If
+
+		'/* Does the vector cross x = -1 ? */
+		if (n1._x < -1 and n2._x > -1) or (n1._x > -1 and n2._x < -1) Then
+			mu = (-1 - n1._x) / (n2._x - n1._x)
+			if n1._x > -1 Then
+				n2._z = n1._z + mu * (n2._z - n1._z)
+				n2._x = -1
+			Else
+				n1._z = n1._z + mu * (n2._z - n1._z)
+				n1._x = -1
+			End If
+		End If
+
+		'/* Is the line segment totally above z = 1 ? */
+		if n1._z >= 1 And n2._z >= 1 Then
+			return False
+		End If
+
+		'/* Is the line segment totally below z = -1 ? */
+		if n1._z <= -1 And n2._z <= -1 Then
+			return False
+		End If
+
+		'/* Does the vector cross z = 1 ? */
+		if (n1._z > 1 and n2._z < 1) or (n1._z < 1 And n2._z > 1) Then
+			mu = (1 - n1._z) / (n2._z - n1._z)
+			if (n1._z < 1) Then
+				n2._x = n1._x + mu * (n2._x - n1._x)
+				n2._z = 1
+			Else
+				n1._x = n1._x + mu * (n2._x - n1._x)
+				n1._z = 1
+			End If
+		End If
+
+		'/* Does the vector cross z = -1 ? */
+		if (n1._z < -1 and n2._z > -1) or (n1._z > -1 And n2._z < -1) Then
+			mu = (-1 - n1._z) / (n2._z - n1._z)
+			if (n1._z > -1) Then
+				n2._x = n1._x + mu * (n2._x - n1._x)
+				n2._z = -1
+			Else
+				n1._x = n1._x + mu * (n2._x - n1._x)
+				n1._z = -1
+			End If
+		End If
+		
+		Return True
+	End method
+
+
+	method Trans_Norm2Screen( norm:Point3D, projected:Point2D )
+		'//MessageBox.Show("the value of  are");
+'		projected._h = Int(_screen._center._h - _screen._size._h * norm._x / 2)
+'		projected._v = Int(_screen._center._v - _screen._size._v * norm._z / 2)
+
+		'new corrected aspect ratio
+		projected._h = _screen._center._h - norm._x / _screen._ratioh
+		projected._v = _screen._center._v - norm._z / _screen._ratiov
+	End method
+
+
+	method Trans_Visible( e1:Point3D )
+		'/* Is the vector totally in front of the front cutting plane ? */
+'		Print e1._y+"   "+_camera._front+" "+_camera._back
+		if e1._y <= _camera._front Then
+			e1._visible = False
+			Return
+		End If
+
+		'/* Is the vector totally behind the back cutting plane ? */
+		if e1._y >= _camera._back Then
+			e1._visible = False
+			Return
+		End If
+		
+		e1._visible = True
+	End method
+
+
+	method Trans_Line:bool( w1:Point3D, w2:Point3D )
+		Trans_World2Eye( w1, _e1 )
+		Trans_World2Eye( w2, _e2 )
+		
+		if Trans_ClipEye( _e1, _e2 ) Then
+			Trans_Eye2Norm( _e1, _n1 )
+			Trans_Eye2Norm( _e2, _n2 )
+			if Trans_ClipNorm( _n1, _n2) Then
+				Trans_Norm2Screen( _n1, _p1 )
+				Trans_Norm2Screen( _n2, _p2 )
+				return True
+			End If
+		End If
+
+		return True
+	End method
+	
+
+	method Normalise( v:Point3D )
+		local length:double
+		length = Sqrt( v._x * v._x + v._y * v._y + v._z * v._z )
+		v._x /= length
+		v._y /= length
+		v._z /= length
+	End method
+
+	
+	method CrossProduct:Point3D( p1:Point3D, p2:Point3D )
+		local p3:Point3D
+		p3 = new Point3D( 0, 0, 0 )
+		
+		p3._x = p1._y * p2._z - p1._z * p2._y
+		p3._y = p1._z * p2._x - p1._x * p2._z
+		p3._z = p1._x * p2._y - p1._y * p2._x
+		return p3
+	End method
+	
+	
+	method EqualVertex:bool( p1:Point3D, p2:Point3D )
+		if Abs( p1._x - p2._x) > EPSILON Then
+			return False
+		End If
+		if Abs( p1._y - p2._y) > EPSILON Then
+			return False
+		End If
+		if Abs( p1._z - p2._z) > EPSILON Then
+			return False
+		End If
+		
+		Return True
+	End method
+End Class
+

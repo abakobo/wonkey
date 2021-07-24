@@ -2,78 +2,166 @@
 Namespace wide
 
 
+	Global _blankIcon:Image
+	Global _errorIcon:Image
+
+	Global _constructIcon:Image
+	Global _enumIcon:Image
+	Global _structIcon:Image
+	Global _interfaceIcon:Image
+
+	Global _lambdaIcon:Image
+
+	Global _methodIcon:Image
+	Global _functionIcon:Image
+	Global _propertyIcon:Image
+	Global _classIcon:Image
+	Global _classPrivateIcon:Image
+	Global _classProtectedIcon:Image
+	Global _globalIcon:Image
+	Global _constIcon:Image
+	Global _fieldIcon:Image
+	Global _localIcon:Image
+
+
 Class CodeGutterView Extends View
 
 	Method New( doc:CodeDocument )
-		
 		Style=GetStyle( "GutterView" )
 	
 		_doc=doc
 	End
+
 	
-	Protected
+Protected
 	
+
 	Method OnValidateStyle() Override
-	
-		Local font:=RenderStyle.Font
 		Local k:=App.Theme.Scale.x
 		
-		_width=font.TextWidth( "1234567" )+10*k
+		_width = RenderStyle.Font.TextWidth( "12345678" )+10*k
+		_width2 = RenderStyle.Font.TextWidth( "1234567" )+10*k
 
-		_size=New Vec2i( _width+8*k,0 )
+		_size = New Vec2i( _width+8*k,0 )
 	End
+
 	
 	Method OnMeasure:Vec2i() Override
-	
 		Return _size
 	End
+
 	
 	Method OnRender( canvas:Canvas ) Override
-		
+'		Print "OnRender gutter view"
 		_textView=_doc.CodeView
 		
 		Local cursorLine:=_textView.Document.FindLine( _textView.Cursor )
 		Local anchorLine:=_textView.Document.FindLine( _textView.Anchor )
 		
-		canvas.Color=RenderStyle.BackgroundColor
-		
+'		canvas.Color = RenderStyle.BackgroundColor
+		canvas.Color = GetNewColor( MainWindow._theme.Syntax[14], 0.05 )
 		canvas.DrawRect( Rect.X,Rect.Y,Rect.Width,Rect.Height )
 		
-		Local textColor:=RenderStyle.TextColor
-		
+'		Local textColor:Color = Color.Grey'RenderStyle.TextColor
+		local textColor:Color = MainWindow._theme.IDE[1] * 0.8
 		Local vrect:=_textView.VisibleRect
-		
 		Local firstLine:=_textView.LineAtPoint( vrect.TopLeft )
-		
 		Local lastLine:=_textView.LineAtPoint( vrect.BottomLeft )+1
 		
 		canvas.Translate( 0,-vrect.Top )
 		
-		If _errorIcon = Null Then _errorIcon=CodeItemIcons.GetIcon( "warning" )
+		If _errorIcon = Null Then
+			_errorIcon = CodeItemIcons.GetIcon( "warning" )
+
+			_blankIcon = CodeItemIcons.GetIcon( "blank" )
+
+			_constructIcon = CodeItemIcons.GetIcon( "constructor_public" )
+			_enumIcon = CodeItemIcons.GetIcon( "enum_public" )
+			_structIcon = CodeItemIcons.GetIcon( "struct_public" )
+			_interfaceIcon = CodeItemIcons.GetIcon( "interface" )
+
+			_lambdaIcon = CodeItemIcons.GetIcon( "lambda" )
+
+			_methodIcon = CodeItemIcons.GetIcon( "method_public" )
+			_functionIcon = CodeItemIcons.GetIcon( "function_public" )
+			_propertyIcon = CodeItemIcons.GetIcon( "property_public" )
+			_classIcon = CodeItemIcons.GetIcon( "class_public" )
+			_classPrivateIcon = CodeItemIcons.GetIcon( "class_private" )
+			_classProtectedIcon = CodeItemIcons.GetIcon( "class_protected" )
+			_globalIcon = CodeItemIcons.GetIcon( "global_public" )
+			_constIcon = CodeItemIcons.GetIcon( "const" )
+			_fieldIcon = CodeItemIcons.GetIcon( "field_public" )
+			_localIcon = CodeItemIcons.GetIcon( "local" )
+		End If
 		
-		canvas.Color=textColor
+		canvas.Color = textColor
 		
 		Local curFolding:=FindNearestFoldingAbove( firstLine-1 )
 		_folded.Clear()
 		
 		Local k:=App.Theme.Scale.x
+		Local xn:=_width2-8*k
+		Local xx:=_width-6*k
+
+		Local lineStr:string
 		
-		For Local i:=firstLine Until lastLine
-			
+		Local i:int
+		For i = firstLine Until lastLine
 			If Not _textView.IsLineVisible( i )
 				Continue
 			Endif
 			
 			Local rect:=_textView.LineRect( i )
-			Local xx:=_width-8*k
 			Local hcenter:=rect.Top+RenderStyle.Font.Height*.5
+
+			Local dx:=-2*k
+			canvas.Alpha=1
+			
+			If _methodIcon Then
+				lineStr =_doc.TextDocument.GetLine( i ).ToLower().TrimStart()
+				canvas.Color=Color.White
+				Select lineStr.Left(5)
+					Case "metho"
+						canvas.DrawImage( _methodIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+					Case "funct"
+						canvas.DrawImage( _functionIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+					Case "class"
+						canvas.DrawImage( _classIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+					Case "priva"
+						canvas.DrawImage( _classPrivateIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+					Case "prote"
+						canvas.DrawImage( _classProtectedIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+					Case "prope"
+						canvas.DrawImage( _propertyIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+					Case "struc"
+						canvas.DrawImage( _structIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+					Case "enum "
+						canvas.DrawImage( _enumIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+					Case "inter"
+						canvas.DrawImage( _interfaceIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+					Case "const"
+						If lineStr.Left(8) = "construc" Then
+							canvas.DrawImage( _constructIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+						Else
+							canvas.DrawImage( _constIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+						End If
+					Case "field"
+						canvas.DrawImage( _fieldIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+					Case "local"
+						canvas.DrawImage( _localIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+					Case "globa"
+						canvas.DrawImage( _globalIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+					Default
+						If lineStr.Find("lambda") > -1 Then
+							canvas.DrawImage( _lambdaIcon, xx+5*k+dx-_methodIcon.Width,hcenter-5*k-3)
+						End If
+				End Select
+			End If
+
 			' folding marks
-			'
 			Local folding:=_textView.GetFolding( i )
-			If folding
-				Local dx:=-2*k
+			If folding Then
 				canvas.Color=textColor
-				canvas.Alpha=1
 				canvas.DrawLine( xx+7*k+dx,hcenter,xx+7*k+7*k+dx,hcenter ) ' horiz line
 				If folding.folded
 					canvas.DrawLine( xx+10*k+dx,hcenter-4*k,xx+10*k+dx,hcenter-4*k+8*k ) ' vert line to make cross
@@ -90,6 +178,7 @@ Class CodeGutterView Extends View
 						canvas.Alpha=1
 					Endif
 				Endif
+				
 			Elseif curFolding
 				canvas.Color=textColor
 				canvas.Alpha=0.5
@@ -113,7 +202,6 @@ Class CodeGutterView Extends View
 			Endif
 			
 			' show dots between each 10th
-			'
 			Local drawDot:=Prefs.EditorShowEvery10LineNumber And ((i+1) Mod 10 <> 0)
 			drawDot=drawDot And Not (folding And folding.folded)
 			drawDot=drawDot And i<>cursorLine And i<>anchorLine
@@ -124,7 +212,6 @@ Class CodeGutterView Extends View
 			Endif
 			
 			' show error bubble
-			'
 			If _doc.HasErrors And _doc.HasErrorAt( i )
 				If _errorIcon <> Null
 					canvas.Color=Color.White
@@ -132,42 +219,68 @@ Class CodeGutterView Extends View
 					canvas.Color=textColor
 				Endif
 			Elseif Not drawDot
-				canvas.Color=(i=cursorLine Or i=anchorLine) ? textColor*1.125 Else textColor 'make selected line number little brighter
-				canvas.DrawText( i+1,xx,hcenter,1,.5 )
+				If i = cursorLine Or i = anchorLine Then
+					canvas.Alpha = 0.4
+					canvas.Color = RenderStyle.SkinColor
+					canvas.DrawRect( Rect.X, hcenter-RenderStyle.Font.Height*0.5, Rect.Width, RenderStyle.Font.Height )
+					canvas.Alpha = 1
+					canvas.Color = textColor*1.125
+				Else
+					canvas.Color = textColor
+				End If
+				
+				canvas.DrawText( i+1,xn-4,hcenter,1,.5 )
+
+'				If _methodIcon Then
+'					canvas.DrawImage( _errorIcon,xx-_methodIcon.Width,rect.Top )
+'				End If
+				
 			Endif
 			
 		Next
 		
 		canvas.Alpha=1
-		
 	End
-	
+
+
 	Method OnMouseEvent( event:MouseEvent ) Override
-		
-		If event.Type=EventType.MouseUp
+		Select event.Type
+			Case EventType.MouseDown
+				Local pos:= event.Location-New Vec2i( 0,4*App.Theme.Scale.y )
 			
-			Local pos:=event.Location-New Vec2i( 0,4*App.Theme.Scale.y )
-			If pos.x<_width-6*App.Theme.Scale.x Return
+				Local line:=_textView.LineAtPoint( pos+New Vec2i( 100,_textView.Scroll.y ) )
+				
+				If line = _textView.CursorLine And pos.x > _width-24*App.Theme.Scale.x Then
+					_textView.SelectBlock( line )
+				Else
+					_textView.GotoLine( line )
+				End If
+
+			Case EventType.MouseUp
+				Local pos:= event.Location-New Vec2i( 0,4*App.Theme.Scale.y )
+				If pos.x < _width-6*App.Theme.Scale.x Return
 			
-			Local line:=_textView.LineAtPoint( pos+New Vec2i( 100,_textView.Scroll.y ) )
+				Local line:=_textView.LineAtPoint( pos+New Vec2i( 100,_textView.Scroll.y ) )
 			
-			_textView.SwitchFolding( line,True )
+				_textView.SwitchFolding( line,True )
 		End
 	End
 	
 	
-	Private
+Private
+
 	
 	Field _width:Int
+	Field _width2:Int
 	Field _size:Vec2i
 	Field _textView:CodeDocumentView
 	Field _doc:CodeDocument
 	Field _folded:=New Stack<CodeTextView.Folding>
 	
-	Global _errorIcon:Image
+	
+
 	
 	Method FindNearestFoldingAbove:CodeTextView.Folding( line:Int )
-		
 		For Local i:=line To 0 Step -1
 			Local folding:=_textView.GetFolding( i )
 			If folding
@@ -184,7 +297,6 @@ End
 Class Canvas Extension
 	
 	Method DrawRectWire( x:Float,y:Float,w:Float,h:Float )
-		
 		Self.DrawLine( x,y,x+w,y )
 		Self.DrawLine( x+w,y,x+w,y+h )
 		Self.DrawLine( x+w,y+h,x,y+h )

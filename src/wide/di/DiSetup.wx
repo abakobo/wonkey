@@ -2,14 +2,32 @@
 Namespace wide
 
 ' place where all our types are created
-'
 Function SetupDiContainer()
-	
 	Di.Bind( Lambda:ExamplesView()
 		Return New ExamplesView(
 			Di.Resolve<DocumentManager>() )
 	End )
 	
+	Di.Bind( Lambda:AsciiView()
+		Return New AsciiView(
+			Di.Resolve<DocumentManager>() )
+	End )
+
+	Di.Bind( Lambda:AssetsView()
+		Return New AssetsView(
+			Di.Resolve<DocumentManager>() )
+	End )
+
+	Di.Bind( Lambda:LibraryView()
+		Return New LibraryView(
+			Di.Resolve<DocumentManager>() )
+	End )
+
+	Di.Bind( Lambda:ColorView()
+		Return New ColorView(
+			Di.Resolve<DocumentManager>() )
+	End )
+
 	Di.Bind( Lambda:DocsTabView()
 		Return New DocsTabView( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
 	End )
@@ -31,13 +49,13 @@ Function SetupDiContainer()
 	End )
 	
 	Di.Bind( Lambda:DebugView()
-		Return New DebugView( 
+		Return New DebugView(
 			Di.Resolve<DocumentManager>(),
 			Di.Resolve<OutputConsole>() )
 	End )
 	
 	Di.Bind( Lambda:BuildActions()
-		Return New BuildActions( 
+		Return New BuildActions(
 			Di.Resolve<DocumentManager>(),
 			Di.Resolve<BuildConsole>(),
 			Di.Resolve<DebugView>() )
@@ -66,36 +84,66 @@ End
 ' and we must works with interfaces
 '
 Class DocsTabView Extends TabViewExt
-	Method New( flags:TabViewFlags=TabViewFlags.DraggableTabs )
+	Method New( flags:TabViewFlags = TabViewFlags.DraggableTabs )
 		Super.New( flags )
 	End
 End
 
-Class DocBrowserView Extends DockingView
-	
+
+Class FindBrowserView Extends DockingView
 	Method New()
-		
 		Super.New()
 		
 		_propView=New DockingView
 		AddView( _propView,"bottom",200,True )
 	End
+
 	
 	Property PropertiesViewHeight:Int()
 		Return Int(GetViewSize( _propView ))
 	Setter( value:Int )
 		SetViewSize( _propView,value )
 	End
-	
+
+
 	Property PropertiesView:DockingView()
 		Return _propView
 	End
-	
-	Private
+
+Private
 	
 	Field _propView:DockingView
 	
 End
+
+
+Class DocBrowserView Extends DockingView
+	Method New()
+		Super.New()
+		
+		_propView = New DockingView
+		AddView( _propView, "bottom", 200, True )
+	End
+
+	
+	Property PropertiesViewHeight:Int()
+		Return Int(GetViewSize( _propView ))
+	Setter( value:Int )
+		SetViewSize( _propView,value )
+	End
+
+
+	Property PropertiesView:DockingView()
+		Return _propView
+	End
+
+
+Private
+	
+	Field _propView:DockingView
+	
+End
+
 
 
 Class BuildConsole Extends ConsoleExt

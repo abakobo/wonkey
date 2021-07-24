@@ -7,24 +7,25 @@ Namespace wide
 Class ConsoleExt Extends TextView
 	
 	Struct StdoutResult
-		
 		Field stdout:String
 		Field error:ErrorInfo
+
 		
-		Method New( stdout:String,error:ErrorInfo )
-			
-			Self.stdout=stdout
-			Self.error=error
+		Method New( stdout:String, error:ErrorInfo )
+			Self.stdout = stdout
+			Self.error = error
 		End
-		
 	End
+
 	
 	Field RequestJumpToFile:Void( path:String,line:Int )
+
 	
 	#rem wonkeydoc Invoked when the console finishes executing a process.
 	#end
 	Field Finished:Void( exitCode:Int )
 	
+
 	#rem wonkeydoc Creates a new console.
 	#end
 	Method New()
@@ -32,51 +33,44 @@ Class ConsoleExt Extends TextView
 		
 		ReadOnly=True
 	End
+
 	
 	#rem wonkeydoc True if the process is running.
 	#end
 	Property Running:Bool()
-
 		Return _running
 	End
+
 	
 	#rem wonkeydoc The process.
 	#end
 	Property Process:Process()
-
 		Return _process
 	End
+
 	
 	#rem wonkeydoc Process exit code.
-	
 	If the process is still running, -1 is returned.
-	
 	#end
 	Property ExitCode:Int()
-
 		If _process And Not _procOpen return _process.ExitCode
 
 		Return -1
 	End
+
 	
 	#rem wonkeydoc Runs a process.
-	
 	Returns true if the process was successfully started, else false.
-	
 	Process stdout is written to the console while the process is running.
-	
 	This method waits for the process to complete, so should always be called on a fiber.
-	
 	#end
 	Method Run:Bool( cmd:String )
-	
 		If Not Start( cmd )
 			Alert( "Failed to start process '"+cmd+"'" )
 			Return False
 		Endif
 		
 		Repeat
-		
 			Local result:=ReadStdoutWithErrors()
 			Local stdout:=result.stdout
 			If Not stdout Exit
@@ -87,13 +81,11 @@ Class ConsoleExt Extends TextView
 		Return True
 	End
 
+
 	#rem wonkeydoc Starts a process.
-	
 	Returns true if the process was successfully started, else false.
-	
 	#end	
 	Method Start:Bool( cmd:String )
-	
 		If _running Return False
 		
 		Local process:=New Process
@@ -104,7 +96,6 @@ Class ConsoleExt Extends TextView
 		End
 		
 		process.StdoutReady=Lambda()
-		
 			Local stdout:=process.ReadStdout()
 			
 			If Not stdout
@@ -128,7 +119,6 @@ Class ConsoleExt Extends TextView
 			Forever
 			
 			If _stdoutWaiting And Not _stdoutBuf.Empty _stdoutWaiting.Set( True )
-			
 		End
 		
 		If Not process.Start( cmd ) Return False
@@ -147,18 +137,14 @@ Class ConsoleExt Extends TextView
 		
 		Return True
 	End
+
 	
 	#rem wonkeydoc Reads process stdout.
-	
 	If an empty string is returned, the process has finished.
-	
 	This method may have to wait for stdout to become available, so should always be called on a fiber.
-	
 	#end
 	Method ReadStdout:String()
-	
 		While _stdoutBuf.Empty
-		
 			If Not _stdoutOpen
 				If _procOpen
 					_stdoutWaiting=New Future<Bool>
@@ -177,11 +163,10 @@ Class ConsoleExt Extends TextView
 		_linesRead+=1
 		Return out
 	End
+
 	
 	Method ReadStdoutWithErrors:StdoutResult()
-	
 		While _stdoutBuf.Empty
-	
 			If Not _stdoutOpen
 				If _procOpen
 					_stdoutWaiting=New Future<Bool>
@@ -201,35 +186,35 @@ Class ConsoleExt Extends TextView
 		_linesRead+=1
 		Return New StdoutResult( out,err )
 	End
+
 	
 	#rem wonkeydoc Writes to process stdin.
 	#end
 	Method WriteStdin( str:String )
-	
 		If Not _procOpen Return
 	
 		_process.WriteStdin( str )
 	End
+
 	
 	#rem wonkeydoc Terminates the process.
 	#end
 	Method Terminate()
-
 		If Not _procOpen Return
 		
 		_process.Terminate()
 	End
+
 	
 	#rem wonkeydoc Writes text to the console.
 	#end
 	Method Write( text:String )
-	
 		_lines.Add( text )
 		AddFiltered( text )
 	End
+
 	
 	Method SetFilter( value:String )
-	
 		If value = _filter Return
 		
 		_filter=value
@@ -240,116 +225,127 @@ Class ConsoleExt Extends TextView
 		
 		SelectText( Text.Length,Text.Length )
 	End
+
 	
 	Method ClearAll()
-		
 		Clear()
 		_lines.Clear()
 	End
+
 	
 	Property ProcessingRtChar:Bool()
-		
 		Return _processingRt
-		
 	Setter( value:Bool )
-		
 		_processingRt=value
 	End
 	
-	Protected
+Protected
+
 	
 	Method OnKeyEvent( event:KeyEvent ) Override
-	
-		If CanCopy And (event.Key = Key.C Or event.Key = Key.Insert) And event.Type = EventType.KeyDown And event.Modifiers & Modifier.Control
+'		If CanCopy And (event.Key = Key.C Or event.Key = Key.Insert) And event.Type = EventType.KeyDown And event.Modifiers & Modifier.Control
+'			Copy()
+'			Return
+'		Endif
 		
-			Copy()
-			Return
-		Endif
-		
-		If event.Type = EventType.KeyDown
-			
-			If event.Key = Key.PageUp
-			
-				Scroll-=New Vec2i( 0,VisibleRect.Height )
+		If event.Type = EventType.KeyDown Then
+			Select event.Key
+				Case Key.C, Key.Insert
+					If CanCopy And event.Modifiers & Modifier.Control Then
+						Copy()
+					End If
 				
-			Else If event.Key = Key.PageDown
-			
-				Scroll+=New Vec2i( 0,VisibleRect.Height )
+				Case Key.Up
+					
+				Case Key.Down
+					If Not _errors.Empty Then
+						Local err:ErrorInfo = GetNextError()
+						If err Then
+							RequestJumpToFile( err.path, err.line )
+							Return
+						Endif
+					Endif
+					event.Eat()
+					
+				Case Key.PageUp
+					Scroll-=New Vec2i( 0,VisibleRect.Height )
 				
-			Else If event.Modifiers & Modifier.Control
-				
-				If event.Key = Key.Home
-					SelectText( 0,0 )
-				Else If event.Key = Key.KeyEnd
-					SelectText( Text.Length,Text.Length )
-				Endif
-				
-			Endif
-		Endif
+				Case Key.PageDown
+					Scroll+=New Vec2i( 0,VisibleRect.Height )
+					
+				Case Key.Home
+					If event.Modifiers & Modifier.Control Then
+						SelectText( 0,0 )
+					End If
+				Case Key.KeyEnd
+					If event.Modifiers & Modifier.Control Then
+						SelectText( Text.Length,Text.Length )
+					End If
+			End Select
+		End if
 	
 		'Super.OnKeyEvent( event )
 	End
+
 	
 	Method OnContentMouseEvent( event:MouseEvent ) Override
-		
 		Select event.Type
-			
 			Case EventType.MouseClick
-				
-				If Not _errors.Empty
+				If Not _errors.Empty Then
 					Local err:=ErrorAt( CharAtPoint( event.Location ) )
-					If err
-						RequestJumpToFile( err.path,err.line )
+					If err Then
+						RequestJumpToFile( err.path, err.line )
 						Return
 					Endif
 				Endif
 				
 			Case EventType.MouseMove
-				
-				If Not _errors.Empty
+				If Not _errors.Empty Then
 					Local err:=ErrorAt( CharAtPoint( event.Location ) )
-					Mouse.Cursor=err ? MouseCursor.Hand Else MouseCursor.IBeam
+					Mouse.Cursor = err ? MouseCursor.Hand Else MouseCursor.IBeam
 				Endif
 			
 			Case EventType.MouseEnter
-				
-				Mouse.Cursor=MouseCursor.IBeam
+				Mouse.Cursor = MouseCursor.IBeam
 			
 			Case EventType.MouseLeave
-				
-				Mouse.Cursor=MouseCursor.Arrow
-				
+				Mouse.Cursor = MouseCursor.Arrow
 		End
 		
 		Super.OnContentMouseEvent( event )
-		
 	End
+
 	
+	Method OnRender( canvas:Canvas ) Override
+		canvas.Color = MainWindow._theme.IDE[0]
+		canvas.DrawRect( 0,0, Width, Height )
+
+		canvas.Color = MainWindow._theme.IDE[1]
+	End method
+
+
 	Method OnRenderLine( canvas:Canvas,line:Int ) Override
-	
 		Super.OnRenderLine( canvas,line )
 		
-		If _errors.Empty Return
+		If _errors.Empty Then Return
 		
-		Local err:=_errors[line]
-		If Not err Return
+		Local err := _errors[line]
+		If Not err Then Return
 		
-		Local text:=Document.Text
+		Local text := Document.Text
 		
-		For Local word:=Eachin WordIterator.ForLine( Self,line )
-		
-			If err.CheckRange( word.Index )
-				Local txt:=text.Slice( word.Index,word.Index+word.Length )
-				Local rect:=word.Rect
-				Local w:=RenderStyle.Font.TextWidth( txt )
-				canvas.DrawLine( rect.Left,rect.Bottom,rect.Left+w,rect.Bottom )
+		For Local word := Eachin WordIterator.ForLine( Self,line )
+			If err.CheckRange( word.Index ) Then
+				Local txt := text.Slice( word.Index, word.Index+word.Length )
+				Local rect := word.Rect
+				Local w := RenderStyle.Font.TextWidth( txt )
+				canvas.DrawLine( rect.Left, rect.Bottom, rect.Left+w, rect.Bottom )
 			Endif
 		Next
 	End
 	
 	
-	Private
-	
+Private
 	Field _lines:=New StringStack
 	Field _filter:=""
 	
@@ -367,8 +363,11 @@ Class ConsoleExt Extends TextView
 	Field _linesRead:Int
 	Field _processingRt:Bool
 	
-	Method UpdateRunning()
+	field _errorLineRef:int = -1
+	field _errorCount:int = -1
+
 	
+	Method UpdateRunning()
 		If Not _running Or _procOpen Or _stdoutOpen Return
 		
 		_running=False
@@ -378,17 +377,17 @@ Class ConsoleExt Extends TextView
 		If _stdoutWaiting _stdoutWaiting.Set( True )
 	End
 
+
 	Method AddFiltered( text:String )
-		
-		If Not _filter Or text.Find( _filter) <> -1
+		If Not _filter Or text.Find( _filter) <> -1 Then
 			Local cur:=Cursor,anc:=Anchor
 			Local sc:=Scroll
 			Local maxScroll:=LineRect(Document.NumLines-1).Bottom-VisibleRect.Height
 			Local atBottom:=Scroll.y>=maxScroll And cur=anc
 			
-			If _processingRt And text.StartsWith( "~r" )
+			If _processingRt And text.StartsWith( "~r" ) Then
 				Local line:=Document.NumLines-1,dl:=0
-				If Document.GetLine( line )=""
+				If Document.GetLine( line )="" Then
 					dl=-1
 				Endif
 				SelectText( Document.StartOfLine( line+dl ),Document.EndOfLine( line ) )
@@ -397,7 +396,7 @@ Class ConsoleExt Extends TextView
 				AppendText( text )
 			Endif
 			
-			If Not atBottom
+			If Not atBottom Then
 				SelectText( anc,cur )
 				Scroll=sc 'restore
 			Else
@@ -406,20 +405,21 @@ Class ConsoleExt Extends TextView
 			
 		Endif
 	End
+
 	
 	Method ProcessErrors:ErrorInfo( stdout:String )
-		
-		Local i:=stdout.Find( "] : Error : " )
-		If i<>-1
-			Local j:=stdout.Find( " [" )
-			If j<>-1
-				Local path:=stdout.Slice( 0,j )
-				Local line:=Int( stdout.Slice( j+2,i ) )-1
-				Local msg:=stdout.Slice( i+12 )
-				Local range:=New Vec2i( j+2+Text.Length,i+Text.Length )
+		Local i:int = stdout.Find( "]: error: " )
+		If i <> -1 Then
+			Local j := stdout.Find( " [" )
+			If j <> -1 Then
+				Local path := stdout.Slice( 0,j )
+				Local line:Int = Int( stdout.Slice( j+2,i ) )-1
+				Local msg := stdout.Slice( i+12 )
+				Local range:Vec2i = New Vec2i( j+2+Text.Length,i+Text.Length )
 				
-				Local error:=New ErrorInfo( path,line,msg,range )
-				_errors[_linesRead]=error
+				Local error:ErrorInfo = New ErrorInfo( path, line, msg, range )
+				_errors[_linesRead] = error
+				If _linesRead > _errorCount Then _errorCount = _linesRead
 				
 				Return error
 			Endif
@@ -427,41 +427,69 @@ Class ConsoleExt Extends TextView
 		
 		Return Null
 	End
+
 	
 	Method ErrorAt:ErrorInfo( charPosition:Int )
-		
-		Local line:=Document.FindLine( charPosition )
-		Local err:=_errors[line]
-		If err And charPosition>=err.clickRange.x And charPosition<=err.clickRange.y
+		_errorLineRef = Document.FindLine( charPosition )
+		Local err := _errors[_errorLineRef]
+		If err Then' And charPosition >= err.clickRange.x And charPosition <= err.clickRange.y Then
 			Return err
 		Endif
 		
+		_errorLineRef = -1
 		Return Null
 	End
+	
+	
+	method GetNextError:ErrorInfo()
+		If _errorLineRef = -1 Then
+			local found:int = -1
+			local k:int
+			For k = 0 To _errorCount
+				If found = -1 And _errors[k] Then
+					found = k
+				End If
+			Next
+			_errorLineRef = found
+		Else
+			_errorLineRef += 1
+		End If
+		
+'		Print _errorCount+"  "+_errorLineRef
+
+		Local err := _errors[_errorLineRef]
+		If err Then
+'			Print "found"
+			Return err
+		Endif
+		
+		_errorLineRef = -1
+		Return Null
+	End method
 	
 End
 
 
 Private
 
+
 Struct ErrorInfo
-	
 	Field path:String
 	Field line:Int
 	Field message:String
 	Field clickRange:Vec2i
+
 	
-	Method New( path:String,line:Int,msg:String,clickRange:Vec2i )
-		
-		Self.path=path
-		Self.line=line
-		Self.message=msg
-		Self.clickRange=clickRange
+	Method New( path:String, line:Int, msg:String, clickRange:Vec2i )
+		Self.path = path
+		Self.line = line
+		Self.message = msg
+		Self.clickRange = clickRange
 	End
+
 	
 	Method CheckRange:Bool( pos:Int )
-		
-		Return pos>=clickRange.x And pos<clickRange.y
+		Return pos >= clickRange.x And pos<clickRange.y
 	End
 	
 End

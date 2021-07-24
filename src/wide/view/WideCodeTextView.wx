@@ -2,10 +2,11 @@
 Namespace wide
 
 
+
 Class WideCodeTextView Extends CodeTextView
+
 	
 	Method New( doc:WideDocument )
-		
 		_document=doc
 		
 		AdjustFileType()
@@ -15,13 +16,11 @@ Class WideCodeTextView Extends CodeTextView
 			AdjustFileType()
 		End
 	End
+
 	
 	Property FileType:String() 'where else we can store this type?
-		
 		Return _type
-		
 	Setter( value:String )
-		
 		If value=_type Return
 		_type=value
 		Keywords=KeywordsManager.Get(_type)
@@ -29,15 +28,16 @@ Class WideCodeTextView Extends CodeTextView
 		Formatter=FormattersManager.Get(_type)
 		Document.TextHighlighter=Highlighter.Painter
 	End
+
 	
 	Property FilePath:String()
 		return _path
 	Setter(value:String)
 		_path = value
 	End
+
 	
 	Method LoadCode( path:String,type:String=".wx" )
-		
 		If Not type Then type=ExtractExt( path )
 		FileType=type
 		FilePath=path
@@ -45,18 +45,18 @@ Class WideCodeTextView Extends CodeTextView
 	End
 	
 	
-	Protected
+Protected
 	
 	Field _document:WideDocument
+
 	
 	Method AdjustFileType()
-		
 		FileType=_document.FileExtension
 		FilePath=_document.Path
 	End
+
 	
 	Method OnKeyEvent( event:KeyEvent ) Override
-	
 		TextViewKeyEventFilter.FilterKeyEvent( event,Self,FileType )
 		
 		If Not event.Eaten
@@ -64,9 +64,9 @@ Class WideCodeTextView Extends CodeTextView
 		Endif
 		
 	End
+
 	
-	Private
-	
+Private
 	Field _type:String
 	Field _path:String
 	

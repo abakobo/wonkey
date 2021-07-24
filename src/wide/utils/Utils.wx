@@ -3,21 +3,16 @@ Namespace wide
 
 
 Function OpenInExplorer( path:String )
-	
 #If __HOSTOS__="macos"
-
 	libc.system( "open ~q"+path+"~q" )
-	
 #Else
-
 	OpenUrl( path )
-
 #Endif
-
 End
 
+
+
 Function SwapCase:String( s:String )
-	
 	Local result:="",ss:String,lower:String
 	For Local i:=0 Until s.Length
 		ss=s.Slice( i,i+1 )
@@ -27,15 +22,15 @@ Function SwapCase:String( s:String )
 	Return result
 End
 
+
 Function IsLowercacedFirstChar:Bool( s:String )
-	
 	If Not s Return False
 	Local s1:=s.Slice( 0,1 )
 	Return s1 = s1.ToLower()
 End
 
-Function GetCaseSensitivePath:String( path:String )
 
+Function GetCaseSensitivePath:String( path:String )
 #If __HOSTOS__="windows"
 	Local dir:=ExtractDir( path )
 	Local items:=LoadDir( dir )
@@ -51,8 +46,8 @@ Function GetCaseSensitivePath:String( path:String )
 #Endif
 End
 
+
 Function GetShowInExplorerTitle:String()
-	
 #If __TARGET__="macos"
 	Return "Show in Finder"
 #Else
@@ -71,6 +66,7 @@ Class Utils Final
 		Return False
 	End
 
+
 	Function ValueAt<T>:T( list:List<T>,index:Int )
 		Local k:=0
 		For Local i:=Eachin list
@@ -79,42 +75,43 @@ Class Utils Final
 		End
 		Return Null
 	End
+
 	
 	Function RepeatInvoke<T>( func:T(),count:Int )
 		For Local k:=0 Until count
 			func()
 		Next
 	End
+
 	
 	Function GetIndent:Int( line:String )
-		
 		Local len:=line.Length,n:=0
 		While n < len And line[n] <= Chars.SPACE
 			n+=1
 		Wend
 		Return n
 	End
+
 	
 	Function GetIndentAsSpaces:Int( line:String )
-		
 		Local len:=line.Length,n:=0
 		While n < len And line[n] <= Chars.SPACE
 			n+=(line[n]=Chars.TAB) ? Prefs.EditorTabSize Else 1
 		Wend
 		Return n
 	End
+
 	
 	Function GetIndentStr:String( line:String )
 		Local n:=GetIndent( line )
 		Return  (n > 0) ? line.Slice( 0,n ) Else ""
 	End
+
 	
 	Function GetIndentBeforePos:String( line:String,pos:Int )
-	
 		Local n:=pos-1
 		
 		While n >= 0
-		
 			If line[n] = 46 'dot
 				' dot is valid full-ident part
 			ElseIf Not (IsIdent( line[n] ) Or line[n] = 35) '35 => #
@@ -128,6 +125,7 @@ Class Utils Final
 		
 		Return ident
 	End
+
 	
 	Function DrawRect( canvas:Canvas,rect:Rectf,fill:Bool )
 		If fill
@@ -139,7 +137,8 @@ Class Utils Final
 			canvas.DrawLine( rect.Left,rect.Top,rect.Left,rect.Bottom )
 		End
 	End
-	
+
+
 	Function RepeatStr:String( str:String,count:Int )
 		Local result:=""
 		For Local i:=0 Until count
@@ -147,19 +146,19 @@ Class Utils Final
 		Next
 		Return result
 	End
+
 	
 	Function GetAllFiles( rootDir:String,filterExts:String[],target:Stack<String>,idleAppEachN:Int=-1 )
-		
 		GetAllFilesInternal( rootDir,filterExts,target,idleAppEachN )
 	End
+
 	
 	#Rem wonkeydoc If 'any' is true - check at least one starts, else - check all.
 	#End
 	Function BatchStartsWith:Bool( text:String,values:String[],any:Bool )
-	
 		For Local i:=0 Until values.Length
 			Local ok:=text.StartsWith( values[i] )
-			If ok 
+			If ok
 				If any Return True
 			Else
 				If Not any Return False
@@ -168,12 +167,12 @@ Class Utils Final
 		
 		Return any ? False Else True
 	End
+
 	
 	Function BatchContains:Bool( text:String,values:String[],any:Bool )
-	
 		For Local i:=0 Until values.Length
 			Local ok:=text.Contains( values[i] )
-			If ok 
+			If ok
 				If any Return True
 			Else
 				If Not any Return False
@@ -182,12 +181,12 @@ Class Utils Final
 	
 		Return any ? False Else True
 	End
+
 	
 	#Rem wonkeydoc 
 	@return arr[2] or null, arr[0] - position of first found match or -1 if not found, arr[1] - index of matched value from values array
 	#End
 	Function FindAny:Int[]( text:String,values:String[] )
-	
 		For Local i:=0 Until values.Length
 			Local p:=text.Find( values[i] )
 			If p<>-1 Return New Int[](p,i)
@@ -195,6 +194,7 @@ Class Utils Final
 		
 		Return Null
 	End
+
 	
 	Function PrintLog<T>( items:List<T>,prefix:String="" )
 	
@@ -202,6 +202,7 @@ Class Utils Final
 			Print prefix+""+i
 		End
 	End
+
 	
 	Function PrintLog<T>( items:Stack<T>,prefix:String="" )
 	
@@ -211,16 +212,16 @@ Class Utils Final
 	End
 	
 	
-	Private
+Private
 	
 	Global _storedTabSize:=0,_spacesForTab:String
 	
 	
 	Method New()
 	End
+
 	
 	Function GetAllFilesInternal( dir:String,filterExts:String[],target:Stack<String>,idleAppEachN:Int=-1 )
-		
 		Local files:=LoadDir( dir )
 		Local ii:=0
 		For Local f:=Eachin files
@@ -239,18 +240,18 @@ Class Utils Final
 	
 End
 
+
 Function FileExists:Bool( path:String )
-	
 	Return GetFileType( path )=FileType.File
 End
 
+
 Function DirectoryExists:Bool( path:String )
-	
 	Return GetFileType( path )=FileType.Directory
 End
 
+
 Function FormatTime:String( millis:Long,format:String="{min} m {sec} s" )
-	
 	millis/=1000
 	Local mins:=millis/60
 	Local secs:=millis Mod 60
@@ -261,13 +262,16 @@ Function FormatTime:String( millis:Long,format:String="{min} m {sec} s" )
 	Return s
 End
 
-Function ShowMessage( title:String,msg:String,okButton:String="  OK  " )
 
-	Dialog.Run( title,New Label( msg ),New String[](okButton),0,0 )
+Function ShowMessage( title:String, msg:String, okButton:String="  OK  " )
+'	Dialog.Run( title,New Label( msg ),New String[](okButton),0,0 )
+
+	local img:Image = Image.Load( "asset::warning.png" )
+	Message( img, msg )
 End
 
+
 Function IsIdentStr:Bool( str:String,skipDots:Bool=True )
-	
 	If Not str Return False
 	
 	If IsDigit( str[0] ) Return False
@@ -285,15 +289,15 @@ Function IsIdentStr:Bool( str:String,skipDots:Bool=True )
 	Return True
 End
 
+
 Function TODO( message:String )
-	
 	Print "Not implemented yet: '"+message+"'"
 	DebugStop()
 	MainWindow.GainFocus()
 End
 
+
 Function DoInNotMainFiber( work:Void() )
-	
 	If Fiber.Current()=Fiber.Main()
 		New Fiber( work )
 	Else
@@ -301,8 +305,8 @@ Function DoInNotMainFiber( work:Void() )
 	End
 End
 
+
 Function GetOrCreate<T>:T( map:StringMap<T>,key:String )
-	
 	Local item:=map[key]
 	If Not item
 		item=New T
@@ -320,22 +324,21 @@ End
 Class Stack<T> Extension
 	
 	Method AddUnique( value:T )
-		
 		If Not Self.Contains( value ) Then Self.Add( value )
 	End
+
 	
 	Operator+=( item:T )
-		
 		Self.Add( item )
 	End
+
 	
 	Operator-=( item:T )
-	
 		Self.Remove( item )
 	End
+
 	
 	Operator+=( items:T[] )
-	
 		Self.AddAll( items )
 	End
 	
@@ -345,14 +348,13 @@ End
 Struct Recti Extension
 	
 	Method MoveTo( x:Int,y:Int )
-		
 		Local size:=Self.Size
 		Self.Origin=New Vec2i( x,y )
 		Self.Size=size
 	End
+
 	
 	Method MoveBy( dx:Int,dy:Int )
-	
 		Local size:=Self.Size
 		Self.Origin=Self.Origin+New Vec2i( dx,dy )
 		Self.Size=size
@@ -361,12 +363,11 @@ End
 
 
 Function TypeName<T>:String( obj:T ) Where T Extends Object
-	
 	Return obj ? String.FromCString( obj.typeName() ) Else Null
 End
 
+
 Function FindViewInHierarchy<T>:T( view:View ) Where T Extends View
-	
 	While view
 		Local r:=Cast<T>( view )
 		If r Return r
@@ -375,31 +376,28 @@ Function FindViewInHierarchy<T>:T( view:View ) Where T Extends View
 	Return Null
 End
 
+
 Function StripEnding:String( text:String,ends:String )
-	
 	Return text.EndsWith( ends ) ? text.Slice( 0,text.Length-ends.Length ) Else text
 End
 
+
 Function StripStarting:String( text:String,starts:String )
-	
 	Return text.StartsWith( starts ) ? text.Slice( starts.Length ) Else text
 End
 
 ' 
 Struct IdentInfo
-	
 	Field pos:Int
 	Field ident:String
 	Field isArray:Bool
-	
 End
+
 
 #Rem wonkeydocs Return ident and position in line where ident starts
 #End
 Function GetIndentBeforePos_Wx:IdentInfo( line:String,posInLine:Int,withDots:Bool,wholeWord:Bool=False )
-	
 	' grab whole word under cursor
-	'
 	If wholeWord
 		Local len:=line.Length
 		While posInLine < len And IsIdent( line[posInLine] )
@@ -410,7 +408,6 @@ Function GetIndentBeforePos_Wx:IdentInfo( line:String,posInLine:Int,withDots:Boo
 	Local n:=posInLine-1
 	
 	While n >= 0
-	
 		' array syntax: a[i]
 		If line[n]=Chars.CLOSED_SQUARE_BRACKET
 			Local cnt:=1
@@ -479,8 +476,8 @@ Function GetIndentBeforePos_Wx:IdentInfo( line:String,posInLine:Int,withDots:Boo
 	Return info
 End
 
-Function IsPosInsideOfQuotes_Wx:Bool( text:String,pos:Int )
 
+Function IsPosInsideOfQuotes_Wx:Bool( text:String,pos:Int )
 	Local i:=0
 	Local n:=text.Length
 	If pos=0 Return False
@@ -492,7 +489,7 @@ Function IsPosInsideOfQuotes_Wx:Bool( text:String,pos:Int )
 				Return False
 			Else 'inside
 				Return True
-			Endif 
+			Endif
 		Endif
 		If c = Chars.DOUBLE_QUOTE
 			quoteCounter+=1

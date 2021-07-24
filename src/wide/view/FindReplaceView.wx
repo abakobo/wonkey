@@ -8,20 +8,21 @@ Class FindReplaceView Extends DockingView
 		Find,
 		Replace
 	End
-	
+
+
+	Field RequestedFindInFiles:Void( opt:FindOptions )
 	Field RequestedFind:Void( opt:FindOptions )
 	Field RequestedReplace:Void( opt:FindOptions )
+
 	
 	Method New( actions:FindActions )
-		
 		Super.New()
 		
-		Style=GetStyle( "FindReplaceView","DockingView" )
+		Style = GetStyle( "FindReplaceView2", "DockingView" )
 		
 		Local mainDock:=New DockingView
 		
 		' FIND
-		'
 		Local findDock:=New DockingView
 		
 		Local what:=New Label( "Find:" )
@@ -63,37 +64,62 @@ Class FindReplaceView Extends DockingView
 		
 		Local act:=New Action( "Next >" )
 		act.Triggered+=Lambda()
-			
 			OnFindNext()
 		End
 		_buttonFindNext=New ToolButtonExt( act,GetActionTextWithShortcut( actions.findNext ) )
 		
 		act=New Action( "< Prev" )
 		act.Triggered+=Lambda()
-			
 			_options.Set( _editFind.Text,"",_chbCase.Checked,_chbWrap.Checked,False,_chbSel.Checked )
 			RequestedFind( _options )
 		End
 		_buttonFindPrev=New ToolButtonExt( act,GetActionTextWithShortcut( actions.findPrevious ) )
+
+		act=New Action( " In Project" )
+		act.Triggered += Lambda()
+			_options.Set( _editFind.Text,"",_chbCase.Checked,_chbWrap.Checked,False,_chbSel.Checked )
+			RequestedFindInFiles( _options )
+		End
+		_buttonFindInFiles = New ToolButton2Ext( act, GetActionTextWithShortcut( actions.findInFiles ) )
 		
-		dock.AddView( New SpacerView( 16,0 ),"left" )
-		dock.AddView( _buttonFindPrev,"left" )
-		dock.AddView( New SpacerView( 5,0 ),"left" )
-		dock.AddView( _buttonFindNext,"left" )
-		dock.AddView( New SpacerView( 5,0 ),"left" )
-		dock.AddView( _chbCase,"left" )
-		dock.AddView( New SpacerView( 5,0 ),"left" )
-		dock.AddView( _chbSel,"left" )
-		dock.AddView( New SpacerView( 5,0 ),"left" )
-		dock.AddView( _chbWrap,"left" )
+
+		act = New Action( "  Find", Null )
+		act.Triggered += Lambda()
+			_options.Set( _editFind.Text,"",_chbCase.Checked,_chbWrap.Checked,False,_chbSel.Checked )
+			RequestedFind( _options )
+		End
+		_buttonFind = New ToolButton2Ext( act, GetActionTextWithShortcut( actions.find ) )
+
+'		dock.ad.AddIconicButton(
+'			ThemeImages.Get( "outputbar/clean.png" ),
+'			Lambda()
+'				_outputConsole.ClearAll()
+'			End,
+'			"Search for the text" )
+
+		dock.AddView( New SpacerView( 20, 0 ),"left" )
+		dock.AddView( _buttonFind, "left" )
+
 		dock.AddView( New SpacerView( 10,0 ),"left" )
+		dock.AddView( _buttonFindInFiles,"left" )
+		dock.AddView( New SpacerView( 15, 0 ),"left" )
+'		dock.AddView( _buttonFindPrev,"left" )
+'		dock.AddView( New SpacerView( 5,0 ),"left" )
+'		dock.AddView( _buttonFindNext,"left" )
+'		dock.AddView( New SpacerView( 5,0 ),"left" )
+'		dock.AddView( _chbCase,"left" )
+'		dock.AddView( New SpacerView( 5,0 ),"left" )
+'		dock.AddView( _chbSel,"left" )
+'		dock.AddView( New SpacerView( 5,0 ),"left" )
+'		dock.AddView( _chbWrap,"left" )
+'		dock.AddView( New SpacerView( 10,0 ),"left" )
 		
 		' replace switcher
-		Local act2:=New Action( "R" )
+		Local act2:=New Action( "Show Replace" )
 		act2.Triggered=Lambda()
 			Mode = (_mode=Kind.Find) ? Kind.Replace Else Kind.Find
 		End
-		Local replSwitcher:=New ToolButtonExt( act2,"Show / hide replace panel" )
+		Local replSwitcher:=New ToolButton2Ext( act2,"Show / hide replace panel" )
 		dock.AddView( replSwitcher,"left" )
 		
 		' don't want to fix padding-right for TabClose style
@@ -109,7 +135,6 @@ Class FindReplaceView Extends DockingView
 		findDock.AddView( close,"right" )
 		
 		' REPLACE
-		'
 		_replaceDock=New DockingView
 		
 		Local with:=New Label( "Replace:" )
@@ -125,19 +150,17 @@ Class FindReplaceView Extends DockingView
 		
 		act=New Action( "Replace" )
 		act.Triggered+=Lambda()
-			
 			_options.Set( _editFind.Text,_editReplace.Text,_chbCase.Checked,_chbWrap.Checked,True,_chbSel.Checked )
 			RequestedReplace( _options )
 		End
-		_buttonReplace=New ToolButtonExt( act )
+		_buttonReplace=New ToolButton2Ext( act )
 		
 		act=New Action( "Replace all" )
 		act.Triggered+=Lambda()
-			
 			_options.Set( _editFind.Text,_editReplace.Text,_chbCase.Checked,_chbWrap.Checked,True,_chbSel.Checked,True )
 			RequestedReplace( _options )
 		End
-		_buttonReplaceAll=New ToolButtonExt( act )
+		_buttonReplaceAll=New ToolButton2Ext( act )
 		
 		dock.AddView( New SpacerView( 16,0 ),"left" )
 		dock.AddView( _buttonReplace,"left" )
@@ -152,6 +175,7 @@ Class FindReplaceView Extends DockingView
 		
 		Self.ContentView=mainDock
 	End
+
 	
 	Property Mode:Kind()
 		Return _mode
@@ -159,6 +183,7 @@ Class FindReplaceView Extends DockingView
 		_mode=value
 		_replaceDock.Visible=(_mode=Kind.Replace)
 	End
+
 	
 	Property FindText:String()
 		Return _editFind.Text
@@ -166,7 +191,8 @@ Class FindReplaceView Extends DockingView
 		_editFind.Text=value
 		_editFind.SelectAll()
 	End
-	
+
+
 	Property CodeView:CodeTextView()
 		Return _tv
 	Setter( value:CodeTextView )
@@ -181,16 +207,16 @@ Class FindReplaceView Extends DockingView
 			Endif
 		Endif
 	End
+
 	
 	Method Activate()
-		
 		MainWindow.UpdateWindow( False ) 'hack
 		_editFind.MakeKeyView()
 		_editFind.SelectAll()
 	End
 	
 	
-	Private
+Private
 	
 	Field _mode:Kind
 	Field _editFind:TextFieldExt
@@ -200,15 +226,16 @@ Class FindReplaceView Extends DockingView
 	Field _chbSel:CheckButton
 	Field _buttonFindNext:ToolButtonExt
 	Field _buttonFindPrev:ToolButtonExt
-	Field _buttonReplace:ToolButtonExt
-	Field _buttonReplaceAll:ToolButtonExt
+	Field _buttonFindInFiles:ToolButton2Ext
+	Field _buttonFind:ToolButton2Ext
+	Field _buttonReplace:ToolButton2Ext
+	Field _buttonReplaceAll:ToolButton2Ext
 	Field _replaceDock:DockingView
 	Field _tv:CodeTextView
 	
 	Field _options:=New FindOptions
 	
 	Method OnFindNext()
-		
 		_options.Set( _editFind.Text,"",_chbCase.Checked,_chbWrap.Checked,True,_chbSel.Checked )
 		RequestedFind( _options )
 	End
@@ -216,7 +243,6 @@ End
 
 
 Class FindOptions
-
 	Field findText:String
 	Field replaceText:String
 	Field caseSensitive:Bool
@@ -224,12 +250,13 @@ Class FindOptions
 	Field goNext:Bool
 	Field all:Bool
 	Field selectionOnly:Bool
+
 	
 	Method New()
 	End
+
 	
 	Method Set( find:String,replace:String,caseSens:Bool,wrap:Bool,goNext:Bool,selOnly:Bool,all:Bool=False )
-
 		findText=find
 		replaceText=replace
 		caseSensitive=caseSens

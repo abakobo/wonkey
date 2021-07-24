@@ -33,16 +33,16 @@ End
 
 
 Class CodeItem
-	
 	Field nspace:NSpace
 	Field isAlias:=False
+
 	
 	Method New( ident:String )
 		_ident=ident
 	End
+
 	
 	Function GetNonBlockParent:CodeItem( parent:CodeItem )
-	
 		Local par:=parent
 		While par And par.KindStr="block"
 			par=par.Parent
@@ -50,9 +50,9 @@ Class CodeItem
 		
 		Return par
 	End
+
 	
 	Function GetNonFieldParent:CodeItem( parent:CodeItem )
-	
 		Local par:=parent
 		While par And par.IsLikeField
 			par=par.Parent
@@ -60,23 +60,26 @@ Class CodeItem
 		
 		Return par
 	End
+
 	
 	Method OnRemoved()
-		
 		If nspace Then nspace.items.Remove( Self )
 	End
+
 	
 	Property Ident:String()
 		Return _ident
 	Setter( value:String )
 		_ident=value
 	End
+
 	
 	Property Indent:Int()
 		Return _indent
 	Setter( value:Int )
 		_indent=value
 	End
+
 	
 	Property Type:CodeType()
 		Return _type
@@ -84,12 +87,14 @@ Class CodeItem
 		_type=value
 		_type.ident=FixTypeIdent( _type.ident )
 	End
+
 		
 	Property Kind:CodeItemKind()
 		Return _kind
 	Setter( value:CodeItemKind )
 		_kind=value
 	End
+
 	
 	Property KindStr:String()
 		Return _kindStr
@@ -97,12 +102,14 @@ Class CodeItem
 		_kindStr=value
 		UpdateKind()
 	End
+
 	
 	Property Access:AccessMode()
 		Return _access
 	Setter( value:AccessMode )
 		_access=value
 	End
+
 	
 	Property AccessStr:String()
 		If _access = AccessMode.Public_
@@ -113,28 +120,29 @@ Class CodeItem
 			Return "private"
 		Endif
 	End
+
 	
 	Property Text:String()
-		
-		If _text = Null
+		If _text = Null Then
 			_text=GetText( True,True )
 		Endif
 		Return _text
 	End
+
 	
 	Property TextForInsert:String()
-		
 		Return GetText( False,False )
 	End
+
 	
 	Property Parent:CodeItem()
 		Return _parent
 	Setter( value:CodeItem )
 		SetParent( value )
 	End
+
 	
 	Property Root:CodeItem()
-		
 		Local par:CodeItem=Null
 		Local i:=Parent
 		While i <> Null
@@ -144,20 +152,21 @@ Class CodeItem
 		Return (par <> Null) ? par Else Self
 		
 	End
+
 	
 	Property NumChildren:Int()
-		
 		Return _children?.Length
 	End
+
 	
 	Property Children:Stack<CodeItem>()
 		Return _children
 	Setter( value:Stack<CodeItem> )
 		_children=value
 	End
+
 	
 	Property Namespac:String()
-		
 		If Not _namespace
 			Local p:=_parent
 			While p<>Null
@@ -170,21 +179,23 @@ Class CodeItem
 	Setter( value:String )
 		_namespace=value
 	End
+
 	
 	Property ModuleName:String()
-		
 		Local s:=_modName
 		If Not s Then s=_parent?.ModuleName
 		Return s
 	Setter( value:String )
 		_modName=value
 	End
+
 	
 	Property FilePath:String()
 		Return _filePath
 	Setter( value:String )
 		_filePath=value
 	End
+
 	
 	Property Scope:String()
 		Local s:=Ident
@@ -195,40 +206,46 @@ Class CodeItem
 		Wend
 		Return s
 	End
+
 	
 	Property ScopeStartPos:Vec2i()
 		Return _scopeStartPos
 	Setter( value:Vec2i )
 		_scopeStartPos=value
 	End
+
 	
 	Property ScopeEndPos:Vec2i()
 		Return _scopeEndPos
 	Setter( value:Vec2i )
 		_scopeEndPos=value
 	End
+
 	
 	Method SetParent( parent:CodeItem )
-		
 		If Parent Then Parent.Children.Remove( Self )
 		_parent=parent
 		If Not _parent.Children Then _parent.Children = New Stack<CodeItem>
 		_parent.Children.Add( Self )
 	End
+
 	
 	Method AddChild( item:CodeItem )
 		item.Parent=Self
 	End
+
 	
 	Property SuperTypes:Stack<CodeType>()
 		Return _superTypes
 	Setter( value:Stack<CodeType> )
 		_superTypes=value
 	End
+
 	
 	Property SuperTypesStr:Stack<String>()
 		Return _superTypesStr
 	End
+
 	
 	Property IsLikeClass:Bool()
 		Select _kind
@@ -237,6 +254,7 @@ Class CodeItem
 		End
 		Return _isExtension
 	End
+
 	
 	Property IsLikeFunc:Bool()
 		Select _kind
@@ -245,6 +263,7 @@ Class CodeItem
 		End
 		Return False
 	End
+
 	
 	Property IsLikeField:Bool()
 		Select _kind
@@ -253,48 +272,53 @@ Class CodeItem
 		End
 		Return False
 	End
+
 	
 	Property IsOperator:Bool()
-	
 		Return _kind=CodeItemKind.Operator_
 	End
+
 	
 	Property IsProperty:Bool()
-	
 		Return _kind=CodeItemKind.Property_
 	End
+
 	
 	Property IsBlock:Bool()
-	
 		Return _kindStr="block"
 	End
+
 	
 	Property IsFuncTypedField:Bool()
-		
 		Return (_kindStr="field" Or _kindStr="global") And _type<>Null And _type.IsLikeFunc
 	End
+
 	
 	Property IsExtension:Bool()
 		Return _isExtension
 	Setter( value:Bool )
 		_isExtension=value
 	End
+
 	
 	Property IsIfaceMember:Bool()
 		Return _isIfaceMember
 	Setter( value:Bool )
 		_isIfaceMember=value
 	End
+
 	
 	Method AddSuperType( type:CodeType )
 		If Not _superTypes Then _superTypes=New Stack<CodeType>
 		_superTypes.Add( type )
 	End
+
 	
 	Method AddSuperTypeStr( type:String )
 		If Not _superTypesStr Then _superTypesStr=New Stack<String>
 		_superTypesStr.Add( type )
 	End
+
 	
 	Method FindParent:CodeItem( parentIdent:String )
 		Local p:=Parent
@@ -304,6 +328,7 @@ Class CodeItem
 		Wend
 		Return Null
 	End
+
 	
 	Method HasSuchSuperClass:Bool( ident:String )
 		If Not _superTypes Return False
@@ -312,7 +337,8 @@ Class CodeItem
 		Next
 		Return False
 	End
-	
+
+
 	Property NearestClassScope:CodeItem()
 		Local p:=Self
 		While p <> Null
@@ -324,19 +350,21 @@ Class CodeItem
 		Wend
 		Return Null
 	End
+
 	
 	Property HasParams:Bool()
 		Return _params<>Null
 	End
+
 	
 	Property Params:CodeParam[]()
 		Return _params
 	Setter( value:CodeParam[] )
 		_params=value
 	End
+
 	
 	Property ParamsStr:String()
-		
 		If Not _params Return ""
 		If _paramsStr Return _paramsStr
 		
@@ -349,9 +377,9 @@ Class CodeItem
 		
 		Return _paramsStr
 	End
+
 	
 	Property ParamsStrWithDefaults:String()
-		
 		If Not _params Return ""
 		If _paramsStrWithDefaults Return _paramsStrWithDefaults
 		
@@ -369,8 +397,7 @@ Class CodeItem
 	End
 	
 	
-	Private
-	
+Private
 	Field _ident:String
 	Field _indent:Int
 	Field _type:CodeType
@@ -390,10 +417,10 @@ Class CodeItem
 	Field _isIfaceMember:Bool
 	Field _modName:String
 	
-	Private
+Private
+
 	
 	Method GetText:String( withSpaces:Bool,withDefaultValues:Bool )
-		
 		Local s:=Ident
 		Select _kind
 			Case CodeItemKind.Function_,CodeItemKind.Method_,CodeItemKind.Lambda_,CodeItemKind.Operator_
@@ -409,7 +436,6 @@ Class CodeItem
 				Endif
 			
 			Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_,CodeItemKind.Alias_
-				
 				If _isExtension
 					s+=" (ext)"
 				Endif
@@ -444,11 +470,12 @@ Class CodeItem
 		End
 		Return s
 	End
+
 	
 	Method GetParamsStr:String( withDefaultValues:Bool )
-		
 		Return withDefaultValues ? ParamsStrWithDefaults Else ParamsStr
 	End
+
 	
 	Method UpdateKind()
 		Select _kindStr
@@ -491,34 +518,36 @@ Class CodeItem
 			_kind=CodeItemKind.Inherited_
 		End
 	End
-	
 End
 
 
+
 Struct CodeType
-	
 	Field kind:String
 	Field expr:String
 	Field args:CodeType[]
 	Field isPointer:Bool
 	Field isArray:Bool
+
 	
 	Property ident:String()
 		Return _ident
 	Setter( value:String )
 		_ident=FixTypeIdent( value )
 	End
+
 	
 	Property IsLikeFunc:Bool()
 		Return kind="functype"
 	End
+
 	
 	Operator To:String()
 		Return ToString()
 	End
+
 	
 	Method ToString:String()
-		
 		If _str Return _str
 		
 		If args
@@ -538,28 +567,29 @@ Struct CodeType
 		Return _str
 	End
 	
-	Private
-	
+Private
 	Field _str:String
 	Field _ident:String
 		
 End
 
 
+
 Struct CodeParam
+	Field type:CodeType
+	Field params:CodeParam[] 'for func as param
+	Field srcpos:Vec2i
+	Field hasDefaultValue:=False
+
 
 	Property ident:String()
 		Return _ident
 	Setter( value:String )
 		_ident = FixTypeIdent( value )
 	End
-	Field type:CodeType
-	Field params:CodeParam[] 'for func as param
-	Field srcpos:Vec2i
-	Field hasDefaultValue:=False
+
 	
 	Method ToString:String()
-		
 		If _str Return _str
 		
 		_str=ident+":"+type.ToString()
@@ -576,8 +606,7 @@ Struct CodeParam
 		Return _str
 	End
 	
-	Private
-	
+Private
 	Field _str:String
 	Field _ident:String
 	
@@ -585,13 +614,10 @@ End
 
 
 Struct CodeItemsSorter Final
-	
-	
-	Function SortByType( list:Stack<CodeItem>,inverse:Bool=False,checkIdent:Bool=False )
-		
+	Function SortByType( list:Stack<CodeItem>, inverse:Bool=False, checkIdent:Bool=False )
 		_checkIdent=checkIdent
 		
-		If _sorterByType = Null
+		If _sorterByType = Null Then
 			_sorterByType=Lambda:Int( lhs:CodeItem,rhs:CodeItem )
 				
 				Local lp:=GetItemPriority( lhs,inverse )
@@ -609,10 +635,10 @@ Struct CodeItemsSorter Final
 		
 		list.Sort( _sorterByType )
 	End
+
 	
 	Function SortByPosition( list:Stack<CodeItem> )
-	
-		If _sorterByPosition = Null
+		If _sorterByPosition = Null Then
 			_sorterByPosition=Lambda:Int( lhs:CodeItem,rhs:CodeItem )
 	
 				Local lp:=lhs.ScopeStartPos
@@ -630,9 +656,9 @@ Struct CodeItemsSorter Final
 	
 		list.Sort( _sorterByPosition )
 	End
+
 	
 	Function SortByIdent( list:Stack<ListViewItem>,etalonIdent:String )
-		
 		_etalonIdent=etalonIdent
 		
 		If _sorterByIdent = Null
@@ -650,9 +676,9 @@ Struct CodeItemsSorter Final
 		
 		list.Sort( _sorterByIdent )
 	End
+
 	
 	Function GetIdentPower:Int( ident:String,etalon:String,useStrongPrefs:Bool=True )
-		
 		Local len:=etalon.Length
 		Local power:=0
 		Local ch:=etalon[0],index:=0
@@ -690,9 +716,9 @@ Struct CodeItemsSorter Final
 		
 		Return power
 	End
+
 	
 	Function GetIdentLength:Int( item:ListViewItem )
-		
 		Local ident:=item.Text
 		Local p:=ident.Find( ":" )
 		If p<>-1
@@ -708,23 +734,21 @@ Struct CodeItemsSorter Final
 	End
 	
 	
-	Private
-	
-	Method New()
-	End
-	
+Private
 	Global _checkIdent:Bool
 	Global _etalonIdent:String
 	Global _sorterByType:Int( lhs:CodeItem,rhs:CodeItem )
 	Global _sorterByIdent:Int( lhs:ListViewItem,rhs:ListViewItem )
 	Global _sorterByPosition:Int( lhs:CodeItem,rhs:CodeItem )
 	
+
+	Method New()
+	End
+
+	
 	Function GetItemPriority:Int( item:CodeItem,inverse:Bool=False )
-		
 		Local retval:=0
-		
 		Select item.Kind
-			
 			Case CodeItemKind.Class_,CodeItemKind.Struct_,CodeItemKind.Interface_,CodeItemKind.Enum_
 				retval=20
 				

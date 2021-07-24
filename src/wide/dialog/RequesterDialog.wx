@@ -1,0 +1,110 @@
+Namespace wide
+
+
+Function Requester:bool( icon:Image, text1:string, text2:string = "" )
+	local requestView:RequesterView = New RequesterView( icon, text1, text2 )
+
+	Local dialog:RequestDlg = New RequestDlg( requestView )
+
+	dialog.ShowModal()
+	Return dialog.OK
+End function
+
+
+class RequestDlg Extends DialogExt
+	field OK:bool = False
+	
+	Method New( contentView:RequesterView = Null )
+		Super.New( "", contentView )
+
+		MinSize = New Vec2i( 460, 240 )
+		FadeEnabled = True 'faded
+
+		contentView.CloseCancel = lambda()
+			OK = False
+			Hide()
+		End
+		contentView.CloseOK = lambda()
+			OK = True
+			Hide()
+		End
+	End
+End
+
+
+
+class RequesterView Extends View
+	field CloseCancel:Void()
+	field CloseOK:Void()
+
+	field ctrls:MiniUI = New MiniUI()
+
+	field ButtonCancel:int
+	field ButtonOK:int
+
+	field tmr:Timer
+
+
+	method New( icon:Image, text1:string, text2:string )
+		tmr = New Timer( 40, App.RequestRender )
+
+		ctrls.OverColor = Color.UIBlue
+		ctrls.SetGrid( 8, 5 )
+
+'		ctrls.ShowGrid = true
+'		ctrls.ShowGuides = True
+		ctrls.GridInset = 6
+
+		Local scale:int = App.Theme.Scale.x
+
+		ctrls.AddImage( 3.25,0, 1.5,2, Color.White, icon )
+
+		local pos:int = text1.Find( "~n" )
+		If pos > -1 Then
+			ctrls.AddTextBold( 0,2, 8, 0.5, Color.LightGrey, text1.Left( pos ), ALIGN_CENTER )
+			ctrls.AddTextBold( 0,2.5, 8, 0.5, Color.LightGrey, text1.Right( text1.Length - pos - 1 ), ALIGN_CENTER )
+'			Print text1.Left( pos )
+'			Print text1.Right( text1.Length - pos - 1 )
+		Else
+			ctrls.AddText( 0,2, 8, 0.5, Color.LightGrey, text1, ALIGN_CENTER )
+		End if
+
+		If text2 <> "" Then ctrls.AddText( 0,3.5, 8, 0.5, Color.LightGrey, text2, ALIGN_CENTER )
+
+		ButtonCancel = ctrls.AddButton( 2,4, 2, 1, Color.DarkGrey, "Cancel", True )
+		ButtonOK = ctrls.AddButton( 4,4, 2, 1, Color.UIBlue* 0.8, "OK", True )
+
+		ctrls.Clicked = lambda( ctrl:int )
+			Select ctrl
+				Case ButtonCancel
+					CloseCancel()
+
+				Case ButtonOK
+					CloseOK()
+
+				Default
+					Print "ctrl clicked: "+ctrl
+			End Select
+		end
+	End method
+
+
+	Method OnRender( canvas:Canvas ) Override
+		ctrls.DrawControls( canvas, _mouseX, _mouseY, _mouseDown )
+
+		If Keyboard.KeyDown( Key.Escape ) Then
+			CloseCancel()
+		Else If Keyboard.KeyDown( Key.Enter ) Then
+			CloseOK()
+		End If
+	End method
+
+
+	method OnMouseMove() Override
+		If ctrls.Over( _mouseX, _mouseY ) Then
+			App.RequestRender()
+		End If
+	End method
+	
+End class
+

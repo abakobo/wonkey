@@ -4,23 +4,23 @@ Namespace mojo
 Using std..
 
 
-Class FontMap
-	Field _tileMap:short[, , ]
-	Field _colorMap:short[, , ]
-	Field _map:short[, ]
-	Field _pallete:ColorPalette
-	Field _mapLayer:int = 0
+class FontMap
+	field _tileMap:short[, , ]
+	field _colorMap:short[, , ]
+	field _map:short[, ]
+	field _pallete:ColorPalette
+	field _mapLayer:int = 0
 
-	Field _mapWidth:int[] = New int[32]
-	Field _mapHeight:int[] = New int[32]
+	field _mapWidth:int[] = new int[32]
+	field _mapHeight:int[] = new int[32]
 
 
-	Method New( arcadeFont:ArcadeFont, pallete:ColorPalette )
+	method New( arcadeFont:ArcadeFont, pallete:ColorPalette )
 		_arcadeFont = arcadeFont
 		_pallete = pallete
 	End
 
-	Method New( font1:ArcadeFont, font2:ArcadeFont, pallete:ColorPalette )
+	method New( font1:ArcadeFont, font2:ArcadeFont, pallete:ColorPalette )
 		_font1 = font1
 		_font2 = font2
 		_arcadeFont = font1
@@ -65,18 +65,18 @@ Class FontMap
 
 
 	
-	Method UseFont( fnt:int )
+	method UseFont( fnt:int )
 		Select Clamp( fnt,  1, 2 )
 			Case 1
-				If _font1 Then _arcadeFont = _font1
+				if _font1 then _arcadeFont = _font1
 			Case 2
-				If _font2 Then _arcadeFont = _font2
+				if _font2 then _arcadeFont = _font2
 		End Select
-	End Method
+	End method
 	
 
-	Method CopyMap( fromMap:FontMap )
-		Local m:int
+	method CopyMap( fromMap:FontMap )
+		local m:int
 		Local x:int
 		Local y:int
 
@@ -84,49 +84,49 @@ Class FontMap
 		_tileMap = New short[_layerCount+1, 128, 128]
 		_colorMap = New short[_layerCount+1, 128, 128]
 
-		For m = 0 To fromMap.Count
-			For x = 0 To 127'_mapWidth[ ToMap ]
-				For y = 0 To 127'_mapHeight[ ToMap ]
+		For m = 0 to fromMap.Count
+			For x = 0 To 127'_mapWidth[ toMap ]
+				For y = 0 To 127'_mapHeight[ toMap ]
 					_tileMap[ m, x, y ] = fromMap._tileMap[ m, x, y ]
 					_colorMap[ m, x, y ] = fromMap._colorMap[ m, x, y ]
 				Next
 			Next
 		Next
-	End Method
+	End method
 	
 	
-	Method Copy( fromMap:int, ToMap:int )
+	method Copy( fromMap:int, toMap:int )
 		Local x:int
 		Local y:int
 		
-		For x = 0 To 127'_mapWidth[ ToMap ]
-			For y = 0 To 127'_mapHeight[ ToMap ]
-				_tileMap[ ToMap, x, y ] = _tileMap[ fromMap, x, y ]
-				_colorMap[ ToMap, x, y ] = _colorMap[ fromMap, x, y ]
+		For x = 0 To 127'_mapWidth[ toMap ]
+			For y = 0 To 127'_mapHeight[ toMap ]
+				_tileMap[ toMap, x, y ] = _tileMap[ fromMap, x, y ]
+				_colorMap[ toMap, x, y ] = _colorMap[ fromMap, x, y ]
 			Next
 		Next
-	End Method
+	End method
 
 
-	Method CopyIgnoreColor( fromMap:int, ToMap:int, col:int )
+	method CopyIgnoreColor( fromMap:int, toMap:int, col:int )
 		Local x:int
 		Local y:int
 		
 		For x = 0 To 127
 			For y = 0 To 127
 				If _colorMap[ fromMap, x, y ] = col Then
-					_tileMap[ ToMap, x, y ] = 0
-					_colorMap[ ToMap, x, y ] = 0
+					_tileMap[ toMap, x, y ] = 0
+					_colorMap[ toMap, x, y ] = 0
 				Else
-					_tileMap[ ToMap, x, y ] = _tileMap[ fromMap, x, y ]
-					_colorMap[ ToMap, x, y ] = _colorMap[ fromMap, x, y ]
+					_tileMap[ toMap, x, y ] = _tileMap[ fromMap, x, y ]
+					_colorMap[ toMap, x, y ] = _colorMap[ fromMap, x, y ]
 				End If
 			Next
-		Next
-	End Method
+		next
+	End method
 
 
-	Method DjikstraCol( layer:int, xstart:int, ystart:int, ignoreTileAbove:int, count:int = 255 )
+	method DjikstraCol( layer:int, xstart:int, ystart:int, ignoreTileAbove:int, count:int = 255 )
 		Local x:int
 		Local y:int
 		
@@ -144,18 +144,18 @@ Class FontMap
 		
 		_colorMap[ layer, xstart, ystart ] = 0
 
-		Local k:int
-		Local last:int = 0
+		local k:int
+		local last:int = 0
 		For k = 1 To count
 			For x = 1 To width -2
 				For y = 1 To height -2
 					If _tileMap[ layer, x, y ] < ignoreTileAbove Then
-						If _colorMap[ layer, x-1, y ] = last or _colorMap[ layer, x+1, y ] = last or
+						if _colorMap[ layer, x-1, y ] = last or _colorMap[ layer, x+1, y ] = last or
 							 	_colorMap[ layer, x, y-1 ] = last or _colorMap[ layer, x, y+1 ] = last Then
 							 	
 							If _colorMap[ layer, x, y ] > last Then
 								_colorMap[ layer, x, y ] = k
-							End If
+							End if
 							
 '							Print "dj:"+x+" "+y+"  "+k
 						End If
@@ -170,29 +170,29 @@ Class FontMap
 				Clamp( _colorMap[ layer, x, y ], 0, 255 )
 			Next
 		Next
-	End Method
+	End method
 	
 	
-	Method Reset()
+	method Reset()
 		_mapLayer = 0
 		_layerCount = -1
-	End Method
+	End method
 	
 	
-	Method Transfer( map:FontMap, fromMap:int, ToMap:int )
+	method Transfer( map:FontMap, fromMap:int, toMap:int )
 		Local x:int
 		Local y:int
 		
 		For x = 0 To 127
 			For y = 0 To 127
-				_tileMap[ ToMap, x, y ] = map._tileMap[ fromMap, x, y ]
-				_colorMap[ ToMap, x, y ] = map._colorMap[ fromMap, x, y ]
+				_tileMap[ toMap, x, y ] = map._tileMap[ fromMap, x, y ]
+				_colorMap[ toMap, x, y ] = map._colorMap[ fromMap, x, y ]
 			Next
-		Next
-	End Method
+		next
+	End method
 
 
-	Method Clear( fromMap:int )
+	method Clear( fromMap:int )
 		Local x:int
 		Local y:int
 		
@@ -201,10 +201,10 @@ Class FontMap
 				_tileMap[ fromMap, x, y ] = 0
 				_colorMap[ fromMap, x, y ] = 0
 			Next
-		Next
-	End Method
+		next
+	End method
 
-	Method ClearColor( fromMap:int )
+	method ClearColor( fromMap:int )
 		Local x:int
 		Local y:int
 		
@@ -212,10 +212,10 @@ Class FontMap
 			For y = 0 To 127
 				_colorMap[ fromMap, x, y ] = 0
 			Next
-		Next
-	End Method
+		next
+	End method
 
-	Method ClearTile( fromMap:int, tile:int )
+	method ClearTile( fromMap:int, tile:int )
 		Local x:int
 		Local y:int
 		
@@ -224,15 +224,15 @@ Class FontMap
 				If _tileMap[ fromMap, x, y ] = tile Then
 					_tileMap[ fromMap, x, y ] = 0
 					_colorMap[ fromMap, x, y ] = 0
-				End If
+				End if
 			Next
-		Next
-	End Method
+		next
+	End method
 
-	Method SwapRndTile( fromMap:int, tile:int, ToThing:int )
+	method SwapRndTile( fromMap:int, tile:int, toThing:int )
 		Local x:int
 		Local y:int
-		Local changed:bool = False
+		local changed:bool = False
 		
 '		repeat
 			For x = 0 To 127
@@ -240,7 +240,7 @@ Class FontMap
 					If not changed and _tileMap[ fromMap, x, y ] = tile Then
 '						Print "found:"+x
 						If Rnd(100) < 20 Then
-							_tileMap[ fromMap, x, y ] = ToThing
+							_tileMap[ fromMap, x, y ] = toThing
 							_colorMap[ fromMap, x, y ] = 0
 							changed = True
 						End If
@@ -248,9 +248,9 @@ Class FontMap
 				Next
 			Next
 '		Until changed
-	End Method
+	End method
 
-	Method Reverse( fromMap:int )
+	method Reverse( fromMap:int )
 		Local x:int
 		Local y:int
 		
@@ -265,29 +265,29 @@ Class FontMap
 				_tileMap[ fromMap, x, y ] = _tileMap[ fromMap, 127-_loadX+x, y ]
 				_colorMap[ fromMap, x, y ] = _colorMap[ fromMap, 127-_loadX+x, y ]
 			Next
-		Next
-	End Method
+		next
+	End method
 
-	Method Load:bool( filePath:string )
-		'Print "loading..."
+	method Load:bool( filePath:string )
+		Print "loading..."
 		If Not filePath Return False
-		If ExtractExt( filePath ).ToLower() <> ".mx2map" Then Return False
+		if ExtractExt( filePath ).ToLower() <> ".mx2map" Then Return false
 
 		Local fStream:Stream = Stream.Open( filePath, "r" )
 		If not fStream Then
-			'Print "XX "+filePath + " not opened"
-			Return False
+			Print "XX "+filePath + " not opened"
+			Return false
 		End If
 		
-		Local id:int = fStream.ReadInt()
+		local id:int = fStream.ReadInt()
 		If id <> -9999 Then
-			'Print filePath + " ID error"
+			Print filePath + " ID error"
 			fStream.Close()
-			Return False
+			Return false
 		End If
 
-		Local layers:int = fStream.ReadInt()
-		'Print "layers To load "+layers
+		local layers:int = fStream.ReadInt()
+		Print "layers to load "+layers
 		_layerCount = layers-1
 
 		_tileMap = New short[layers, 128, 128]
@@ -305,54 +305,54 @@ Class FontMap
 		fStream.Close()
 		
 		_mapLayer = layers-1
-		Return True
-	End Method
+		Return true
+	End method
 
 
-	Method SetRenderRes( width:int,  height:int, xoffset:int = 0 )
+	method SetRenderRes( width:int,  height:int, xoffset:int = 0 )
 		_divx = int(float(width) / _mapWidth[ 0 ])
 		_divy = int(float(height) / _mapHeight[ 0 ])
 		_divx2 = _divx+xoffset
 		_renderWidth = width
 		_renderHeight = height
-	End Method
+	End method
 
-	Method SetRenderResFromLayer( layer:int, width:int,  height:int )
+	method SetRenderResFromLayer( layer:int, width:int,  height:int )
 		_divx = int(float(width) / _mapWidth[ layer ])
 		_divy = int(float(height) / _mapHeight[ layer ])
-	End Method
+	End method
 
-	Method SetDivRes( divX:float, divY:float,  width:int, height:int )
+	method SetDivRes( divX:float, divY:float,  width:int, height:int )
 		_renderWidth = width
 		_renderHeight = height
 		_divx = divX
 		_divy = divY
-	End Method
+	End method
 
 	
-	Method SetDiv( divX:float, divY:float )
+	method SetDiv( divX:float, divY:float )
 		_divx = divX
 		_divy = divY
-	End Method
+	End method
 
-	Method IntDiv()
+	method IntDiv()
 		_divx = int(_divx)
 		_divy = int(_divy)
-	End Method
+	End method
 
 	Function Chr:String(character:Int)
     	Return String.FromChar(character)
 	End
 	
 	
-	Method GetBoolFrom:bool( layer:int,  x:int, y:int,  check:string )
+	method GetBoolFrom:bool( layer:int,  x:int, y:int,  check:string )
 		If check = "" or check.Length > 1 Then Return False
 
 		Return check = Chr( _tileMap[ layer, x, y ] )
-	End Method
+	End method
 
 
-	Method GetIntFrom:int( layer:int,  x:int, y:int,  count:int = 1 )
+	method GetIntFrom:int( layer:int,  x:int, y:int,  count:int = 1 )
 		If count < 1 or count > 6 Then Return 0
 		count -= 1
 		
@@ -371,10 +371,10 @@ Class FontMap
 		Next
 		
 		Return num
-	End Method
+	End method
 	
 	
-	Method Render( canvas:Canvas, layer:int, xs:float, ys:float,  colOffset:int = 0 )
+	method Render( canvas:Canvas, layer:int, xs:float, ys:float,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -386,7 +386,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -399,12 +399,12 @@ Class FontMap
 			Next
 			yp += _divy
 			
-			If yp > _renderHeight Then Return
-		Next
-	End Method
+			If yp > _renderHeight Then return
+		next
+	End method
 
 
-	Method RenderIgnore( canvas:Canvas, layer:int, xs:float, ys:float,  ignore:int = 256 )
+	method RenderIgnore( canvas:Canvas, layer:int, xs:float, ys:float,  ignore:int = 256 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -416,7 +416,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -428,13 +428,13 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method RenderReplace( canvas:Canvas, layer:int, xs:float, ys:float,  replace:int, with1:int, with2:int = -1 )
+	method RenderReplace( canvas:Canvas, layer:int, xs:float, ys:float,  replace:int, with1:int, with2:int = -1 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -446,7 +446,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -460,12 +460,12 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
-	Method RenderReplace2( canvas:Canvas, layer:int, xs:float, ys:float,  replace:int, with1:int, with2:int )
+	method RenderReplace2( canvas:Canvas, layer:int, xs:float, ys:float,  replace:int, with1:int, with2:int )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -477,7 +477,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -491,12 +491,12 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
-	Method RenderPercent( canvas:Canvas, layer:int, xs:float, ys:float,  percent:float )
+	method RenderPercent( canvas:Canvas, layer:int, xs:float, ys:float,  percent:float )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -511,7 +511,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If percent > count Then
@@ -526,13 +526,13 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method RenderPureAnim( canvas:Canvas, layer:int, xs:float, ys:float,  animFrom:int,  animTo:int,  time:int )
+	method RenderPureAnim( canvas:Canvas, layer:int, xs:float, ys:float,  animFrom:int,  animTo:int,  time:int )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -545,7 +545,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -555,19 +555,19 @@ Class FontMap
 							_arcadeFont.DrawCharPureSizeWH( canvas, animFrom + ((_tileMap[layer, x, y]-animFrom+time) Mod md), xp, yp, _divx, _divy )
 						Else
 							_arcadeFont.DrawCharPureSizeWH( canvas, _tileMap[layer, x, y], xp, yp, _divx, _divy )
-						End If
+						End if
 					End If
 				End If
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method RenderPure( canvas:Canvas, layer:int, xs:float, ys:float,  colOffset:int = 0 )
+	method RenderPure( canvas:Canvas, layer:int, xs:float, ys:float,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -579,7 +579,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -591,13 +591,13 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method RenderPure( canvas:Canvas, layer:int, xs:float, ys:float, palette:ColorPalette,  colOffset:int = 0 )
+	method RenderPure( canvas:Canvas, layer:int, xs:float, ys:float, palette:ColorPalette,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -609,7 +609,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -621,16 +621,16 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method CheckCollide:bool( layer:int, xs:float, ys:float,  color:int,  colx:float, coly:float, wd:int, ht:int )
+	method CheckCollide:bool( layer:int, xs:float, ys:float,  color:int,  colx:float, coly:float, wd:int, ht:int )
 		Local x:int
 		Local y:int
-		Local yst:int = 0
+		local yst:int = 0
 		Local xp:float
 		Local yp:float = ys
 		Local xx:int
@@ -641,15 +641,15 @@ Class FontMap
 			yst += 1
 		Wend
 		
-		Local colx1:float = colx + wd
-		Local coly1:float = coly + ht
+		local colx1:float = colx + wd
+		local coly1:float = coly + ht
 		
 		_collideTL = False
 		_collideTR = False
 		_collideBL = False
 		_collideBR = False
 		
-		For y = yst Until _mapHeight[ layer ]
+		For y = yst until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -662,10 +662,10 @@ Class FontMap
 							_collideTR = coly > yp And coly < yp+_divy
 							_collideBR = coly1 > yp And coly1 < yp+_divy
 						End If
-						If _collideTL or _collideTR or _collideBL or _collideBR Then Return True
+						If _collideTL or _collideTR or _collideBL or _collideBR Then Return true
 '						If (colx > xp And colx < xp+_divx) or (colx1 > xp And colx1 < xp+_divx) Then
 '							If (coly > yp And coly < yp+_divy) or (coly1 > yp And coly1 < yp+_divy) Then
-'								Return True
+'								Return true
 '							End If
 '						End If
 					End If
@@ -673,16 +673,16 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return False
+			If yp > _renderHeight Then Return false
 		Next
-		Return False
-	End Method
+		Return false
+	End method
 	
 	
-	Method CheckCollide2:bool( layer:int, xs:float, ys:float,  color:int,  colx:float, coly:float, wd:int, ht:int )
+	method CheckCollide2:bool( layer:int, xs:float, ys:float,  color:int,  colx:float, coly:float, wd:int, ht:int )
 		Local x:int
 		Local y:int
-		Local yst:int = 0
+		local yst:int = 0
 		Local xp:float
 		Local yp:float = ys
 		Local xx:int
@@ -693,15 +693,15 @@ Class FontMap
 			yst += 1
 		Wend
 		
-		Local colx1:float = colx + wd
-		Local coly1:float = coly + ht
+		local colx1:float = colx + wd
+		local coly1:float = coly + ht
 		
 		_collideTL = False
 		_collideTR = False
 		_collideBL = False
 		_collideBR = False
 		
-		For y = yst Until _mapHeight[ layer ]
+		For y = yst until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -715,22 +715,22 @@ Class FontMap
 							_collideTR = coly > yp And coly < yp+_divy
 							_collideBR = coly1 > yp And coly1 < yp+_divy
 						End If
-						If _collideTL or _collideTR or _collideBL or _collideBR Then Return True
+						If _collideTL or _collideTR or _collideBL or _collideBR Then Return true
 					End If
 				End If
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return False
+			If yp > _renderHeight Then Return false
 		Next
-		Return False
-	End Method
+		Return false
+	End method
 	
 	
-	Method RenderPureColor( canvas:Canvas, layer:int, xs:float, ys:float,  color:int )
+	method RenderPureColor( canvas:Canvas, layer:int, xs:float, ys:float,  color:int )
 		Local x:int
 		Local y:int
-		Local yst:int = 0
+		local yst:int = 0
 		Local xp:float
 		Local yp:float = ys
 		Local xx:int
@@ -741,7 +741,7 @@ Class FontMap
 			yst += 1
 		Wend
 		
-		For y = yst Until _mapHeight[ layer ]
+		For y = yst until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -753,13 +753,13 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
 		Next
-	End Method
+	End method
 
 
-	Method RenderPure2( canvas:Canvas, layer:int, xs:float, ys:float,  colOffset:int = 0 )
+	method RenderPure2( canvas:Canvas, layer:int, xs:float, ys:float,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -771,7 +771,7 @@ Class FontMap
 '			yp += _divy
 '		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -783,11 +783,11 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
-		Next
-	End Method
+			If yp > _renderHeight Then return
+		next
+	End method
 
-	Method RenderPure2( canvas:Canvas, font:ArcadeFont, layer:int, xs:float, ys:float,  colOffset:int = 0 )
+	method RenderPure2( canvas:Canvas, font:ArcadeFont, layer:int, xs:float, ys:float,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -799,7 +799,7 @@ Class FontMap
 '			yp += _divy
 '		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -811,12 +811,12 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
-		Next
-	End Method
+			If yp > _renderHeight Then return
+		next
+	End method
 
 
-	Method RenderPureY( canvas:Canvas, layer:int, xs:float, ys:float,  yps:int,  palette:ColorPalette,  colOffset:int = 0 )
+	method RenderPureY( canvas:Canvas, layer:int, xs:float, ys:float,  yps:int,  palette:ColorPalette,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -828,7 +828,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = yps Until _mapHeight[ layer ]
+		For y = yps until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -840,13 +840,13 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method RenderVSlicePureY( canvas:Canvas, layer:int, slice:int, xs:float, ys:float,  yps:int,  width:int, height:int, palette:ColorPalette,  colOffset:int = 0 )
+	method RenderVSlicePureY( canvas:Canvas, layer:int, slice:int, xs:float, ys:float,  yps:int,  width:int, height:int, palette:ColorPalette,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -858,7 +858,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = yps Until _mapHeight[ layer ]
+		For y = yps until _mapHeight[ layer ]
 			xp = xs
 '			For x = 0 Until _mapWidth[ layer ]
 '				If x < 128 And y < 128 Then
@@ -870,13 +870,13 @@ Class FontMap
 '				xp += _divx
 '			Next
 			yp += height
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method RenderColPure( canvas:Canvas, layer:int, xs:float, ys:float )
+	method RenderColPure( canvas:Canvas, layer:int, xs:float, ys:float )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -888,7 +888,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -899,13 +899,13 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method Render( canvas:Canvas, layer:int, xs:float, ys:float, palette:ColorPalette,  colOffset:int = 0 )
+	method Render( canvas:Canvas, layer:int, xs:float, ys:float, palette:ColorPalette,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -917,7 +917,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -929,13 +929,13 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method RenderPalette( canvas:Canvas, layer:int, xs:float, ys:float,  colOffset:int = 0 )
+	method RenderPalette( canvas:Canvas, layer:int, xs:float, ys:float,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -947,7 +947,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -960,13 +960,13 @@ Class FontMap
 			Next
 			yp += _divy
 
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method RenderPalette( canvas:Canvas, layer:int, xs:float, ys:float, w:float, h:float )
+	method RenderPalette( canvas:Canvas, layer:int, xs:float, ys:float, w:float, h:float )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -981,7 +981,7 @@ Class FontMap
 '			yp += _divy
 '		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -994,12 +994,12 @@ Class FontMap
 			Next
 			yp += divy
 
-'			If yp > _renderHeight Then Return
-		Next
-	End Method
+'			If yp > _renderHeight Then return
+		next
+	End method
 
 
-	Method RenderAtXY( canvas:Canvas, layer:int, xn:int, yn:int,  colOffset:int = 0 )
+	method RenderAtXY( canvas:Canvas, layer:int, xn:int, yn:int,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -1011,7 +1011,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xn * _divx
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -1023,13 +1023,13 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method RenderAtXYCol( canvas:Canvas, layer:int, xn:int, yn:int,  col:Color )
+	method RenderAtXYCol( canvas:Canvas, layer:int, xn:int, yn:int,  col:Color )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -1043,7 +1043,7 @@ Class FontMap
 
 		canvas.Color = col
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xn * _divx
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -1055,13 +1055,13 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method RenderOffsetAtXY( canvas:Canvas, layer:int, xn:int, yn:int,  offset:int = 0 )
+	method RenderOffsetAtXY( canvas:Canvas, layer:int, xn:int, yn:int,  offset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -1073,9 +1073,9 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		Local char:int
+		local char:int
 		
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xn * _divx
 			For x = 0 Until _mapWidth[ layer ]
 				If x < 128 And y < 128 Then
@@ -1084,28 +1084,28 @@ Class FontMap
 						If char > -1 And char < 256 Then
 							canvas.Color = _pallete.GetRGBA( _colorMap[layer, x, y] )
 							_arcadeFont.DrawCharSizeWH( canvas, char, xp, yp, _divx, _divy )
-						End If
+						End if
 					End If
 				End If
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
-		Next
-	End Method
+			If yp > _renderHeight Then return
+		next
+	End method
 
 
-	Method RenderBlockXYWH( canvas:Canvas, layer:int, xs:int, ys:int, w:float, h:float, charStart:int = 0, charEnd:int = 255 )
+	method RenderBlockXYWH( canvas:Canvas, layer:int, xs:int, ys:int, w:float, h:float, charStart:int = 0, charEnd:int = 255 )
 		Local x:int
 		Local y:int
 
 		Local xp:float
 		Local yp:float = ys
 		
-		Local divx:float = w / _mapWidth[ layer ]
-		Local divy:float = h / _mapHeight[ layer ]
+		local divx:float = w / _mapWidth[ layer ]
+		local divy:float = h / _mapHeight[ layer ]
 
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 
@@ -1119,24 +1119,24 @@ Class FontMap
 			yp += divy
 			If yp > _renderHeight Then Return
 		Next
-	End Method
+	End method
 
 
-	Method RenderXYWH( canvas:Canvas, layer:int, xs:int, ys:int, w:float, h:float, charStart:int = 0, charEnd:int = 255 )
+	method RenderXYWH( canvas:Canvas, layer:int, xs:int, ys:int, w:float, h:float, charStart:int = 0, charEnd:int = 255 )
 		Local x:int
 		Local y:int
 
 		Local xp:float
 		Local yp:float = ys
 		
-		Local divx:float = w / _mapWidth[ layer ]
-		Local divy:float = h / _mapHeight[ layer ]
+		local divx:float = w / _mapWidth[ layer ]
+		local divy:float = h / _mapHeight[ layer ]
 
-		For y = 0 Until _mapHeight[ layer ]
+		For y = 0 until _mapHeight[ layer ]
 			xp = xs
 			For x = 0 Until _mapWidth[ layer ]
 
-				If _colorMap[layer, x, y] > 0 and _tileMap[layer, x, y] >= charStart And _tileMap[layer, x, y] <= charEnd Then
+				If _colorMap[layer, x, y] > 0 and _tileMap[layer, x, y] >= charStart And _tileMap[layer, x, y] <= charEnd then
 					_arcadeFont.DrawCharSizeWH( canvas, _tileMap[layer, x, y], xp, yp, divx, divy )
 				End If
 
@@ -1145,10 +1145,10 @@ Class FontMap
 			yp += divy
 			If yp > _renderHeight Then Return
 		Next
-	End Method
+	End method
 
 
-	Method RenderAtXYWHCol( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int, count:int = -1 )
+	method RenderAtXYWHCol( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int, count:int = -1 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -1158,11 +1158,11 @@ Class FontMap
 '			yp += _divy
 '		Wend
 		
-		Local cnt:int = 0
+		local cnt:int = 0
 		width = xs+width
 		height = ys+height
 		
-		For y = ys Until height
+		For y = ys until height
 			xp = xn
 			For x = xs Until width
 				If x < 128 And y < 128 Then
@@ -1177,11 +1177,11 @@ Class FontMap
 				xp += _divx2
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 		Next
-	End Method
+	End method
 
-	Method RenderBoldAtXYWHCol( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int, count:int = -1 )
+	method RenderBoldAtXYWHCol( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int, count:int = -1 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -1191,11 +1191,11 @@ Class FontMap
 '			yp += _divy
 '		Wend
 		
-		Local cnt:int = 0
+		local cnt:int = 0
 		width = xs+width
 		height = ys+height
 		
-		For y = ys Until height
+		For y = ys until height
 			xp = xn
 			For x = xs Until width
 				If x < 128 And y < 128 Then
@@ -1214,10 +1214,10 @@ Class FontMap
 			Next
 			yp += _divy
 			If yp > _renderHeight Then Return
-		Next
-	End Method
+		next
+	End method
 
-	Method RenderAtXYWH( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  colOffset:int = 0 )
+	method RenderAtXYWH( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -1229,7 +1229,7 @@ Class FontMap
 		
 		width = xs+width
 		height = ys+height
-		For y = ys Until height
+		For y = ys until height
 			xp = xn
 			For x = xs Until width
 				If x < 128 And y < 128 Then
@@ -1241,12 +1241,12 @@ Class FontMap
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
-	Method RenderAtXYWH( canvas:Canvas, layer:int, xn:float, yn:float,  xs:int, ys:int, width:int, height:int,  scalex:float, scaley:float )
+	method RenderAtXYWH( canvas:Canvas, layer:int, xn:float, yn:float,  xs:int, ys:int, width:int, height:int,  scalex:float, scaley:float )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -1258,7 +1258,7 @@ Class FontMap
 		
 		width = xs+width
 		height = ys+height
-		For y = ys Until height
+		For y = ys until height
 			xp = xn
 			For x = xs Until width
 				If x < 128 And y < 128 Then
@@ -1270,17 +1270,17 @@ Class FontMap
 				xp += scalex
 			Next
 			yp += scaley
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
-	Method RenderPureAtXYWH( canvas:Canvas, font:ArcadeFont, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  colOffset:int = 0 )
+	method RenderPureAtXYWH( canvas:Canvas, font:ArcadeFont, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
 		Local yp:float = yn
-		Local col:int
+		local col:int
 		
 		width = xs+width
 		height = ys+height
@@ -1290,7 +1290,7 @@ Class FontMap
 			ys += 1
 		Wend
 		
-		For y = ys Until height
+		For y = ys until height
 			xp = xn
 			For x = xs Until width
 
@@ -1299,22 +1299,22 @@ Class FontMap
 					If col > 0 Then
 						canvas.Color = _pallete.GetRGBA( col )
 						font.DrawCharPureSizeWH( canvas, _tileMap[layer, x, y], xp, yp, _divx, _divy )
-					End If
+					End if
 				End If
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
-		Next
-	End Method
+			If yp > _renderHeight Then return
+		next
+	End method
 	
 
-	Method RenderPureAtXYWH( canvas:Canvas, font:ArcadeFont, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  col:Color )
+	method RenderPureAtXYWH( canvas:Canvas, font:ArcadeFont, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  col:Color )
 		Local x:int
 		Local y:int
 		Local xp:float
 		Local yp:float = yn
-'		Local col:int
+'		local col:int
 		
 		width = xs+width
 		height = ys+height
@@ -1324,7 +1324,7 @@ Class FontMap
 			ys += 1
 		Wend
 		
-		For y = ys Until height
+		For y = ys until height
 			xp = xn
 			For x = xs Until width
 
@@ -1332,22 +1332,22 @@ Class FontMap
 					If _colorMap[layer, x, y] > 0 Then
 						canvas.Color = col'_pallete.GetRGBA( col )
 						font.DrawCharPureSizeWH( canvas, _tileMap[layer, x, y], xp, yp, _divx, _divy )
-					End If
+					End if
 				End If
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
-		Next
-	End Method
+			If yp > _renderHeight Then return
+		next
+	End method
 	
 
-	Method RenderPureAtXYWH( canvas:Canvas, font:ArcadeFont, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  divx:float, divy:float )
+	method RenderPureAtXYWH( canvas:Canvas, font:ArcadeFont, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  divx:float, divy:float )
 		Local x:int
 		Local y:int
 		Local xp:float
 		Local yp:float = yn
-		Local col:int
+		local col:int
 		
 		width = xs+width
 		height = ys+height
@@ -1357,7 +1357,7 @@ Class FontMap
 			ys += 1
 		Wend
 		
-		For y = ys Until height
+		For y = ys until height
 			xp = xn
 			For x = xs Until width
 
@@ -1366,22 +1366,22 @@ Class FontMap
 					If col > 0 Then
 						canvas.Color = _pallete.GetRGBA( col )
 						font.DrawCharPureSizeWH( canvas, _tileMap[layer, x, y], xp, yp, divx, divy )
-					End If
+					End if
 				End If
 				xp += divx
 			Next
 			yp += divy
-			If yp > _renderHeight Then Return
-		Next
-	End Method
+			If yp > _renderHeight Then return
+		next
+	End method
 	
 		
-	Method RenderPureAtXYWH( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  colOffset:int = 0 )
+	method RenderPureAtXYWH( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
 		Local yp:float = yn
-		Local col:int
+		local col:int
 		
 		width = xs+width
 		height = ys+height
@@ -1390,7 +1390,7 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = ys Until height
+		For y = ys until height
 			xp = xn
 			For x = xs Until width
 
@@ -1399,17 +1399,17 @@ Class FontMap
 '					If col > 0 Then
 						canvas.Color = _pallete.GetRGBA( col )
 						_arcadeFont.DrawCharPureSizeWH( canvas, _tileMap[layer, x, y], xp, yp, _divx, _divy )
-'					End If
+'					End if
 				End If
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 	
-	Method RenderBlankPureAtXYWH( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  colOffset:int = 0 )
+	method RenderBlankPureAtXYWH( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -1422,9 +1422,9 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		Local col:int
+		local col:int
 		
-		For y = ys Until height
+		For y = ys until height
 			xp = xn
 			For x = xs Until width
 
@@ -1435,24 +1435,24 @@ Class FontMap
 						canvas.DrawRect( xp, yp, _divx, _divy )
 						canvas.Color = _pallete.GetRGBA( col )
 						_arcadeFont.DrawCharPureSizeWH( canvas, _tileMap[layer, x, y], xp, yp, _divx, _divy )
-					End If
+					End if
 				End If
 				xp += _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method RenderRBlankPureAtXYWH( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  colOffset:int = 0 )
+	method RenderRBlankPureAtXYWH( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
 		Local yp:float = yn
 
-		Local xx:float = width * _divx
+		local xx:float = width * _divx
 		
 		height = ys+height
 
@@ -1460,14 +1460,14 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		Local col:int
+		local col:int
 		
 '		canvas.Color = Color.Gold
 '		canvas.DrawFrame( xn, yn, width * 8, height * 8 )
 		
-		For y = ys Until height
+		For y = ys until height
 			xp = xn+(width*_divx)-_divx
-			For x = xs To xs+width-1
+			For x = xs to xs+width-1
 
 				If x < 128 And y < 128 Then
 					col =  _colorMap[layer, x, y]+colOffset
@@ -1476,24 +1476,24 @@ Class FontMap
 						canvas.DrawRect( xp, yp, _divx, _divy )
 						canvas.Color = _pallete.GetRGBA( _colorMap[layer, x, y]+colOffset )
 						_arcadeFont.DrawCharRPureSizeWH( canvas, _tileMap[layer, x, y], xp, yp, _divx, _divy )
-					End If
+					End if
 				End If
 				xp -= _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
 
-	Method RenderRPureAtXYWH( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  colOffset:int = 0 )
+	method RenderRPureAtXYWH( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int,  colOffset:int = 0 )
 		Local x:int
 		Local y:int
 		Local xp:float
 		Local yp:float = yn
 
-		Local xx:int = width * _divx
+		local xx:int = width * _divx
 		
 '		width = xs+width
 		height = ys+height
@@ -1502,10 +1502,10 @@ Class FontMap
 			yp += _divy
 		Wend
 		
-		For y = ys Until height
+		For y = ys until height
 			xp = xn+(width*_divx)-_divx
-			For x = xs To xs+width-1
-'		For y = ys Until height
+			For x = xs to xs+width-1
+'		For y = ys until height
 '			xp = xn+width+xx-_divx
 '			For x = xs Until width
 
@@ -1516,12 +1516,12 @@ Class FontMap
 				xp -= _divx
 			Next
 			yp += _divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 
-	Method RenderPure2AtXYWH( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int, size:int = -1 )
+	method RenderPure2AtXYWH( canvas:Canvas, layer:int, xn:int, yn:int,  xs:int, ys:int, width:int, height:int, size:int = -1 )
 		Local x:int
 		Local y:int
 		Local xp:float
@@ -1540,7 +1540,7 @@ Class FontMap
 			divy = size
 		End If
 		
-		For y = ys Until height
+		For y = ys until height
 			xp = xn
 			For x = xs Until width
 
@@ -1556,22 +1556,22 @@ Class FontMap
 				xp += divx
 			Next
 			yp += divy
-			If yp > _renderHeight Then Return
+			If yp > _renderHeight Then return
 
-		Next
-	End Method
+		next
+	End method
 	
-	Field _divx:float
-	Field _divy:float
-	Field _divx2:float
+	field _divx:float
+	field _divy:float
+	field _divx2:float
 
-Protected
+protected
 
-	Method LoadLayer( Stream:Stream, layer:int )
+	method LoadLayer( Stream:Stream, layer:int )
 		_loadX = Stream.ReadInt()
 		_loadY = Stream.ReadInt()
 		
-		'Print "layer "+layer+" size is "+(_loadX+1)+" "+(_loadY+1)
+		Print "layer "+layer+" size is "+(_loadX+1)+" "+(_loadY+1)
 
 		Local rt:short
 		Local cl:short
@@ -1585,29 +1585,29 @@ Protected
 				If x < 128 And y < 128 Then
 					_tileMap[ layer, x, y] = Clamp(int(cl), 0, 255)
 					_colorMap[ layer, x, y] = Clamp(int(rt), 0, 255)
-				End If
+				End if
 			Next
 		Next
 		
 		_mapWidth[ layer ] = _loadX + 1
 		_mapHeight[ layer ] = _loadY + 1
-	End Method
+	End method
 
-Private	
-	Field _arcadeFont:ArcadeFont
-	Field _font1:ArcadeFont
-	Field _font2:ArcadeFont
+private	
+	field _arcadeFont:ArcadeFont
+	field _font1:ArcadeFont
+	field _font2:ArcadeFont
 	
-	Field _renderWidth:int
-	Field _renderHeight:int
+	field _renderWidth:int
+	field _renderHeight:int
 
-	Field _loadX:int
-	Field _loadY:int
+	field _loadX:int
+	field _loadY:int
 	
-	Field _collideTL:Bool
-	Field _collideTR:Bool
-	Field _collideBL:Bool
-	Field _collideBR:Bool
+	field _collideTL:Bool
+	field _collideTR:Bool
+	field _collideBL:Bool
+	field _collideBR:Bool
 	
-	Field _layerCount:int = -1
+	field _layerCount:int = -1
 End

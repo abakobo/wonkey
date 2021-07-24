@@ -8,7 +8,7 @@ Class EditActions
 	Field redo:Action
 	Field cut:Action
 	Field copy:Action
-	Field copyFenced:Action
+	Field copyCode:Action
 	Field paste:Action
 	Field selectAll:Action
 	Field expandSelection:Action
@@ -30,7 +30,6 @@ Class EditActions
 	
 	
 	Method New( docs:DocumentManager )
-		
 		_docs=docs
 		
 		undo=New Action( "Undo" )
@@ -53,16 +52,16 @@ Class EditActions
 		cut.HotKey=Key.X
 		cut.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
 		
-		copy=New Action( "Copy" )
-		copy.Triggered=OnCopy
-		copy.HotKey=Key.C
+		copy = New Action( "Copy" )
+		copy.Triggered = OnCopy
+		copy.HotKey = Key.C
 		copy.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
-
-		copyFenced=New Action( "Copy (Fenced Code Block)" )
-		copyFenced.Triggered=OnCopyFencedCodeBlock
-		'copyFenced.HotKey=Key.C
-		'copyFenced.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
 		
+		copyCode = New Action( "Copy code block" )
+		copy.Triggered = OnCopyCode
+'		copy.HotKey=Key.C
+'		copyCode.HotKeyModifiers = Modifier.Menu|Modifier.Ignore
+
 		paste=New Action( "Paste" )
 		paste.Triggered=OnPaste
 		paste.HotKey=Key.V
@@ -114,139 +113,137 @@ Class EditActions
 		
 		duplicateBlock=ActionById( ActionId.DuplicateBlock )
 		duplicateBlock.Triggered=OnDuplicateBlock
-		
 	End
+
 	
 	Method Update()
-	
 		Local tv:=Cast<TextView>( App.KeyView )
 		
 		undo.Enabled=tv And tv.CanUndo
 		redo.Enabled=tv And tv.CanRedo
 		cut.Enabled=tv And tv.CanCut
 		copy.Enabled=tv And tv.CanCopy
-		copyFenced.Enabled=tv And tv.CanCopy
+		copyCode.Enabled=tv And tv.CanCopy
 		paste.Enabled=tv And tv.CanPaste
 		selectAll.Enabled=tv
 	End
+
 	
-	Private
+Private
 	
 	Field _docs:DocumentManager
+
 	
 	Property CurrentCodeDocument:CodeTextView()
-		
 		Return Cast<CodeTextView>( App.KeyView )
 	End
+
 	
 	Method OnDeleteLine()
-		
 		CurrentCodeDocument?.DeleteLineAtCursor()
 	End
+
 	
 	Method OnDeleteWordForward()
-		
 		CurrentCodeDocument?.DeleteWordForward()
 	End
+
 	
 	Method OnDeleteWordBackward()
-		
 		CurrentCodeDocument?.DeleteWordBackward()
 	End
+
 	
 	Method OnDeleteToBegin()
-		
 		CurrentCodeDocument?.DeleteToBegin()
 	End
+
 	
 	Method OnDeleteToEnd()
-	
 		CurrentCodeDocument?.DeleteToEnd()
 	End
+
 	
 	Method OnLowercase()
-	
 		CurrentCodeDocument?.LowercaseSelection()
 	End
+
 	
 	Method OnUppercase()
-	
 		CurrentCodeDocument?.UppercaseSelection()
 	End
+
 	
 	Method OnSwapCase()
-		
 		CurrentCodeDocument?.SwapCaseSelection()
 	End
+
 	
 	Method OnUndo()
-
 		Local tv:=Cast<TextView>( App.KeyView )
 		
 		If tv tv.Undo()
 		
 		'TODO
 		' testing stuff here
-		
 	End
+
 	
 	Method OnRedo()
-	
 		Local tv:=Cast<TextView>( App.KeyView )
 		
 		If tv tv.Redo()
 	End
 	
+
 	Method OnCut()
-	
 		Local tv:=Cast<TextView>( App.KeyView )
 		
 		If tv tv.Cut()
 	End
 
-	Method OnCopy()
 
+	Method OnCopy()
 		Local tv:=Cast<TextView>( App.KeyView )
 		
 		If tv tv.Copy()
 	End
 
-	Method OnCopyFencedCodeBlock()
 
-		Local tv:=Cast<TextView>( App.KeyView )
-		
-		If tv tv.CopyFencedCodeBlock()
+	Method OnCopyCode()
+		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
+		doc?.CopyCode()
 	End
 
+
 	Method OnPaste()
-		
 		Local tv:=Cast<TextView>( App.KeyView )
 		
 		If tv tv.Paste()
 	End
+
 	
 	Method OnSelectAll()
-		
 		Local tv:=Cast<TextView>( App.KeyView )
 		
 		If tv tv.SelectAll()
 	End
+
 	
 	Method OnExpandSelection()
-		
 		Cast<CodeTextView>( App.KeyView )?.ExpandSelection()
 	End
+
 	
 	Method OnShrinkSelection()
-		
 		Cast<CodeTextView>( App.KeyView )?.ShrinkSelection()
 	End
+
 	
 	Method OnWordWrap()
-	
 		Local tv:=Cast<TextView>( App.KeyView )
 		
-		If tv
+		If tv Then
 			Local cur:=tv.Cursor
 			Local anc:=tv.Anchor
 			Local sc:=tv.Scroll
@@ -255,21 +252,21 @@ Class EditActions
 			tv.Scroll=sc
 		Endif
 	End
+
 	
 	Method OnComment()
-	
 		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
 		doc?.Comment()
 	End
+
 	
 	Method OnUncomment()
-	
 		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
 		doc?.Uncomment()
 	End
+
 	
 	Method OnDuplicateBlock()
-	
 		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
 		doc?.CodeView.DuplicateBlock()
 	End

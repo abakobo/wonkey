@@ -786,10 +786,10 @@ Class View
 		Next
 	End
 
+
 	#rem wonkeydoc @hidden
 	#end
 	Method Render( canvas:Canvas )
-	
 		If Not _visible Return
 		
 		canvas.BeginRender( _bounds,_matrix )

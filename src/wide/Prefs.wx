@@ -3,68 +3,73 @@ Namespace wide
 
 Const Prefs:=New PrefsInstance
 
+
+
 Class PrefsInstance
-	
 	' AutoCompletion
-	Field AcEnabled:=True
-	Field AcKeywordsOnly:=False
-	Field AcShowAfter:=2
-	Field AcUseTab:=True
-	Field AcUseEnter:=True
-	Field AcUseSpace:=False
-	Field AcUseDot:=False
-	Field AcNewLineByEnter:=False
-	Field AcStrongFirstChar:=True
-	Field AcUseLiveTemplates:=True
-	'
-	Field MainToolBarVisible:=True
-	Field MainToolBarSide:=True
-	Field MainToolBarSimple:=True
-	Field MainProjectIcons:=True
-	Field MainProjectAutoscrollToFile:=False
-	Field MainProjectSingleClickExpanding:=False
-	Field MainPlaceDocsAtBegin:=False
-	'
-	Field EditorToolBarVisible:=False
-	Field EditorGutterVisible:=True
-	Field EditorShowWhiteSpaces:=False
+	Field AcEnabled:bool = True
+	Field AcKeywordsOnly:bool = False
+	Field AcShowAfter:int = 2
+	Field AcUseTab:bool = True
+	Field AcUseEnter:bool = True
+	Field AcUseSpace:bool = False
+	Field AcUseDot:bool = False
+	Field AcNewLineByEnter:bool = False
+	Field AcStrongFirstChar:bool = True
+	Field AcUseLiveTemplates:bool = True
+
+	Field MainToolBarVisible:bool = True
+	Field MainToolBarSide:bool = False
+	Field MainToolBarSimple:bool = False
+	Field MainProjectIcons:bool = True
+	Field MainProjectAutoscrollToFile:bool = False
+	Field MainProjectSingleClickExpanding:bool = False
+	Field MainPlaceDocsAtBegin:bool = False
+
+	Field EditorToolBarVisible:bool = False
+	Field EditorGutterVisible:bool = True
+	Field EditorShowWhiteSpaces:bool = True
 	Field EditorFontPath:String
-	Field EditorFontSize:=16
-	Field EditorShowEvery10LineNumber:=True
-	Field EditorCodeMapVisible:=True
-	Field EditorAutoIndent:=True
-	Field EditorAutoPairs:=True
-	Field EditorSurroundSelection:=True
-	Field EditorShowParamsHint:=True
-	Field EditorUseSpacesAsTabs:=False
-	Field EditorTabSize:=4
-	Field EditorRemoveLinesTrailing:=False
-	Field EditorLineSpacing:=1.0
-	'
-	Field SourceSortByType:=True
-	Field SourceShowInherited:=False
-	'
+	Field EditorFontSize:int = 16
+	Field EditorShowEvery10LineNumber:bool = False
+	Field EditorCodeMapVisible:bool = True
+	Field EditorAutoIndent:bool = True
+	Field EditorAutoPairs:bool = True
+	Field EditorSurroundSelection:bool = True
+	Field EditorShowParamsHint:bool = True
+	Field EditorUseSpacesAsTabs:bool = False
+	Field EditorTabSize:int = 4
+	Field EditorRemoveLinesTrailing:bool = False
+	Field EditorLineSpacing:float = 1.0
+
+	Field SourceSortByType:bool = false
+	Field SourceShowInherited:bool = False
+	Field SourceShowMethod:bool = True
+	Field SourceShowFunction:bool = True
+	Field SourceShowProperty:bool = true
+	Field SourceShowLocal:bool = False
+	Field SourceShowField:bool = False
+
 	Field WonkeyRootPath:String
 	Field IdeHomeDir:String
-	Field OpenGlProfile:="es"
+	Field OpenGlProfile:string = "es"
 	Field HotkeysFilePath:String
-	'
-	Field TemplatesInsertByEnter:=True
+
+	Field TemplatesInsertByEnter:bool = True
 	
 	Field SiblyMode:Bool
+
 	
 	Property FindFilesFilter:String()
 		Return _findFilter
 	Setter( value:String )
-		
 		_findFilter=value
 		SaveLocalState()
 	End
+
 	
 	Method LoadState( json:JsonObject )
-		
 		If json.Contains( "main" )
-			
 			Local j2:=json["main"].ToObject()
 			MainToolBarVisible=Json_GetBool( j2,"toolBarVisible",MainToolBarVisible )
 			MainToolBarSide=Json_GetBool( j2,"toolBarSide",MainToolBarSide )
@@ -74,11 +79,9 @@ Class PrefsInstance
 			MainProjectSingleClickExpanding=Json_GetBool( j2,"singleClickExpanding",MainProjectSingleClickExpanding )
 			MainPlaceDocsAtBegin=Json_GetBool( j2,"placeDocsAtBegin",MainPlaceDocsAtBegin )
 			OpenGlProfile=Json_GetString( j2,"openglProfile",OpenGlProfile )
-			
 		Endif
 		
 		If json.Contains( "completion" )
-		
 			Local j2:=json["completion"].ToObject()
 			AcEnabled=j2["enabled"].ToBool()
 			AcKeywordsOnly=j2["keywordsOnly"].ToBool()
@@ -89,11 +92,9 @@ Class PrefsInstance
 			AcUseDot=Json_GetBool( j2,"useDot",AcUseDot )
 			AcNewLineByEnter=Json_GetBool( j2,"newLineByEnter",AcNewLineByEnter )
 			AcUseLiveTemplates=Json_GetBool( j2,"useLiveTemplates",AcUseLiveTemplates )
-			
 		Endif
 		
 		If json.Contains( "editor" )
-		
 			Local j2:=json["editor"].ToObject()
 			EditorToolBarVisible=j2["toolBarVisible"].ToBool()
 			EditorGutterVisible=j2["gutterVisible"].ToBool()
@@ -110,33 +111,41 @@ Class PrefsInstance
 			EditorTabSize=Json_GetInt( j2,"tabSize",EditorTabSize )
 			EditorRemoveLinesTrailing=Json_GetBool( j2,"removeLinesTrailing",EditorRemoveLinesTrailing )
 			EditorLineSpacing=Json_GetFloat( j2,"lineSpacing",EditorLineSpacing )
-			
 		Endif
+
 		
 		If json.Contains( "source" )
-		
 			Local j2:=json["source"].ToObject()
 			SourceSortByType=j2["sortByType"].ToBool()
 			SourceShowInherited=j2["showInherited"].ToBool()
-			
+			If j2.Contains( "showMethod") Then
+				SourceShowMethod = j2["showMethod"].ToBool()
+				SourceShowFunction = j2["showFunction"].ToBool()
+				SourceShowProperty = j2["showProperty"].ToBool()
+				SourceShowLocal = j2["showLocal"].ToBool()
+				SourceShowField = j2["showField"].ToBool()
+			Else
+				SourceShowMethod = True
+				SourceShowFunction = True
+				SourceShowProperty = True
+				SourceShowLocal = False
+				SourceShowField = False
+			End If
 		Endif
+
 		
 		If json.Contains( "templates" )
-		
 			Local j2:=json["templates"].ToObject()
 			TemplatesInsertByEnter=Json_GetBool( j2,"insertByEnter",TemplatesInsertByEnter )
-			
 		Endif
 		
 		If json.Contains( "siblyMode" )
-		
 			SiblyMode=json["siblyMode"].ToBool()
 		End
-	
 	End
-	
+
+
 	Method SaveState( json:JsonObject )
-		
 		Local j:=New JsonObject
 		json["main"]=j
 		j["toolBarVisible"]=New JsonBool( MainToolBarVisible )
@@ -182,17 +191,21 @@ Class PrefsInstance
 		json["source"]=j
 		j["sortByType"]=New JsonBool( SourceSortByType )
 		j["showInherited"]=New JsonBool( SourceShowInherited )
+		j["showMethod"]=New JsonBool( SourceShowMethod )
+		j["showFunction"]=New JsonBool( SourceShowFunction )
+		j["showProperty"]=New JsonBool( SourceShowProperty )
+		j["showField"]=New JsonBool( SourceShowField )
+		j["showLocal"]=New JsonBool( SourceShowLocal )
 		
 		j=New JsonObject
 		json["templates"]=j
 		j["insertByEnter"]=New JsonBool( TemplatesInsertByEnter )
 		
 		If SiblyMode json["siblyMode"]=JsonBool.TrueValue
-		
 	End
+
 	
 	Method LoadLocalState()
-		
 		IdeHomeDir=HomeDir()+".wide/"
 		CreateDir( IdeHomeDir )
 		
@@ -206,20 +219,19 @@ Class PrefsInstance
 		
 		FindFilesFilter=Json_GetString( json.Data,"findFilesFilter","wx,txt" )
 	End
-	
+
+
 	Method SaveLocalState()
-		
 		If Not WonkeyRootPath.EndsWith( "/" ) Then WonkeyRootPath+="/"
 		
 		Local json:=New JsonObject
 		json["rootPath"]=New JsonString( WonkeyRootPath )
 		json["findFilesFilter"]=New JsonString( FindFilesFilter )
 		json.Save( AppDir()+"state.json" )
-		
 	End
-	
+
+
 	Method GetCustomFontPath:String()
-		
 		If Not EditorFontPath Return ""
 		If Not EditorFontPath.Contains( ".ttf" ) Return ""
 		
@@ -230,14 +242,14 @@ Class PrefsInstance
 		
 		Return path
 	End
-	
+
+
 	Method GetCustomFontSize:Int()
-	
-		Return Max( EditorFontSize,6 ) '6 is a minimum
+		Return Max( EditorFontSize, 6 ) '6 is a minimum
 	End
-	
-	Private
+
+
+Private
 	
 	Field _findFilter:String
-	
 End

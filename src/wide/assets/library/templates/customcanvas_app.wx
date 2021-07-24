@@ -1,0 +1,62 @@
+Namespace myapp
+
+
+#Import "<std>"
+#Import "<mojo>"
+Using std..
+Using mojo..
+
+
+'this will be our custom canvas resolution
+Const Resolution:Vec2i = New Vec2i( 640, 480 )
+
+Function Main()
+	New AppInstance
+	New MyWindow
+	App.Run()
+End
+
+
+Class MyWindow Extends Window
+
+	'this will be your custom canvas
+	field myCanvas:Canvas
+	'a canvas needs an image to draw to
+	Field canvasImage:Image
+
+
+	Method New()
+		'If you are Using highdpi displays then use this vesion
+		'Super.New( "My Window", 640, 480, WindowFlags.Resizable | WindowFlags.HighDPI )
+		Super.New( "My Window", 640, 480, WindowFlags.Resizable )
+		
+		'first create an image of the requires size
+		canvasImage = New Image( Resolution.X, Resolution.Y )
+		'And use this To crate a canvas
+		myCanvas = New Canvas( canvasImage )
+	End
+
+
+	Method OnRender( canvas:Canvas ) Override
+		App.RequestRender()
+		
+		'fill the custom canvas with a color
+		myCanvas.Clear( Color.Black )
+
+		'draw some text to the custom canvas
+		myCanvas.Color = Color.White
+		myCanvas.DrawText( "Width:"+Width+" Height:"+Height, 5,5 )
+		myCanvas.DrawText( "ResX:"+Resolution.X+" ResY:"+Resolution.Y, 5,25 )
+
+		myCanvas.DrawText( "Resize the window and watch the width/resolution numbers", 5,50 )
+
+		'finish drawing To our canvas
+		myCanvas.Flush()
+		
+		'finally draw the custom canvas to the normal canvas
+		canvas.Color = Color.White
+		canvas.DrawRect( 0, 0, Width, Height,  canvasImage )
+	End
+
+End
+

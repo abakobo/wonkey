@@ -5,17 +5,21 @@ Namespace mojox
 #end
 Class Label Extends View
 
+
 	#rem wonkeydoc Invoked when the label is clicked.
 	#end
 	Field Clicked:Void()
 
+
 	#rem wonkeydoc Invoked when the label is right clicked.
 	#end
 	Field RightClicked:Void()
+
 	
 	#rem wonkeydoc Invoked when the label is double clicked.
 	#end
 	Field DoubleClicked:Void()
+
 	
 	#rem wonkeydoc Creates a new label.
 	#end
@@ -29,6 +33,7 @@ Class Label Extends View
 		Text=text
 		Icon=icon
 	End
+
 	
 	Method New( action:Action )
 		Self.New()
@@ -47,12 +52,11 @@ Class Label Extends View
 		End
 	End
 
+
 	#rem wonkeydoc Label text.
 	#end
 	Property Text:String()
-	
 		Return _text
-		
 	Setter( text:String )
 		If text=_text Return
 	
@@ -61,12 +65,11 @@ Class Label Extends View
 		RequestRender()
 	End
 
+
 	#rem wonkeydoc Label text gravity.
 	#end
 	Property TextGravity:Vec2f()
-	
 		Return _textGravity
-	
 	Setter( textGravity:Vec2f )
 		If textGravity=_textGravity Return
 	
@@ -74,13 +77,17 @@ Class Label Extends View
 
 		RequestRender()
 	End
+	
+	
+	Property TextRect:Recti()
+		Return _textRect
+	End
+
 
 	#rem wonkeydoc Label icon.
 	#end
 	Property Icon:Image()
-	
 		Return _icon
-	
 	Setter( icon:Image )
 		If icon=_icon Return
 	
@@ -88,29 +95,29 @@ Class Label Extends View
 		
 		RequestRender()
 	End
+
 	
 	#rem wonkeydoc Adds a view to the right of the label.
 	#end
 	Method AddView( view:View )
-		
 		AddChildView( view )
 	
 		_views.Push( view )
 	End
+
 	
 	#rem wonkeydoc Removes a view from the label.
 	#end
 	Method RemoveView( view:View )
-	
 		RemoveChildView( view )
 		
 		_views.Remove( view )
 	End
-	
-	Protected
-	
-	Method OnMeasure:Vec2i() Override
 
+Protected
+	
+
+	Method OnMeasure:Vec2i() Override
 		_iconSize=New Vec2i( 0,0 )
 		_textSize=New Vec2i( 0,0 )
 		_viewsSize=New Vec2i( 0,0 )
@@ -139,9 +146,9 @@ Class Label Extends View
 		
 		Return New Vec2i( w,h )
 	End
+
 	
 	Method OnLayout() Override
-	
 		Local iy:=(Height-_iconSize.y)/2
 		_iconRect=New Recti( 0,iy,_iconSize.x,iy+_iconSize.y )
 	
@@ -178,11 +185,10 @@ Class Label Extends View
 			view.Frame=New Recti( x0,0,x1,Height )
 			x0=x1
 		Next
-	
 	End
+
 	
 	Method OnRender( canvas:Canvas ) Override
-	
 		If _icon 
 			RenderStyle.DrawIcon( canvas,_icon,_iconRect.X,_iconRect.Y )
 		Endif
@@ -191,31 +197,28 @@ Class Label Extends View
 			RenderStyle.DrawText( canvas,_text,_textRect,_textGravity )
 		Endif
 	End
-	
-	Method OnMouseEvent( event:MouseEvent ) Override
 
+
+	Method OnMouseEvent( event:MouseEvent ) Override
 		Select event.Type
-		Case EventType.MouseDown,EventType.MouseWheel
-		
-			Return
+			Case EventType.MouseDown,EventType.MouseWheel
+				Return
 			
-		Case EventType.MouseClick
-		
-			Clicked()
+			Case EventType.MouseClick
+				Clicked()
 			
-		Case EventType.MouseRightClick
-		
-			RightClicked()
+			Case EventType.MouseRightClick
+				RightClicked()
 			
-		Case EventType.MouseDoubleClick
-		
-			DoubleClicked()
+			Case EventType.MouseDoubleClick
+				DoubleClicked()
 		End
 
 		event.Eat()
 	End
+
 	
-	Private
+Private
 	
 	Field _text:String
 	Field _textGravity:Vec2f=New Vec2f( 0,.5 )

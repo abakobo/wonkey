@@ -1,41 +1,137 @@
-
 Namespace wide
+
+'------------------------
+' this is the SOURCE tab view
+'
+' there are 2 - main top one and bottom local one
+'------------------------
 
 
 Class CodeTreeView Extends TreeViewExt
-	
+	field FeedMe:Void()
+
 	Field SortByType:=True
 	Field ShowInherited:=False
+
+	Field ShowMethod:=True
+	Field ShowFunction:=True
+	Field ShowProperty:=True
+	Field ShowLocal:=False
+	Field ShowField:=False
+
 	Field FillNestedItems:=True
+
 	
-	Method Fill( codeItems:Stack<CodeItem>,parser:ICodeParser,expandIfOnlyOneItem:Bool=True )
+	method OnMouseEvent( event:MouseEvent ) override
+		Super.OnMouseEvent( event )
 		
+		If _rootNode._children.Length < 1 Then
+			'no data try and source some
+			FeedMe()
+		End If
+	End Method
+	
+	
+	Method RenderNode( canvas:Canvas, node:Node ) Override
+		Local clip:=VisibleRect
+		If Not node._bounds.Intersects( clip ) Return
+		
+		If _rootNodeVisible Or node<>_rootNode Then
+			Local rect:=node._rect
+		
+			If node._children.Length Then
+				Local icon:=node._expanded ? _expandedIcon Else _collapsedIcon
+				
+				Local x:=(_nodeSize-icon.Width)/2
+				Local y:=(rect.Height-icon.Height)/2
+				
+				RenderStyle.DrawIcon( canvas, icon, rect.min.x+x, rect.min.y+y )
+			Endif
+			
+			rect.min.x+=_nodeSize
+			
+			Local style:=NodeStyle( node )
+			
+			style.Render( canvas, rect )
+			rect -= style.Bounds
+
+			If node.Icon Then
+				Local y:int = (rect.Height - node.Icon.Height)/2
+				style.DrawIcon( canvas, node.Icon, rect.min.x, rect.min.y+y )
+				rect.min.x += node.Icon.Width+style.Font.TextWidth( " " )
+			Endif
+
+			Local txt:string = node.Text.Right( node.Text.Length - 1)
+'			Local txt:string = node.Text
+
+			Select node.Text.Left(1)
+				Case 0 'default off
+					canvas.Alpha = 0.6
+					style.DrawText( canvas, txt, rect, New Vec2f( 0,.5 ) )
+					canvas.Alpha = 1
+				Case 1 'class
+					style.DrawText( canvas, txt, rect, New Vec2f( 0,.5 ) )
+					rect.X += 1
+					style.DrawText( canvas, txt, rect, New Vec2f( 0,.5 ) )
+				Case 3 'methd
+					Local on:string = txt.Left(2)
+					If on = "On" Or on = "on" Then
+						style.DrawText( canvas, txt, rect, New Vec2f( 0,.5 ) )
+					Else
+						canvas.Alpha = 0.6
+						style.DrawText( canvas, txt, rect, New Vec2f( 0,.5 ) )
+						canvas.Alpha = 1
+					End If
+				Case 2,4,5,6,7	'function/property/vars
+					canvas.Alpha = 0.6
+					style.DrawText( canvas, txt, rect, New Vec2f( 0,.5 ) )
+					canvas.Alpha = 1
+				Default 'Case 2
+'					Print node.Text
+					canvas.Alpha = 0.6
+					style.DrawText( canvas, node.Text, rect, New Vec2f( 0,.5 ) )
+					canvas.Alpha = 1
+			End Select
+		Endif
+			
+		If node._expanded
+			For Local child:=Eachin node._children
+				RenderNode( canvas,child )
+			Next
+		Endif
+		
+	End
+
+
+	Method Fill( codeItems:Stack<CodeItem>, parser:ICodeParser, expandIfOnlyOneItem:Bool=True )
 		Local node:=RootNode
 		
 		RootNodeVisible=False
 		node.Expanded=True
 		node.RemoveAllChildren()
 		
-		If codeItems ' empty stack is correct here - we must remove all
-			_codeItems=codeItems
+		If codeItems Then ' empty stack is correct here - we must remove all
+			_codeItems = codeItems
 		Endif
 		
-		If Not _codeItems Or _codeItems.Empty Return
+		If Not _codeItems Or _codeItems.Empty Then
+'			Print "no code items!"
+			Return
+		End If
 		
 		SortItems( _codeItems )
 		
 		For Local i:=Eachin _codeItems
-			AddTreeItem( i,node,parser )
+			AddTreeItem( i, node, parser )
 		Next
 		
-		If expandIfOnlyOneItem And RootNode.NumChildren=1
-			RootNode.Children[0].Expanded=True
+		If expandIfOnlyOneItem And RootNode.NumChildren = 1 Then
+			RootNode.Children[0].Expanded = True
 		Endif
-		
 	End
+
 	
 	Method SelectByScope( scope:CodeItem )
-		
 		Local node:=FindNode( RootNode,scope )
 		If Not node And scope.Parent Then node=FindNode( RootNode,scope.Parent )
 		If Not node Return
@@ -60,11 +156,10 @@ Class CodeTreeView Extends TreeViewExt
 		Selected=Null
 		Selected=node
 	End
+
 	
 	Method FindNode:TreeView.Node( treeNode:TreeView.Node,item:CodeItem )
-	
 		Local node:=Cast<CodeTreeNode>( treeNode )
-		
 		If node And node.CodeItem = item Return node
 	
 		Local list:=treeNode.Children
@@ -78,16 +173,55 @@ Class CodeTreeView Extends TreeViewExt
 		Return Null
 	End
 	
+
 	
-	Private
+Private
 	
 	Field _codeItems:Stack<CodeItem>
+
 	
-	Method AddTreeItem( item:CodeItem,node:TreeView.Node,parser:ICodeParser )
-		
+	Method AddTreeItem( item:CodeItem, node:TreeView.Node, parser:ICodeParser )
 		If item.IsBlock Return
 		
-		Local n:=New CodeTreeNode( item,node )
+		Local n:CodeTreeNode
+'		Print item.KindStr
+		Select item.KindStr
+			Case "class"
+				n = New CodeTreeNode( "1", item, node )
+
+			Case "method"
+				If ShowMethod Then
+					n = New CodeTreeNode( "3", item, node )
+				End If
+
+			Case "function"
+				If ShowFunction Then
+					n = New CodeTreeNode( "4", item, node )
+				End If
+
+			Case "property"
+				If ShowProperty Then
+					n = New CodeTreeNode( "5", item, node )
+				End If
+				
+			Case "local"
+				If ShowLocal
+					n = New CodeTreeNode( "6", item, node )
+				End If
+
+			Case "field", "const", "global"
+				If ShowField Then
+					n = New CodeTreeNode( "7", item, node )
+				End If
+
+			Default
+				If item.Text.Left(2) = "on" Or item.Text.Left(2) = "On" Then
+					n = New CodeTreeNode( "2", item, node )
+				Else
+					n = New CodeTreeNode( "0", item, node )
+				End If
+		End
+		If Not n Then return
 		
 		' restore expand state
 		_expander.Restore( n )
@@ -104,7 +238,6 @@ Class CodeTreeView Extends TreeViewExt
 		
 		' sorting only root class members
 		If item.IsLikeClass
-			
 			SortItems( list )
 			
 			If ShowInherited
@@ -127,22 +260,21 @@ Class CodeTreeView Extends TreeViewExt
 			Local txt:=i.Text
 			If added.Contains( txt ) Continue
 			added.Add( txt )
-			AddTreeItem( i,n,parser )
+			AddTreeItem( i, n, parser )
 		End
-		
 	End
+
 	
 	Method SortItems( list:Stack<CodeItem> )
-	
 		If SortByType
 			CodeItemsSorter.SortByType( list,False,True )
 		Else
 			CodeItemsSorter.SortByPosition( list )
 		End
 	End
+
 	
 	Method GetInherited:Stack<CodeItem>( item:CodeItem,parser:ICodeParser,result:Stack<CodeItem> )
-	
 		If item.SuperTypesStr=Null Return Null
 	
 		For Local t:=Eachin item.SuperTypesStr
@@ -172,21 +304,26 @@ End
 
 
 Class CodeTreeNode Extends TreeView.Node
-
-	Method New( item:CodeItem,node:TreeView.Node )
-		
-		Super.New( item.Text,node )
+	Method New( kind:string, item:CodeItem, node:TreeView.Node )
+		Super.New( kind+item.Text, node )
 		_code=item
 		Icon=CodeItemIcons.GetIcon( item )
 	End
+
+
+	Method New( item:CodeItem, node:TreeView.Node )
+		Super.New( item.Text, node )
+		_code=item
+		Icon=CodeItemIcons.GetIcon( item )
+	End
+
 	
 	Property CodeItem:CodeItem()
-		
 		Return _code
 	End
 	
 	
-	Private
+Private
 	
 	Field _code:CodeItem
 	

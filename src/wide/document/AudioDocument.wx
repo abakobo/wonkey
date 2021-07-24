@@ -2,194 +2,435 @@
 Namespace wide
 
 
+#Import "../assets/audio.png"
+#Import "../assets/notes.png"
+
+
 Private
 
 Class AudioDocumentView Extends View
 
-	Method New( doc:AudioDocument )
-		_doc=doc
 
-		Layout="fill"
+	Method New( doc:AudioDocument )
+		_doc = doc
 		
-		Style.BackgroundColor=App.Theme.GetColor( "content" )
+		'this is internal and will setup the pitch values
+		'these (once set up) can be found through the global variable _notes[note number]
+		If Not _notesHaveBeenSet Then CreateNotes()
+
+		Layout = "fill"
 		
-		_toolBar=New ToolBar
-		_toolBar.Layout="float"
-		_toolBar.Gravity=New Vec2f( .5,1 )
+'		Style.BackgroundColor = App.Theme.GetColor( "content" )
+		Style.BackgroundColor = MainWindow._theme.Syntax[14]
 		
-		_toolBar.AddAction( "Play" ).Triggered=Lambda()
-			GetChannel().Play( _doc.Sound )
-		End
 		
-		_toolBar.AddAction( "Loop" ).Triggered=Lambda()
-			GetChannel().Play( _doc.Sound,True )
-		End
+'		_toolBar=New ToolBar
+'		_toolBar.Layout="float"
+'		_toolBar.Gravity=New Vec2f( .5,1 )
 		
-		_toolBar.AddAction( "Stop" ).Triggered=Lambda()
-			GetChannel().Stop()
-		End
+		GetChannel()
 		
-		Local volbar:=New ScrollBar( Axis.X )
-		volbar.MinSize=New Vec2i( 64,0 )
-		volbar.Minimum=0
-		volbar.Maximum=100
-		volbar.PageSize=10
-		volbar.Value=_chan.Volume*100
-		volbar.ValueChanged+=Lambda( value:int )
-			_chan.Volume=value/100.0
-		End
-		Local vol:=New Label( "Volume " )
-		vol.AddView( volbar )
-		_toolBar.AddView( vol )
+'		_toolBar.AddAction( "Play" ).Triggered=Lambda()
+'			_chan.Play( _doc.Sound )
+'		End
 		
-		Local panbar:=New ScrollBar( Axis.X )
-		panbar.MinSize=New Vec2i( 64,0 )
-		panbar.Minimum=-100
-		panbar.Maximum=+100
-		panbar.PageSize=10
-		panbar.Value=_chan.Pan*100
-		panbar.ValueChanged+=Lambda( value:Int )
-			GetChannel().Pan=value/100.0
-		End
-		Local pan:=New Label( "Pan " )
-		pan.AddView( panbar )
-		_toolBar.AddView( pan )
+'		_toolBar.AddAction( "Loop" ).Triggered=Lambda()
+'			_chan.Play( _doc.Sound,True )
+'		End
 		
-		AddChildView( _toolBar )
+'		_toolBar.AddAction( "Stop" ).Triggered=Lambda()
+'			_chan.Stop()
+'		End
+		
+'		Local volbar:=New ScrollBar( Axis.X )
+'		volbar.MinSize=New Vec2i( 64,0 )
+'		volbar.Minimum=0
+'		volbar.Maximum=100
+'		volbar.PageSize=10
+'		volbar.Value = _chan.Volume*100
+'		volbar.ValueChanged+=Lambda( value:int )
+'			_chan.Volume=value/100.0
+'		End
+'		Local vol:=New Label( "Volume " )
+'		vol.AddView( volbar )
+'		_toolBar.AddView( vol )
+'		
+'		Local panbar:=New ScrollBar( Axis.X )
+'		panbar.MinSize=New Vec2i( 64,0 )
+'		panbar.Minimum=-100
+'		panbar.Maximum=+100
+'		panbar.PageSize=10
+'		panbar.Value=_chan.Pan*100
+'		panbar.ValueChanged+=Lambda( value:Int )
+'			GetChannel().Pan=value/100.0
+'		End
+'		Local pan:=New Label( "Pan " )
+'		pan.AddView( panbar )
+'		_toolBar.AddView( pan )
+		
+'		AddChildView( _toolBar )
 	End
+
 	
-	Protected
+Protected
+
 	
-	Method OnLayout() Override
+'	Method OnLayout() Override
+'		_toolBar.Frame=Rect
+'	End
+
 	
-		_toolBar.Frame=Rect
-	End
+	Method DrawAudio( canvas:Canvas, x:int, y:int, width:int, height:int )
+		Local data := _doc.Data
+
+		If data <> _chanData And _chan Then _chan.Stop()
+		_chanData = data
+		
+		local mid:int = height * 0.5
+
+		canvas.Color = MainWindow._theme.Syntax[14]
+		canvas.DrawRect( 0,0, width, height )
+
+		canvas.Color = MainWindow._theme.IDE[1] * 0.5
+		canvas.DrawLine( 0, mid, width, mid )
+
+		canvas.Color = MainWindow._theme.IDE[1]
+		local xp:float
+		local sample:float
+		local p:int
+		local last:int
+		
+		If data.Stereo Then
+			local half:int = mid * 0.5
+			local y1:int = half
+			local y2:int = mid + y1
+			local p1:int
+			local last1:int
+			For xp = 0 Until width
+				sample = data.GetSample( (xp / width) *data.Length, 0 )
+
+				p = y1 + (half * sample)
+
+				sample = data.GetSample( (xp / width) * data.Length, 1 )
+				p1 = y2 + (half * sample)
+
+				If xp Then
+					canvas.DrawLine( x+xp-1, y+last, x+xp,y+p )
+					canvas.DrawLine( x+xp-1, y+last1, x+xp,y+p1 )
+				End If
+
+				last = p
+				last1 = p1
+			Next
+		Else
+			For xp = 0 Until width
+				sample = data.GetSample( (xp / width) * data.Length, 0 )
+
+				p = mid + (mid * sample)
+				If xp Then canvas.DrawLine( x+xp-1, y+last, x+xp,y+p )
+				last = p
+			Next
+		End If
+		
+		local playhead:float = float(_chan.PlayheadSample) / data.Length
+		canvas.Color = MainWindow._theme.Syntax[16]
+'		canvas.Color = Color.UIYellow * 0.8
+		xp = x + (width * playhead)
+		canvas.DrawRect( xp, y, 2, height )
+	End Method
+	
+	
+	method DrawLevels( canvas:Canvas, x:int, y:int, width:int, height:int )
+		x += 10
+		y += 10
+		width -= 10
+		height -= 10
+		
+		local mid:int = width * 0.5
+
+		Local data:AudioData = _doc.Data
+		local left:float = Clamp( Abs(data.GetSample( _chan.PlayheadSample, 0 )), 0,1 )
+		local right:float = Clamp( Abs(data.GetSample( _chan.PlayheadSample, 1 )), 0,1 )
+		
+		If Not _chan.Playing Then
+			left = 0
+			right = 0
+		End If
+		
+		If left > _leftTop Then _leftTop = left
+		If right > _rightTop Then _rightTop = right
+
+		canvas.Color = Color.Black * 0.7
+		If data.Stereo Then
+			canvas.DrawRect( x,y, mid - 2, height )
+			canvas.DrawRect( x+mid+2,y, mid - 2, height )
+		Else
+			canvas.DrawRect( x,y, width, height )
+		End If
+		
+		x += 2
+		y += 2
+		width -= 4
+		height -= 4
+		
+		local y1:int = y + height
+
+		canvas.Color = Color.Lime
+		If data.Stereo Then
+			canvas.DrawRect( x, y1, mid-6, -height * left )
+			canvas.DrawRect( x+mid+2, y1, mid-6, -height * right )
+
+			canvas.Color = Color.LightGrey * 0.8
+			canvas.DrawRect( x, y1 -height * _leftTop, mid-6, 4 )
+			canvas.DrawRect( x+mid+2, y1 -height * _rightTop, mid-6, 4 )
+		Else
+			canvas.DrawRect( x, y1, width, -height * left )
+
+			canvas.Color = Color.LightGrey * 0.8
+			canvas.DrawRect( x, y1-height*_leftTop, width, 4 )
+		End If
+		
+		_leftTop = Clamp( _leftTop - 0.02, 0, 1 )
+		_rightTop = Clamp( _rightTop - 0.02, 0, 1 )
+	End Method
+
+
+	method DrawVolume( canvas:Canvas, x:int, y:int, width:int, height:int )
+		If Not _audioImage Then
+			_audioImage = Image.Load( "asset::audio.png" )
+		End If
+		local x1:int = x + width-4
+		local y1:int = y + height
+		local yp:int = y1 - (height * _volume * 0.96)
+		
+		local w1:int = width * 0.2
+		local h1:int = width * 0.3
+		
+		canvas.Color = Color.White
+		canvas.DrawRect( x,y, width,height, _audioImage )
+
+
+		canvas.LineWidth = Clamp( 3 * App.Theme.Scale.x, 1, 20 )
+'		canvas.Color = Color.XamPeach * 0.8
+		canvas.Color = MainWindow._theme.Syntax[16] * 0.8
+
+		canvas.DrawLine( x,yp, x+w1,yp-h1 )
+		canvas.DrawLine( x+w1,yp-h1, x1,yp-h1 )
+		canvas.DrawLine( x1,yp+h1, x1,yp-h1 )
+		canvas.DrawLine( x1,yp+h1, x+w1,yp+h1 )
+		canvas.DrawLine( x+w1,yp+h1, x,yp )
+
+		canvas.LineWidth = 1
+
+		If _mouseX > x And _mouseX < x1 And _mouseY > y And _mouseY < y1 Then
+			If _mouseDown Then
+				_volume = Clamp( float(height-(_mouseY-y)) / height, 0, 1 )
+			End If
+		End If
+	End Method
+	
 	
 	Method OnRender( canvas:Canvas ) Override
-	
-		Local data:=_doc.Data
+		If _audioTimer Then _audioTimer.Suspended = False
 		
-		canvas.BlendMode=BlendMode.Additive
+		canvas.Color = GetNewColor( MainWindow._theme.Syntax[14], 0.07 )
+		canvas.DrawRect( 0,0, Width, Height )
 		
-		For Local chan:=0 Until 2
+		local scale:float = App.Theme.Scale.x
 		
-			canvas.Color=chan ? Color.Red else Color.Green
+		local h1:int = 50 * scale
+		local y1:int = Height - h1
 		
-			Local last:=0.0
-		
-			For Local x:=0 Until Width
-			
-				Local sample:=data.GetSample( Float(x)/Width*data.Length,chan )
-				
-				Local p:=Height/2+(Height/4*sample)
-				
-				If x canvas.DrawLine( x-1,last,x,p )
-				
-				last=p
-			Next
-		
-		Next
-		
-	End
-	
-	Private
-	
-	Global _chan:Channel
-	
-	Global _volume:Int
+		DrawAudio( canvas, 0,0, Width - 120 * scale, y1 )
 
-	Field _doc:AudioDocument
+		DrawLevels( canvas, Width - 120 * scale, 0, 60 * scale, y1 )
+		
+		DrawVolume( canvas, Width - 60 * scale, 0, 60 * scale, y1 )
+
+		canvas.Color = Color.White
+		If Not _noteImage Then
+			_noteImage = Image.Load( "asset::notes.png" )
+		End If
+		canvas.DrawRect( 0,y1, h1*5.6,h1, _noteImage )
+		canvas.DrawText( _octave, h1*6, y1 + h1 * 0.05 )
+		canvas.DrawText( _playNote, h1*6, y1 + h1 * 0.6 )
+	End
+
+
+	method OnKeyUp( KeyDown:Key ) override
+		If _chan.Playing Then _chan.Stop()
+	End Method
 	
-	Field _toolBar:ToolBar
+	
+	method OnKeyDown( KeyDown:Key ) override
+		local note:int = -1
+		_playNote = -1
+		Select KeyDown
+			Case Key.LeftBracket
+				_octave = Clamp( _octave-1, 0, 9 )
+			Case Key.RightBracket
+				_octave = Clamp( _octave+1, 0, 9 )
+
+			Case Key.Z
+				note = 0
+			Case Key.S
+				note = 1
+			Case Key.X
+				note = 2
+			Case Key.D
+				note = 3
+			Case Key.C
+				note = 4
+			Case Key.V
+				note = 5
+			Case Key.G
+				note = 6
+			Case Key.B
+				note = 7
+			Case Key.H
+				note = 8
+			Case Key.N
+				note = 9
+			Case Key.J
+				note = 10
+			Case Key.M
+				note = 11
+			Case Key.Comma
+				note = 12
+			Case Key.L
+				note = 13
+			Case Key.Period
+				note = 14
+			Case Key.Semicolon
+				note = 15
+			Case Key.Slash
+				note = 16
+		End
+		
+		If note > -1 Then
+			_chan.Volume = _volume
+			_playNote = note + _octave*12
+			If note > 11 Then
+				_chan.Pitch = _notes[ _octave+1, note-12 ]
+			Else
+				_chan.Pitch = _notes[ _octave, note ]
+			End If
+			_chan.Play( _doc.Sound )
+		End If
+			
+	End method
+
+'	method OnMouseDown() override
+'		Print _mouseX+" "+_mouseY
+'	End method
+	
+	
+Private
+
+	Global _chan:Channel
+	global _chanData:AudioData
+	global _note:int
+	global _octave:int = 4
+	
+	global _audioImage:Image
+	global _noteImage:Image
+	
+	field _volume:float = 1
+	field _leftTop:Float
+	field _rightTop:float
+	field _playNote:int
+	
+	Field _doc:AudioDocument
+'	Field _toolBar:ToolBar
+
 	
 	Function GetChannel:Channel()
-		
-		If Not _chan Then _chan=New Channel
+		If Not _chan Then _chan = New Channel
 		
 		Return _chan
 	End
 End
 
-Class AudioDocument Extends WideDocument
 
+Class AudioDocument Extends WideDocument
 	Method New( path:String )
 		Super.New( path )
 		
 		_view=New AudioDocumentView( Self )
 	End
+
 	
 	Property Data:AudioData()
-	
 		Return _data
 	End
+
 	
 	Property Sound:Sound()
-	
 		If Not _sound _sound=New Sound( _data )
 		
 		Return _sound
 	End
+
+
+Protected
 	
-	Protected
-	
+
 	Method OnLoad:Bool() Override
-	
 		_data=AudioData.Load( Path )
 		If Not _data Return False
 		
 		Return True
 	End
+
 	
 	Method OnSave:Bool() Override
-
 		Return False
 	End
+
 	
 	Method OnClose() Override
-	
 		If _sound _sound.Discard()
 		If _data _data.Discard()
 		
 		_sound=Null
 		_data=Null
 	End
+
 	
 	Method OnCreateView:AudioDocumentView() Override
-	
 		Return _view
 	End
+
 	
-	Private
+Private
 
 	Field _view:AudioDocumentView
-	
 	Field _data:AudioData
-	
 	Field _sound:Sound
-	
 End
 
-Class AudioDocumentType Extends WideDocumentType
 
+Class AudioDocumentType Extends WideDocumentType
 	Property Name:String() Override
 		Return "AudioDocumentType"
 	End
+
 	
-	Protected
-	
+Protected
+
+
 	Method New()
 		AddPlugin( Self )
 		
-		Extensions=New String[]( ".wav",".ogg" )
+		Extensions=New String[]( ".wav", ".ogg" )
 	End
+
 	
 	Method OnCreateDocument:WideDocument( path:String ) Override
-	
 		Return New AudioDocument( path )
 	End
+
 	
-	Private
-	
+Private
 	Global _instance:=New AudioDocumentType
-	
 End

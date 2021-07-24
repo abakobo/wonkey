@@ -1,0 +1,132 @@
+
+Namespace wide
+
+
+
+Private
+
+
+Class FontDocumentView Extends View
+	field font:Font
+
+	Method New( doc:FontDocument )
+		_doc = doc
+		
+		Layout = "fill"
+		
+		Style.BackgroundColor = MainWindow._theme.Syntax[14]
+		
+		
+	End
+
+	
+Protected
+
+
+	Method OnRender( canvas:Canvas ) Override
+		If _audioTimer Then _audioTimer.Suspended = True
+		
+		canvas.Color = MainWindow._theme.Syntax[14]
+		canvas.DrawRect( 0,0, Width, Height )
+
+		local size:int = 60 * App.Theme.Scale.x
+		If Not font Then
+			font = App.Theme.OpenFont( _doc.Data, size )
+		End If
+		
+		If Not font Then
+			Print "bad font "+_doc.Data
+			Return
+		End If
+
+		canvas.Font = font
+		local midX:int = Width * 0.5
+		canvas.Color = MainWindow._theme.IDE[1]
+		
+		canvas.DrawText( "0 1 2 3 4 5 6 7 8 9", midX, size* 0.5,  0.5,0.5 )
+		canvas.DrawText( "A B C D E F G H I J K L M", midX, size*1.5,  0.5,0.5 )
+		canvas.DrawText( "N O P Q R S T U V W X Y Z", midX, size*2.25,  0.5,0.5 )
+		canvas.DrawText( "a b c d e f g h i j k l m", midX, size*3.25,  0.5,0.5 )
+		canvas.DrawText( "n o p q r s t u v w x y z", midX, size*4,  0.5,0.5 )
+	End
+
+
+Private
+
+	Field _doc:FontDocument
+
+	
+End
+
+
+Class FontDocument Extends WideDocument
+	Method New( path:String )
+		Super.New( path )
+		
+		_view = New FontDocumentView( Self )
+	End
+
+	
+	Property Data:string()
+		Return _data
+	End
+
+	
+Protected
+	
+
+	Method OnLoad:Bool() Override
+		_data = Path'App.Theme.OpenFont( Path, 14 )
+
+'		If Not _data Return False
+		
+		Return True
+	End
+
+	
+	Method OnSave:Bool() Override
+		Return False
+	End
+
+	
+	Method OnClose() Override
+		_data = ""
+	End
+
+	
+	Method OnCreateView:FontDocumentView() Override
+		Return _view
+	End
+
+	
+Private
+
+	Field _view:FontDocumentView
+	Field _data:string
+End
+
+
+Class FontDocumentType Extends WideDocumentType
+	Property Name:String() Override
+		Return "FontDocumentType"
+	End
+
+	
+Protected
+
+
+	Method New()
+		AddPlugin( Self )
+		
+		Extensions = New String[]( ".ttf", ".otf", ".fon", ".fnt" )
+	End
+
+	
+	Method OnCreateDocument:WideDocument( path:String ) Override
+		Return New FontDocument( path )
+	End
+
+	
+Private
+	Global _instance := New FontDocumentType
+End

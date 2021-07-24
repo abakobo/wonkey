@@ -3,9 +3,9 @@ Namespace wide
 
 
 Class ExamplesView Extends DockingView
+
 	
 	Method New( docs:DocumentManager )
-		
 		Super.New()
 		
 		_docs=docs
@@ -13,9 +13,7 @@ Class ExamplesView Extends DockingView
 		_tree=New TreeViewExt
 		
 		' load projects when first time expanding node
-		'
 		_tree.NodeExpanded+=Lambda( n:TreeView.Node )
-			
 			Local node:=GetNodeWithData( n )
 			If Not node Or node.data.loaded Return
 			node.RemoveAllChildren() ' remove dummy item
@@ -25,19 +23,16 @@ Class ExamplesView Extends DockingView
 		End
 		
 		_tree.NodeClicked+=Lambda( node:TreeView.Node )
-			
 			If Prefs.MainProjectSingleClickExpanding Then OnOpenDocument( node )
 		End
 		
 		_tree.NodeDoubleClicked+=Lambda( node:TreeView.Node )
-			
 			If Not Prefs.MainProjectSingleClickExpanding Then OnOpenDocument( node )
 		End
-		
 	End
+
 	
 	Method Init()
-		
 		If _inited Return
 		
 		_inited=True
@@ -48,12 +43,10 @@ Class ExamplesView Extends DockingView
 		ContentView=label
 		
 		LoadData()
-		
 	End
 	
 	
-	Private
-	
+Private
 	Const VALID_FOLDERS:=New String[]( "examples","samples","tests" )
 	
 	Field _tree:TreeViewExt
@@ -61,11 +54,10 @@ Class ExamplesView Extends DockingView
 	Field _fileIcon:Image
 	Field _docs:DocumentManager
 	Field _inited:Bool
+
 	
 	Method LoadData()
-		
 		New Fiber( Lambda()
-			
 			Fiber.Sleep( 1.5 )
 			
 			Local folders:=New StringStack
@@ -107,23 +99,23 @@ Class ExamplesView Extends DockingView
 			ContentView=_tree
 		End )
 	End
-	
+
+
 	Method GetNodeWithData:NodeWithData<FolderData>( node:TreeView.Node )
-		
 		Return Cast<NodeWithData<FolderData>>( node )
 	End
+
 	
 	Method OnOpenDocument( n:TreeView.Node )
-		
 		Local node:=GetNodeWithData( n )
 		If node And FileExists( node.data.path )
 			_docs.OpenDocument( node.data.path,True )
 			_docs.LockBuildFile()
 		Endif
 	End
-	
+
+
 	Method OnValidateStyle() Override
-	
 		Super.OnValidateStyle()
 		
 		_dirIcon=ProjectBrowserView.GetFileTypeIcon( "._dir" )
@@ -131,9 +123,9 @@ Class ExamplesView Extends DockingView
 		
 		UpdateIcons( _tree.RootNode )
 	End
-	
+
+
 	Method UpdateIcons( n:TreeView.Node )
-		
 		Local node:=GetNodeWithData( n )
 		If node
 			Local icon:=ProjectBrowserView.GetFileTypeIcon( node.data.path )
@@ -149,9 +141,9 @@ Class ExamplesView Extends DockingView
 			UpdateIcons( child )
 		Next
 	End
-	
+
+
 	Method FillNode( n:TreeView.Node,path:String )
-		
 		Local node:=GetNodeWithData( n )
 		node.data.loaded=True
 		
@@ -159,7 +151,6 @@ Class ExamplesView Extends DockingView
 		Local files:=New Stack<String>
 		
 		For Local f:=Eachin LoadDir( path )
-			
 			Local fpath:=path+f
 			
 			Select GetFileType( fpath )
@@ -181,7 +172,6 @@ Class ExamplesView Extends DockingView
 		Endif
 		
 		For Local file:=Eachin dirs
-			
 			Local full:=path+file
 			Local data:=New FolderData
 			data.path=full
@@ -194,9 +184,9 @@ Class ExamplesView Extends DockingView
 			Endif
 		Next
 	End
-	
+
+
 	Method CollectFolders( folder:String,target:StringStack )
-		
 		For Local name:=Eachin LoadDir( folder )
 			Local lowercasedName:=name.ToLower()
 			If Utils.ArrayContains( VALID_FOLDERS,lowercasedName )
@@ -220,12 +210,10 @@ Class ExamplesView Extends DockingView
 End
 
 
-
 Private
 
+
 Class FolderData
-	
 	Field path:String
 	Field loaded:Bool
-	
 End

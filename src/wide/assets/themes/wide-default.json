@@ -7,6 +7,8 @@
 		"textview-cursor-line":"#2000",
 		"textview-whitespaces":"#2aaa",
 		"textview-extra-selection":"#5555",
+		"picobg":"#111111",
+		"picored":"#FF1111",
 		"statusbar": "content",
 		"statusbar-active": "#CA5100",
 		"menu-shortcut":"text-background",
@@ -169,19 +171,21 @@
 			"backgroundColor":"codemap-background"
 		},
 
+
+
 		"ExamplesView":{
 			"border":[ 0 ],
 			"padding":[ 0 ],
-			"backgroundColor":"content"
+			"backgroundColor":"clear"
 		},
 		"ExamplesCard":{
-			"margin":[ 10,15,10,15 ],
+			"margin":[ 15,15,15,15 ],
 			"border":[ 1 ],
-			"borderColor":"clear"
+			"backgroundColor":"clear"
 		},
 		"ExamplesTitle":{
 			"extends": "Label",
-			"font": "examples-title"
+			"font": "normal"
 		},
 		"ExamplesButton":{
 			"extends": "Button",
@@ -191,6 +195,8 @@
 			"extends":"TextView",
 			"font":"normal"
 		},
+
+
 
 		"MenuButton":{
 			"extends":"Label",

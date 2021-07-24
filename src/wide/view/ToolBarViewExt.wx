@@ -4,23 +4,30 @@ Namespace wide
 
 Class ToolBarExt Extends ToolBar
 
+
 	Method New( axis:Axis = Null )
-		
 		Super.New( axis )
 		Style=GetStyle( "ToolBarExt" )
 	End
+
 	
+	Method OnRender( canvas:Canvas ) Override
+		canvas.Color = GetNewColor( MainWindow._theme.IDE[0], 0.07 )
+		canvas.DrawRect( 0,0,Width,Height )
+	End method
+	
+	
+
 	Method AddIconicButton:ToolButtonExt( icon:Image,trigger:Void(),hint:String=Null )
-		
 		Local act:=New Action( Null,icon )
 		act.Triggered=trigger
 		Local b:=New ToolButtonExt( act,hint )
 		AddView( b )
 		Return b
 	End
+
 	
 	Method AddIconicButton:MultiIconToolButton( icons:Image[],trigger:Void(),hint:String=Null )
-		
 		Local act:=New Action( Null )
 		act.Triggered=trigger
 		Local b:=New MultiIconToolButton( act,icons,hint )
@@ -32,17 +39,16 @@ End
 
 
 Class ToolButtonExt Extends ToolButton
-
 	Field Toggled:Void( state:Bool )
+
 	
-	Method New( action:Action,hint:String=Null )
-		
+	Method New( action:Action, hint:String=Null )
 		Super.New( action )
 		
-		Style=GetStyle( "ColoredToolButton" )
+		Style = GetStyle( "ColoredToolButton" )
 		
-		PushButtonMode=True
-		_hint=hint
+		PushButtonMode = True
+		_hint = hint
 		
 		UpdateColors()
 		
@@ -51,12 +57,14 @@ Class ToolButtonExt Extends ToolButton
 		End
 		
 	End
+
 	
 	Property Hint:String()
 		Return _hint
 	Setter( value:String )
 		_hint=value
 	End
+
 	
 	Property IsToggled:Bool()
 		Return _toggled
@@ -65,6 +73,7 @@ Class ToolButtonExt Extends ToolButton
 		_toggled=value
 		Toggled( _toggled )
 	End
+
 	
 	Property ToggleMode:Bool()
 		Return _toggleMode
@@ -75,17 +84,18 @@ Class ToolButtonExt Extends ToolButton
 	End
 		
 		
-	Protected
+Protected
+
 	
 	Method OnThemeChanged() Override
 		UpdateColors()
 	End
+
 	
 	Method OnMouseEvent( event:MouseEvent ) Override
-		
 		If _hint <> Null
 			If event.Type = EventType.MouseEnter
-				ShowHint( _hint,event.Location,Self )
+				ShowHint( _hint, event.Location,Self )
 			Elseif event.Type = EventType.MouseLeave
 				HideHint()
 			Endif
@@ -93,50 +103,161 @@ Class ToolButtonExt Extends ToolButton
 		
 		Super.OnMouseEvent( event )
 	End
+
 	
 	Method OnRender( canvas:Canvas ) Override
-	
-		If _toggled
-			canvas.Color=_selColor
-			canvas.LineWidth=1
-			Utils.DrawRect( canvas,Rect,True )
+		Local bnd:Recti = Bounds
+		bnd.Left -= 4
+		bnd.Right += 5
+		bnd.Top -= 4
+		bnd.Bottom += 5
+		canvas.Viewport = bnd
+
+		If Super.StyleState = "hover" Then
+			canvas.Color = MainWindow._theme.IDE[3] * 0.8
+			canvas.DrawRoundedRect( 2,2,Width+7,Height+7, 5 )
+		End If
+
+		If Icon Then
+			RenderStyle.DrawIcon( canvas, Icon, Icon.Rect.X+7, Icon.Rect.Y+7 )
 		Endif
-		Super.OnRender( canvas )
+
+'		Print "OnRender ToolBarViewExt"
+'		If _toggled Then
+'			canvas.Color=_selColor
+'			canvas.LineWidth=1
+'			Utils.DrawRect( canvas,Rect,True )
+'		Endif
+'		Super.OnRender( canvas )
 	End
 	
 	
-	Private
+Private
+
 	
 	Field _hint:String
 	Field _selColor:Color
 	Field _toggled:Bool,_toggleMode:Bool
+
 	
 	Method UpdateColors()
-		
-		_selColor=App.Theme.GetColor( "active" )
-		
+'		_selColor=App.Theme.GetColor( "active" )
+		_selColor = MainWindow._theme.IDE[3] * 0.8
 	End
-	
 End
 
 
-Class MultiIconToolButton Extends ToolButtonExt
+
+Class ToolButton2Ext Extends ToolButton
 	
-	Method New( action:Action,icons:Image[],hint:String=Null )
+	Method New( action:Action, hint:String=Null )
+		Super.New( action )
 		
+		Style = GetStyle( "ColoredToolButton2" )
+		
+		_hint = hint
+		_noButton = False
+		
+		UpdateColors()
+	End
+
+
+	Property NoButton:Bool()
+		Return _noButton
+	Setter( value:Bool )
+		_noButton = value
+	End
+
+
+	Property Hint:String()
+		Return _hint
+	Setter( value:String )
+		_hint=value
+	End
+
+	
+Protected
+	field _noButton:bool = False
+	
+	Field _hint:String
+	Field _selColor:Color
+
+	
+
+	Method UpdateColors()
+		_selColor = MainWindow._theme.IDE[3] * 0.8
+	End
+	
+
+	Method OnMouseEvent( event:MouseEvent ) Override
+		If _hint <> Null
+			If event.Type = EventType.MouseEnter
+				ShowHint( _hint, event.Location,Self )
+			Elseif event.Type = EventType.MouseLeave
+				HideHint()
+			Endif
+		Endif
+		
+		Super.OnMouseEvent( event )
+	End
+
+
+	Method OnRender( canvas:Canvas ) Override
+		Local bnd:Recti = canvas.Viewport
+		bnd.Left -= 8
+		bnd.Top -= 8
+		bnd.Right += 8
+		bnd.Bottom += 8
+		canvas.Viewport = bnd
+
+		If Not _noButton Then
+			canvas.Color = MainWindow._theme.IDE[2]
+			canvas.DrawRoundedRect( 0,2, Width+12, Height+10, 5 )
+	
+			If Super.StyleState = "hover" Then
+				canvas.Color = MainWindow._theme.IDE[3] * 0.8
+				canvas.DrawRoundedRect( 0,2, Width+12, Height+10, 5 )
+			End If
+		End If
+
+		If Icon Then
+			canvas.Color = Color.White
+			canvas.DrawRect( 2,2, Width+8, Height+6, Icon )
+'			RenderStyle.DrawIcon( canvas, Icon, Icon.Rect.X+7, Icon.Rect.Y+7 )
+		Endif
+
+		If Text Then
+			canvas.Color = MainWindow._theme.IDE[1]
+			canvas.DrawText( Text, Width * 0.6, Height, 0.5,0.5 )
+		Endif
+	End method
+
+
+	Method OnThemeChanged() Override
+		UpdateColors()
+	End
+
+End
+
+
+
+
+Class MultiIconToolButton Extends ToolButtonExt
+	Method New( action:Action,icons:Image[],hint:String=Null )
 		Super.New( action,hint )
 		
 		_icns=icons
 		Icon=icons[0]
 	End
+
 	
 	Method SetIcon( index:Int )
-		
 		Icon=_icns[index]
 	End
 	
 	
-	Private
+Private
+
 	
 	Field _icns:Image[]
 	

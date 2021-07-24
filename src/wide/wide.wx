@@ -5,7 +5,6 @@ Namespace wide
 #Import "bin/wget.exe"
 
 'to build resource.o when icon changes...
-'
 'windres resource.rc resource.o
 
 #If __ARCH__="x86"
@@ -17,7 +16,6 @@ Namespace wide
 #Endif
 
 '----------------------------
-
 '#Import "<reflection>"
 
 #Import "<std>"
@@ -25,6 +23,22 @@ Namespace wide
 #Import "<mojox>"
 #Import "<tinyxml2>"
 #Import "<sdl2>"
+
+#Import "dialog/FindDialog"
+#Import "dialog/PrefsDialog"
+#Import "dialog/EditProductDialog"
+#Import "dialog/DialogExt"
+#Import "dialog/NoTitleDialog"
+#Import "dialog/FindInFilesDialog"
+#Import "dialog/UpdateModulesDialog"
+#Import "dialog/GenerateClassDialog"
+
+'#Import "../dialog/aboutdialog"
+'#Import "../dialog/RequesterDialog"
+'#Import "../dialog/RecentFilesDialog"
+#Import "dialog/RecentFilesDialog"
+#Import "dialog/RequesterDialog"
+#Import "dialog/MessageDialog"
 
 #Import "action/FileActions"
 #Import "action/EditActions"
@@ -36,15 +50,6 @@ Namespace wide
 #Import "action/TabActions"
 #Import "action/FoldingActions"
 
-#Import "dialog/FindDialog"
-#Import "dialog/PrefsDialog"
-#Import "dialog/EditProductDialog"
-#Import "dialog/DialogExt"
-#Import "dialog/NoTitleDialog"
-#Import "dialog/FindInFilesDialog"
-#Import "dialog/UpdateModulesDialog"
-#Import "dialog/GenerateClassDialog"
-#Import "dialog/RecentFilesDialog"
 
 #Import "document/DocumentManager"
 #Import "document/WideDocument"
@@ -55,7 +60,10 @@ Namespace wide
 #Import "document/JsonDocument"
 #Import "document/XmlDocument"
 #Import "document/ExamplesDocument"
-#Import "document/SceneDocument"
+'#Import "document/SceneDocument"
+#Import "document/PaletteDocument"
+#Import "document/FontDocument"
+#Import "document/mx23dDocument"
 
 #Import "eventfilter/TextViewKeyEventFilter"
 #Import "eventfilter/WonkeyKeyEventFilter"
@@ -83,7 +91,7 @@ Namespace wide
 #Import "syntax/CodeFormatter"
 #Import "syntax/WonkeyFormatter"
 
-#Import "testing/ParserTests"
+'#Import "testing/ParserTests"
 
 #Import "utils/Extensions"
 #Import "utils/JsonUtils"
@@ -97,6 +105,7 @@ Namespace wide
 #Import "view/ListViewExt"
 #Import "view/AutocompleteView"
 #Import "view/TreeViewExt"
+#Import "view/FindTreeView"
 #Import "view/CodeTreeView"
 #Import "view/CodeGutterView"
 #Import "view/ToolBarViewExt"
@@ -116,6 +125,8 @@ Namespace wide
 #Import "view/GutterView"
 #Import "view/MenuExt"
 #Import "view/ScrollableViewExt"
+#Import "view/scrollView"
+#Import "view/scrollbar"
 #Import "view/BuildErrorListViewItem"
 #Import "view/TextFieldExt"
 #Import "view/SpacerView"
@@ -126,6 +137,10 @@ Namespace wide
 #Import "view/Undock"
 #Import "view/TextViewExt"
 #Import "view/ExamplesView"
+#Import "view/ColorView"
+#Import "view/AsciiView"
+#Import "view/AssetsView"
+#Import "view/LibraryView"
 
 #Import "theme/ThemeImages"
 #Import "theme/ThemesInfo"
@@ -150,40 +165,52 @@ Using tinyxml2..
 Using sdl2..
 
 #If __TARGET__="windows"
-Const _HostOS:="windows"
+	Const _HostOS:="windows"
 #Else If __TARGET__="macos"
-Const _HostOS:="macos"
+	Const _HostOS:="macos"
 #Else If __TARGET__="linux"
-Const _HostOS:="linux"
+	Const _HostOS:="linux"
 #Else If __TARGET__="raspbian"
-Const _HostOS:="raspbian"
+	Const _HostOS:="raspbian"
 #Else
-Const _HostOS:=""
+	Const _HostOS:=""
 #Endif
 
 
 Const WONKEY_DOMAIN:="http://github.com/wonkey-coders"
 
-Global AppTitle:="Wide v1.0.0"
+Global AppTitle:="Wide2 v1.0.0"
 
 #If __TARGET__<>"macos"
-	Global AppStateFile:="bin/"+_HostOS+"/wide/wide.state.json"
+	Global AppStateFile:="bin/"+_HostOS+"/wide/wide2.state.json"
 #Else
-	Global AppStateFile:="bin/"+_HostOS+"/wide.state.json"
+	Global AppStateFile:="bin/"+_HostOS+"/wide2.state.json"
 #End
 
 
 
+
 Function Main()
-	
 	SetupDiContainer()
 	
 	Prefs.LoadLocalState()
 	
+'	Local root:string = Prefs.WonkeyRootPath
+'	If Not root Then root = AppDir()
+'	Print "root:"+root
 	Local root:=Prefs.WonkeyRootPath
-	If Not root Then root=AppDir()
+	If Not root Then root = AppDir()
+	Print "root path:"+root
+	Local fnd:int = root.Find( "/src/wide" )
+	If fnd > 2 Then
+		root = root.Left( fnd+1 )
+	Else
+		fnd = root.Find( "\src\wide" )
+		If fnd > 2 Then root = root.Left( fnd+1 )
+	End If
+
 	
-	root=SetupWonkeyRootPath( root,True )
+	root = SetupWonkeyRootPath( root, True )
 	If Not root libc.exit_( 1 )
 	
 	If root<>Prefs.WonkeyRootPath
@@ -193,42 +220,34 @@ Function Main()
 	
 	ChangeDir( root )
 	
-	LoadEnv()
-	
 	'load Wide state
-	'
 	Local jobj:=JsonObject.Load( AppStateFile )
-	If Not jobj jobj=New JsonObject
+	If Not jobj Then jobj=New JsonObject
 	
 	Prefs.LoadState( jobj )
 	
 	ThemesInfo.Load( "theme::themes.json" )
 	
 	'initial theme
-	'
-	If Not jobj.Contains( "theme" ) jobj["theme"]=New JsonString( "theme-smooth" )
-	
+	If Not jobj.Contains( "theme" ) jobj["theme"]=New JsonString( "theme-studio" )
 	If Not jobj.Contains( "themeScale" ) jobj["themeScale"]=New JsonNumber( 1 )
 	
 	SetConfig( "MOJO_INITIAL_THEME",jobj.GetString( "theme" ) )
-	
 	SetConfig( "MOJO_INITIAL_THEME_SCALE",jobj.GetString( "themeScale" ) )
 	
-	#If __TARGET__="windows"
+#If __TARGET__="windows"
 	If Prefs.OpenGlProfile
 		SetConfig( "MOJO_OPENGL_PROFILE",Prefs.OpenGlProfile )
 	Endif
-	#Endif
+#Endif
 	
 	'start the app!
-	'
 	New AppInstance
 	
 	InitHotkeys()
 	
 	'initial window state
-	'
-	Local flags:=WindowFlags.Resizable|WindowFlags.HighDPI
+	Local flags := WindowFlags.Resizable|WindowFlags.HighDPI
 	
 	Local rect:Recti
 	
@@ -241,57 +260,64 @@ Function Main()
 		flags|=WindowFlags.Center
 	Endif
 	
-	New MainWindowInstance( AppTitle,rect,flags,jobj )
+	New MainWindowInstance( AppTitle, rect, flags, jobj )
 	
-	App.Idle+=Lambda()
-		
+	App.Idle += Lambda()
 		' open docs from args
-		Local args:=AppArgs()
-		For Local i:=1 Until args.Length
-			Local arg:=args[i]
-			arg=arg.Replace( "\","/" )
+		Local args := AppArgs()
+		For Local i := 1 Until args.Length
+			Local arg := args[i]
+			arg = arg.Replace( "\", "/" )
 			MainWindow.OnFileDropped( arg )
 		Next
 		
-		#If __TARGET__="macos"
+#If __TARGET__="macos"
 		App.Idle+=Lambda() ' quick fix for black screen on mojave at startup
-			
 			Local dx:=MainWindow.Frame.Left Mod 2 = 0 ? -1 Else 1
 			MainWindow.Frame=MainWindow.Frame+New Recti( dx,0,0,0 )
 			MainWindow.RequestRender()
 		End
-		#Endif
+#Endif
 	End
 	
 	SDL_EnableScreenSaver()
 	
 	App.Run()
-	
 End
 
-Function SetupWonkeyRootPath:String( rootPath:String,searchMode:Bool )
-	
+
+function GetNewColor:Color( base:Color, change:float )
+	local red:float = Clamp( base.R + change, 0, 1 )
+	local green:float = Clamp( base.G + change, 0, 1 )
+	local blue:float = Clamp( base.B + change, 0, 1 )
+
+	Return New Color( red, green, blue )
+End function
+
+
+Function SetupWonkeyRootPath:String( rootPath:String, searchMode:Bool )
 #If __DESKTOP_TARGET__
 	
-	If searchMode
+	If searchMode Then
 		' search for desired folder
-		Local found:=FindBinFolder( rootPath )
+		Local found:string = FindBinFolder( rootPath )
+		
 		' search for AddDir() folder
 		If Not found And rootPath<>AppDir() Then found=FindBinFolder( AppDir() )
+		
 		' search for choosen-by-requester folder
 		While Not found
-			
-			Local ok:=Confirm( "Initializing","Wonkey root directory isn't set.~nTo continue, you should specify it." )
-			If Not ok
+			Local ok:bool = Confirm( "Initializing","Wonkey root directory isn't set.~nTo continue, you should specify it." )
+			If Not ok Then
 				Return ""
 			End
-			Local s:=requesters.RequestDir( "Choose Wonkey folder",AppDir() )
-			found=FindBinFolder( s )
+			Local s:string = requesters.RequestDir( "Choose Wonkey folder",AppDir() )
+			found = FindBinFolder( s )
 		Wend
 		
-		rootPath=found
+		rootPath = found
+
 	Else
-		
 		Local ok:= (GetFileType( "bin" )=FileType.Directory And GetFileType( "modules" )=FileType.Directory)
 		If Not ok
 			Notify( "Wonkey root folder","Incorrect folder!" )
@@ -305,51 +331,40 @@ Function SetupWonkeyRootPath:String( rootPath:String,searchMode:Bool )
 	Return rootPath
 End
 
+
 Function GetActionTextWithShortcut:String( action:Action )
-	
 	Return action.Text+" ("+action.HotKeyText+")"
 End
 
+
 Function Exec( exePath:String,args:String="" )
-	
 #If __HOSTOS__="windows"
-	
 	libc.system( exePath+" "+args )
-	
 #Else If __HOSTOS__="macos"
-	
 	libc.system( "open ~q"+exePath+"~q --args "+args )
-	
 #Else If __HOSTOS__="linux"
-	
 	libc.system( exePath+" "+args+" >/dev/null 2>/dev/null &" )
-	
 #Else If __HOSTOS__="raspbian"
-	
 	libc.system( exePath+" "+args+" >/dev/null 2>/dev/null &" )
-	
 #Endif
-	
 End
 
 
 Private
 
+
 Function FindBinFolder:String( startingFolder:String )
-	
 	Local cur:=CurrentDir()
 	Local ok:=True
 	ChangeDir( startingFolder )
 	
 	While GetFileType( "bin" )<>FileType.Directory Or GetFileType( "modules" )<>FileType.Directory
-		
 		If IsRootDir( CurrentDir() )
-			
 			ok=False
 			Exit
 		Endif
 		
-		ChangeDir( ExtractDir( StripSlashes(CurrentDir()) ) )
+		ChangeDir( ExtractDir( CurrentDir() ) )
 	Wend
 	Local result:=ok ? CurrentDir() Else ""
 	ChangeDir( cur )

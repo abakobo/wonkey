@@ -567,6 +567,8 @@ class ColorPalette
     }
 #end rem
 
+		file.Close()
+		
 		SetRGB()
 
 		Return true

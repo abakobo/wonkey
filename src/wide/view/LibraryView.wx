@@ -1,0 +1,193 @@
+Namespace wide
+
+
+#Import "AssetCore"
+
+Class LibraryView Extends AssetCore
+
+
+	Method New( docs:DocumentManager )
+		Super.New( docs )
+
+
+		_path = AssetsDir()+"library/"
+		GetFolders( _path )
+		GetFiles( "" )
+
+		ctrls.SetText( _openButton, "Add Asset" )
+		ctrls.SetWidth( _openButton, 170 )
+		
+		'respond to clicked buttons
+		ctrls.Clicked = lambda( ctrl:int )
+			Select ctrl
+				Case _openButton
+					AddLibraryAsset( _fullPath )
+'					MainWindow.OnFileDropped( _fullPath )
+			End Select
+		End
+	End
+
+	
+'	Method Init()
+'	End
+	
+
+
+	method GetFolders( path:String )
+'		path = ExtractDir( path )+"Assets/"
+		_assetsPath = path
+		Print "GetPath = "+path
+		
+		local f:string
+		Local dir:string[] = filesystem.LoadDir( path )
+		
+		_currentFolder = -1
+'
+'		_folderCount = 0
+'		_folderPath[_folderCount] = StripExt( path )
+'		_folder[_folderCount] = "Contents"
+
+		'load the folders
+		For f = Eachin dir
+			Local fpath:string = path+"/"+f
+			
+			If f <> "" Then
+				Select GetFileType( fpath )
+					Case FileType.Directory
+						If f.Left(8) <> "$RECYCLE" And f.Left(1) <> "." and _folderCount < MAX_FILE-1 Then
+							_folderCount += 1
+							
+							_folderPath[_folderCount] = fpath
+							_folder[_folderCount] = StripExt(f)
+							Print fpath
+						End if
+				End Select
+			End if
+		Next
+		
+'		Print "count:"+_folderCount
+	
+		'sort the folders
+'		Local k:int
+'		Local l:int
+'		Local tmp:int
+'		For k = start To _count-1
+'			For l = k+1 To _count
+'				if Lesser( _file[_index[l]], _file[_index[k]] ) Then
+'					tmp = _index[k]
+'					_index[k] = _index[l]
+'					_index[l] = tmp
+'				End If
+'			Next
+'		Next
+	End Method
+	
+	
+
+
+	
+	
+	Method OnRender( canvas:Canvas ) Override
+		canvas.Color = GetNewColor( MainWindow._theme.IDE[0], 0.03 )
+		canvas.DrawRect( 0,0, Width,Height)
+		
+		local font:Font = canvas.Font
+		_scale = App.Theme.Scale.x
+		canvas.Font = App.Theme.OpenFont( "asset::UbuntuMono-R.ttf", 12 * _scale )
+'		canvas.Font = _ubuntuFont
+		
+		If Width > Height Then
+			RenderWide( canvas )
+		Else
+			RenderTall( canvas )
+		End If
+		
+		canvas.Font = font
+	End Method
+	
+
+	method NewDir:string( assetPath:string )
+		Print "newdir:"+assetPath
+		
+		local dirExists:FileType = GetFileType( assetPath )
+		Select dirExists
+			Case FILETYPE_NONE
+				CreateDir( assetPath )
+				Return assetPath+"/"
+'				assetPath = assetPath+"assets/"
+'				Print "dir none"
+			Case FILETYPE_DIR
+				Return assetPath+"/"
+'				assetPath = assetPath+"assets/"
+'				Print "dir dir"
+			Case FILETYPE_FILE
+'				assetPath = ""
+'				Print "dir file"
+			Case FILETYPE_UNKNOWN
+'				assetPath = ""
+'				Print "dir unknown"
+		End Select
+		Return ""
+	End Method
+	
+	
+	method AddLibraryAsset( path:string )
+		Print "asset to add "+path
+		local assetPath:string = ExtractDir( MainWindow.MainFile )
+		Print "assetPath "+assetPath
+		assetPath = NewDir( assetPath+"assets" )
+		If assetPath = "" Then Return
+		
+		local dir:string = ""
+		Select ExtractExt( path )
+			Case ".mx2palette", ".ase", ".pal"
+				dir = "palettes/"
+				If NewDir( assetPath+dir ) = "" Then Return
+			Case ".png"
+				dir = "images/"
+				If NewDir( assetPath+dir ) = "" Then Return
+		End Select
+		assetPath += dir + StripDir(path)
+		Print "OK "+assetPath
+		
+		CopyFile( path, assetPath )
+		
+	End method
+	
+
+	method OnMouseDoubleClick() Override
+		Select ctrls.ControlOver
+			Case 0
+			Default
+				If _mouseX < _xDiv1 Then 'over folders
+				Else If _mouseX > _xDiv2 And _mouseX < _xDiv3 And _fullPath <> "" Then 'open file
+					local time:long = Millisecs() - _clickTime
+					If time < 300 Then
+						AddLibraryAsset( _fullPath )
+'						MainWindow.OnFileDropped( _fullPath )
+'						Print _fullPath
+					End If
+				Else ' over current resource
+				End If
+		End Select
+	End Method
+	
+	
+
+	method RenderTall( canvas:Canvas )
+		Local scale:float = App.Theme.Scale.x
+
+'		canvas.Color = MainWindow._theme.IDE[1]
+'		canvas.DrawText( MainWindow.MainFile, 10,5 )
+
+		canvas.Color = Color.White
+		canvas.DrawImage( _warningImage, 10,10 )
+			
+		canvas.Color = MainWindow._theme.IDE[1]
+		canvas.DrawText( "Assets can only be viewed", 5, 80 * scale )
+		canvas.DrawText( "When docked at the bottom", 5, 100 * scale )
+
+	End method
+	
+End
+

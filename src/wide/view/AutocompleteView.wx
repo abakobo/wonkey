@@ -3,20 +3,21 @@ Namespace wide
 
 
 Class CodeListViewItem Extends ListViewItem
+
 	
 	Method New( item:CodeItem )
-
 		Super.New( item.Text )
 		_item=item
 		Icon=CodeItemIcons.GetIcon( item )
 	End
+
 		
 	Property CodeItem:CodeItem()
 		Return _item
 	End
 	
-	
-	Private
+Private
+
 	
 	Field _item:CodeItem
 	
@@ -24,43 +25,106 @@ End
 
 
 Class AutocompleteListView Extends ListViewExt
-	
 	Field word:String 'word to select
+
 	
-	Method New( lineHeight:Int,maxLines:Int )
-		
-		Super.New( lineHeight,maxLines )
+	Method New( lineHeight:Int, maxLines:Int )
+		Super.New( lineHeight, maxLines )
 		
 		OnThemeChanged()
 	End
 	
 	
-	Protected
+Protected
+
 	
 	Method OnThemeChanged() Override
-		
 		Super.OnThemeChanged()
-		_selColor=App.Theme.GetColor( "completion-list-selected" )
-		_textColor=App.Theme.GetColor( "completion-list-text" )
-		_markedBgColor=App.Theme.GetColor( "completion-list-marked-bg" )
-		_markedTextColor=App.Theme.GetColor( "completion-list-marked-text" )
+'		_selColor = Color.UIBlue * 0.7
+'		_selColor = App.Theme.GetColor( "completion-list-selected" )
+		_selColor = MainWindow._theme.IDE[3] * 0.7
+
+'		_textColor = App.Theme.GetColor( "completion-list-text" )
+		_textColor = MainWindow._theme.IDE[1]
+
+'		_markedBgColor = App.Theme.GetColor( "completion-list-marked-bg" )
+		_markedBgColor = MainWindow._theme.IDE[3] * 0.7
+
+'		_markedTextColor = App.Theme.GetColor( "completion-list-marked-text" )
+		_markedTextColor = MainWindow._theme.IDE[1]
 	End
+
 	
-	Method DrawItem( item:ListViewItem,canvas:Canvas,x:Float,y:Float,handleX:Float=0,handleY:Float=0 ) Override
+	method GetColor:Color( text:String )
+		local ln:int
+		local k:int
 		
-		canvas.Color=Color.White
+		ln = _coreText.Length-1
+		For k = 0 To ln
+			If text = _coreText[k] Then Return _coreCol[k]
+		Next
+
+		ln = _uiText.Length-1
+		For k = 0 To ln
+			If text = _uiText[k] Then Return _uiCol[k]
+		Next
+
+		ln = _picoText.Length-1
+		For k = 0 To ln
+			If text = _picoText[k] Then Return _picoCol[k]
+		Next
+
+		ln = _xamText.Length-1
+		For k = 0 To ln
+			If text = _xamText[k] Then Return _xamCol[k]
+		Next
+
+		ln = _c64Text.Length-1
+		For k = 0 To ln
+			If text = _c64Text[k] Then Return _c64Col[k]
+		Next
+
+		ln = _vicText.Length-1
+		For k = 0 To ln
+			If text = _vicText[k] Then Return _vicCol[k]
+		Next
+
+		ln = _exText.Length-1
+		For k = 0 To ln
+			If text = _exText[k] Then Return _exCol[k]
+		Next
+
+		ln = _labText.Length-1
+		For k = 0 To ln
+			If text = _labText[k] Then Return _labCol[k]
+		Next
 		
-		Local txt:=item.Text
-		Local icon:=item.Icon
-		If icon <> Null
-			canvas.Alpha=.8
-			canvas.DrawImage( icon,x-icon.Width*handleX,y-icon.Height*handleY )
-			x+=icon.Width+8
-			canvas.Alpha=1
+		Return Color.Black
+	End Method
+	
+	
+	Method DrawItem( item:ListViewItem, canvas:Canvas, x:Float, y:Float, handleX:Float=0, handleY:Float=0 ) Override
+		canvas.Color = Color.White
+		
+		Local txt := item.Text
+		Local icon := item.Icon
+		
+		If icon <> Null Then
+			local iconWidth:int = icon.Width * handleX
+			local iconHeight:int = icon.Height * handleY
+			If txt.Right( 5 ) = "Color" Then
+				canvas.Color = GetColor( txt.Left( txt.Length-8 ) )
+				canvas.DrawRect( 2, y - iconHeight, icon.Width+4, icon.Height-2 )
+			Else
+				canvas.Alpha = .8
+				canvas.DrawImage( icon, x - iconWidth, y - iconHeight )
+			End If
+			x += icon.Width+8
+			canvas.Alpha = 1
 		Endif
 		
-		canvas.Color=_textColor
-		If Not word
+		canvas.Color = _textColor
+		If Not word Then
 			canvas.DrawText( txt,x,y,handleX,handleY )
 			Return
 		Endif
@@ -86,9 +150,11 @@ Class AutocompleteListView Extends ListViewExt
 			Endif
 			x+=w
 		Next
+		
 	End
+
 	
-	Private
+Private
 	
 	Field _markedBgColor:Color
 	Field _markedTextColor:Color
@@ -98,26 +164,24 @@ End
 
 
 Struct AutocompleteResult
-	
 	Field ident:String
 	Field text:String
 	Field item:CodeItem
 	Field bySpace:Bool
 	Field byTab:Bool
 	Field isTemplate:Bool
-	
 End
 
 
 Class AutocompleteDialog Extends NoTitleDialog
-	
 	Field OnChoosen:Void( result:AutocompleteResult )
+
 	
 	Method New()
-		
 		Super.New()
 		
-		Local lineHg:=20,linesCount:=15
+		Local lineHg:=20
+		local linesCount:=15
 		
 		_view=New AutocompleteListView( lineHg,linesCount )
 		_view.MoveCyclic=True
@@ -152,6 +216,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 		OnValidateStyle()
 	End
+
 	
 	Property DisableUsingsFilter:Bool()
 		Return _disableUsingsFilter
@@ -159,24 +224,26 @@ Class AutocompleteDialog Extends NoTitleDialog
 		_fullIdent=""
 		_disableUsingsFilter=value
 	End
+
 	
 	Property LastIdentPart:String()
 		Return _lastIdentPart
 	End
+
 	
 	Property FullIdent:String()
 		Return _fullIdent
 	End
+
 	
 	Method CanShow:Bool( line:String,posInLine:Int,fileType:String )
-	
 		Local parser:=GetParser( fileType )
 		Return parser.CanShowAutocomplete( line,posInLine )
 		
 	End
+
 	
 	Method Show( ident:String,filePath:String,fileType:String,docLineNum:Int,docLineStr:String,docPosInLine:Int )
-		
 		OnValidateStyle()
 		
 		Local dotPos:=ident.FindLast( "." )
@@ -235,7 +302,6 @@ Class AutocompleteDialog Extends NoTitleDialog
 '			Return
 '		End
 		
-		
 		_fullIdent=ident
 		_lastIdentPart=lastIdentLower
 		
@@ -244,13 +310,10 @@ Class AutocompleteDialog Extends NoTitleDialog
 		'-----------------------------
 		' extract items
 		'-----------------------------
-		
 		If Not Prefs.AcKeywordsOnly
-		
 			Local usings:Stack<String>
 			
 			If Not _disableUsingsFilter
-				
 				usings=New Stack<String>
 				
 				Local currentFile:=Cast<CodeDocument>( MainWindow.DocsManager.CurrentDocument )?.Path
@@ -355,15 +418,15 @@ Class AutocompleteDialog Extends NoTitleDialog
 	End
 	
 	
-	Protected
+Protected
+
 	
 	Method OnValidateStyle() Override
-		
 		_view.MaxSize=(App.Theme.Scale.x>1) ? _etalonMaxSize*App.Theme.Scale Else _etalonMaxSize
 	End
+
 	
-	Private
-	
+Private
 	Field _etalonMaxSize:Vec2f
 	Field _view:AutocompleteListView
 	Field _hintView:Label
@@ -374,17 +437,20 @@ Class AutocompleteDialog Extends NoTitleDialog
 	Field _listForExtract:=New Stack<CodeItem>
 	Field _listForExtract2:=New Stack<CodeItem>
 	Field _disableUsingsFilter:Bool
-	
+
+
 	Method GetParser:ICodeParser( fileType:String )
 		If _parsers[fileType] = Null Then UpdateParsers( fileType )
 		Return _parsers[fileType]
 	End
-	
+
+
 	Method GetKeywords:Stack<ListViewItem>( fileType:String )
 		If _keywords[fileType] = Null Then UpdateKeywords( fileType )
 		Return _keywords[fileType]
 	End
-	
+
+
 	Method GetTemplates:Stack<ListViewItem>( fileType:String )
 		If _templates[fileType] = Null
 			UpdateTemplates( fileType )
@@ -396,95 +462,109 @@ Class AutocompleteDialog Extends NoTitleDialog
 		Endif
 		Return _templates[fileType]
 	End
-	
+
+
 	Method IsItemInScope:Bool( item:CodeItem,scope:CodeItem )
 		If scope = Null Return False
 		Return item.ScopeStartPos.x >= scope.ScopeStartPos.x And item.ScopeEndPos.x <= scope.ScopeEndPos.x
 	End
-	
+
+
 	Method OnKeyFilter( event:KeyEvent )
-		
 		If Not IsOpened Return
 		
 		Local ctrl:=(event.Modifiers & Modifier.Control)<>0
 		
 		Select event.Type
-			
-			Case EventType.KeyDown,EventType.KeyRepeat
-				
+			Case EventType.KeyDown, EventType.KeyRepeat
 				Local curItem:=_view.CurrentItem
 				Local templ:=Cast<TemplateListViewItem>( curItem )
 				
 				Local key:=event.Key
 				Select key
-				
-				Case Key.Escape
-					Hide()
-					event.Eat()
-				
-				Case Key.Home,Key.KeyEnd
-					Hide()
-				
-				Case Key.Up
-					_view.SelectPrev()
-					event.Eat()
-					
-				Case Key.Down
-					_view.SelectNext()
-					event.Eat()
-					
-				Case Key.PageUp
-					_view.PageUp()
-					event.Eat()
-					
-				Case Key.PageDown
-					_view.PageDown()
-					event.Eat()
-					
-				Case Key.Enter,Key.KeypadEnter
-					If Not templ Or Prefs.TemplatesInsertByEnter
-						If Prefs.AcUseEnter
-							OnItemChoosen( curItem,key )
-							If Not Prefs.AcNewLineByEnter Then event.Eat()
-						Else
-							Hide() 'hide by enter
-						Endif
-					Endif
-					
-				Case Key.Tab
-					If Prefs.AcUseTab Or templ
-						OnItemChoosen( curItem,key )
+					Case Key.Escape
+						Hide()
 						event.Eat()
-					Endif
 					
-				Case Key.Space
-					If Not templ
-						If Prefs.AcUseSpace And Not ctrl
+					Case Key.Home, Key.KeyEnd
+						Hide()
+					
+					Case Key.Up
+						If _view.Count = 1 Or (_view.Count < 13 And _view.CurrentIndex = 0) Then
+							Hide()
+						Else
+							_view.SelectPrev()
+						End If
+						event.Eat()
+						
+					Case Key.Down
+						If _view.Count = 1 Then
+							Hide()
+						Else
+							_view.SelectNext()
+						End If
+						event.Eat()
+					
+					Case Key.PageUp
+						_view.PageUp()
+						event.Eat()
+						
+					Case Key.PageDown
+						_view.PageDown()
+						event.Eat()
+						
+					Case Key.Enter,Key.KeypadEnter
+						If Not templ Or Prefs.TemplatesInsertByEnter
+							If Prefs.AcUseEnter
+								OnItemChoosen( curItem,key )
+								If Not Prefs.AcNewLineByEnter Then event.Eat()
+							Else
+								Hide() 'hide by enter
+							Endif
+						Endif
+					
+					Case Key.Tab
+						If Prefs.AcUseTab Or templ
 							OnItemChoosen( curItem,key )
 							event.Eat()
 						Endif
-					Endif
-					
-				Case Key.Period
-					If Not templ
-						If Prefs.AcUseDot
-							OnItemChoosen( curItem,key )
-							event.Eat()
+						
+					Case Key.Space
+						If Not templ
+							If Prefs.AcUseSpace And Not ctrl
+								OnItemChoosen( curItem,key )
+								event.Eat()
+							Endif
 						Endif
-					Endif
-				
-				Case Key.Backspace
-				Case Key.CapsLock
-				Case Key.LeftShift,Key.RightShift
-				Case Key.LeftControl,Key.RightControl
-				Case Key.LeftAlt,Key.RightAlt
-					'do nothing,skip filtering
-				Default
-					'Hide()
+						
+					Case Key.Period
+						If Not templ
+							If Prefs.AcUseDot
+								OnItemChoosen( curItem,key )
+								event.Eat()
+							Endif
+						Endif
+					
+					Case Key.Backspace
+					Case Key.CapsLock
+					Case Key.LeftShift,Key.RightShift
+						Hide()
+						event.Eat()
+					Case Key.LeftControl,Key.RightControl
+						Hide()
+						event.Eat()
+					Case Key.LeftGui,Key.RightGui
+						Hide()
+						event.Eat()
+					Case Key.LeftAlt,Key.RightAlt
+						Hide()
+						event.Eat()
+						'do nothing,skip filtering
+					Default
+						'Hide()
 				End
 			
 			Case EventType.KeyChar
-				
 				Local char:=event.Text[0]
 				Local ctrlSpace:=(ctrl And char=Chars.SPACE)
 				If Not ctrlSpace And Not IsIdent( char ) Then Hide()
@@ -492,19 +572,19 @@ Class AutocompleteDialog Extends NoTitleDialog
 		End
 		
 	End
-	
+
+
 	Method OnItemChoosen( item:ListViewItem,key:Key )
-		
 		Local siCode:=Cast<CodeListViewItem>( item )
 		Local siTempl:=Cast<TemplateListViewItem>( item )
 		Local ident:="",text:=""
 		Local code:CodeItem=Null
 		Local templ:=False
-		If siCode
+		If siCode Then
 			ident=siCode.CodeItem.Ident
 			text=siCode.CodeItem.TextForInsert
 			code=siCode.CodeItem
-		Elseif siTempl
+		Elseif siTempl Then
 			ident=siTempl.name
 			text=siTempl.value
 			templ=True
@@ -522,9 +602,9 @@ Class AutocompleteDialog Extends NoTitleDialog
 		OnChoosen( result )
 		Hide()
 	End
-	
+
+
 	Method UpdateKeywords( fileType:String )
-		
 		'keywords
 		Local kw:=KeywordsManager.Get( fileType )
 		Local list:=New Stack<ListViewItem>
@@ -544,9 +624,9 @@ Class AutocompleteDialog Extends NoTitleDialog
 		Endif
 		_keywords[fileType]=list
 	End
-	
+
+
 	Method UpdateTemplates( fileType:String )
-	
 		'live templates
 		Local templates:=LiveTemplates.All( fileType )
 		Local list:=New Stack<ListViewItem>
@@ -561,13 +641,14 @@ Class AutocompleteDialog Extends NoTitleDialog
 		Endif
 		_templates[fileType]=list
 	End
-	
+
+
 	Method UpdateParsers( fileType:String )
 		_parsers[fileType]=ParsersManager.Get( fileType )
 	End
-	
+
+
 	Function GetPreprocessorDirectives:String( fileType: String )
-		
 		Select fileType
 			Case ".wx", ".monkey2"
 				Return "#If ,#Rem,#End,#Endif,#Else,#Else If ,#Import ,#Reflect ,wonkeydoc,__TARGET__,__MOBILE_TARGET__,__DESKTOP_TARGET__,__WEB_TARGET__,__HOSTOS__,__ARCH__,__DEBUG__,__RELEASE__,__CONFIG__,__MAKEDOCS__"
@@ -582,9 +663,7 @@ End
 
 
 Class Theme Extension
-	
 	Method GetStyleWithDownCasting:Style( name:String,name2:String=Null,name3:String=Null )
-		
 		Local style:=Self.GetStyle( name )
 		If style=Null And name2
 			style=Self.GetStyle( name2 )

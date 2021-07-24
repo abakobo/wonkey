@@ -5,22 +5,29 @@ Namespace wide
 Class PathsProvider
 	
 	Const WX_TMP:=".wx"
+
 	
-	Function GetActiveMainFilePath:String( checkCurrentDoc:Bool=True,showNoMainFileAlert:Bool=False )
+	function ForcePathParse( path:string )
+		If Not path Then Return
 		
-		If _customBuildProject
+		CodeParsing.IsFileBuildable( path )
+	End function
+	
+	
+	Function GetActiveMainFilePath:String( checkCurrentDoc:Bool=True, showNoMainFileAlert:Bool=False )
+		If _customBuildProject Then
 			If showNoMainFileAlert Then ProjectView.CheckMainFilePath( _customBuildProject,True )
 			Return _customBuildProject.MainFilePath
 		Endif
 		
 		Local lockedDoc:=docsManager().LockedDocument
 		Local path:=lockedDoc?.Path
-		If Not path
+		If Not path Then
 			If checkCurrentDoc
 				path=docsManager().CurrentDocument?.Path
 			Endif
 			Local proj:=projView().ActiveProject
-			If proj
+			If proj Then
 				If showNoMainFileAlert Then ProjectView.CheckMainFilePath( proj,True )
 				If proj.MainFilePath
 					path=proj.MainFilePath
@@ -39,9 +46,9 @@ Class PathsProvider
 		
 		Return path
 	End
+
 	
 	Function GetMainFileOfDocument:String( path:String )
-		
 		'Print "GetFilePathToParse: "+path
 		
 		' is it a module file?
@@ -49,7 +56,7 @@ Class PathsProvider
 		Local modsDir:=Prefs.WonkeyRootPath+"modules/"
 		' excluding of tests dirs
 		'
-		If path.StartsWith( modsDir ) And path.Find( "/tests/")=-1
+		If path.StartsWith( modsDir ) And path.Find( "/tests/")=-1 Then
 			Local i1:=modsDir.Length
 			Local i2:=path.Find( "/",i1+1 )
 			If i2<>-1
@@ -62,8 +69,8 @@ Class PathsProvider
 			' priority for locked file
 			'
 			Local lockedPath:=docsManager().LockedDocument?.Path
-			If lockedPath
-				If ExtractDir( path ).Contains( ExtractDir( lockedPath ) )
+			If lockedPath Then
+				If ExtractDir( path ).Contains( ExtractDir( lockedPath ) ) Then
 					' will parse locked file coz 'path' is under 'locked' folder
 					Return lockedPath
 				Endif
@@ -83,19 +90,19 @@ Class PathsProvider
 		' as is
 		Return path
 	End
+
 	
 	Function SetCustomBuildProject( proj:WonkeyProject )
-	
 		_customBuildProject=proj
 	End
+
 	
 	Function GetGeninfoPath:String( filePath:String )
-		
 		Return ExtractDir( filePath )+WX_TMP+"/"+StripDir( StripExt( filePath ) )+".geninfo"
 	End
+
 	
 	Function GetTempFilePathForParsing:String( srcPath:String )
-		
 		Local dir:=ExtractDir( srcPath )+WX_TMP+"/"
 		CreateDir( dir )
 		Local name:=StripDir( srcPath )
@@ -104,27 +111,26 @@ Class PathsProvider
 	End
 	
 	
-	Private
-	
+Private
 	Global _customBuildProject:WonkeyProject
 	
-	Function GetActiveProject:WonkeyProject()
 	
+	Function GetActiveProject:WonkeyProject()
 		If _customBuildProject Return _customBuildProject
 	
 		Return projView().ActiveProject
 	End
+
 	
 	Function projView:ProjectView()
-		
 		Global _projView:ProjectView
 		If Not _projView Then _projView=Di.Resolve<ProjectView>()
 		
 		Return _projView
 	End
+
 	
 	Function docsManager:DocumentManager()
-		
 		Global _docsManager:DocumentManager
 		If Not _docsManager
 			' dirty but better than MainWindow.DocsManager

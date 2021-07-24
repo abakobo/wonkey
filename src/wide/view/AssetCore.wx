@@ -1,0 +1,883 @@
+Namespace wide
+
+#Import "../minira"
+
+
+#Import "../assets/bird.png"
+
+#Import "../assets/browser/smallfolder.png"
+
+#Import "../assets/browser/warning.png"
+#Import "../assets/browser/folder.png"
+
+#Import "../assets/browser/file.png"
+#Import "../assets/browser/file-text.png"
+#Import "../assets/browser/file-script.png"
+#Import "../assets/browser/file-image.png"
+#Import "../assets/browser/file-font.png"
+#Import "../assets/browser/file-palette.png"
+#Import "../assets/browser/file-sound.png"
+#Import "../assets/browser/file-web.png"
+#Import "../assets/browser/file-imagefont.png"
+#Import "../assets/browser/file-fontmap.png"
+#Import "../assets/browser/file-wonkey.png"
+#Import "../assets/browser/file-3d.png"
+#Import "../assets/browser/file-glsl.png"
+#Import "../assets/browser/file-glslmat.png"
+#Import "../assets/browser/file-glslfx.png"
+#Import "../assets/browser/file-qb.png"
+#Import "../assets/browser/file-vc.png"
+#Import "../assets/browser/file-in.png"
+#Import "../assets/browser/file-sys.png"
+#Import "../assets/browser/file-disk.png"
+#Import "../assets/browser/file-psd.png"
+#Import "../assets/browser/file-bin.png"
+
+#Import "../assets/fonts/UbuntuMono-R.ttf"
+#Import "../assets/game.mx2palette"
+
+
+Class AssetCore Extends DockingView
+	field _smallFolderImage:Image
+	
+	field _warningImage:Image
+	field _folderImage:Image
+	
+	field _fileImage:Image[] = New Image[32]
+	
+'	field _ubuntuFont:Font' = App.Theme.OpenFont( "asset::UbuntuMono-R.ttf", 11 )
+
+	field _scale:float
+	field _heightScale:float = 1
+	
+	field _clickTime:long
+	
+
+	field _path:string
+	field _assetsPath:string
+	
+	field _folderCount:int
+	field _count:int
+	
+	field _currentFolder:int = 0
+	field _overFolder:int
+	
+	const MAX_FOLDER:int = 24
+	field _folder:string[] = New string[MAX_FOLDER]
+	field _folderPath:string[] = New string[MAX_FOLDER]
+
+	field _currentFile:int = -1
+	field _overFile:int
+
+	const MAX_FILE:int = 1024
+	field _file:string[] = New string[MAX_FILE]
+	field _filePath:string[] = New string[MAX_FILE]
+	field _kind:ubyte[] = New ubyte[MAX_FILE]
+	field _size:int[] = New int[MAX_FILE]
+	
+	field _xDiv1:int
+	field _xDiv2:int
+	field _xDiv3:int
+	
+	field _fullPath:string
+	field _fullKind:int
+	
+	field _mapLayers:int
+	field _mapX:int
+	field _mapY:int
+	field _mapTile:ubyte[,]
+	field _mapColorTile:ubyte[,]
+	field _mapPalette:ColorPalette
+	
+	field _soundData:AudioData
+	field _sound:Sound
+	field _channel:Channel = New Channel
+	
+	field _image:Image
+	field _icons:Image[] = New Image[64]
+
+	field _shader:Shader
+	field _birdImage:Image
+	field _drag:float = 0.2
+	
+	field _palette:ColorPalette
+	
+	field _font:Font
+
+	
+	field ctrls:MiniUI = New MiniUI( 10 )
+	field _vFaderZoom:int
+	field _openButton:int
+	field _detailsText:int
+	field _sizeText:int
+	
+	field _detailsTxt:String = ""
+	field _sizeTxt:String = ""
+
+	field m3d:MiniRa3D
+	Field canvasImage:Image
+	field myCanvas:Canvas
+	field _model:Object3D
+
+	const KIND_NONE:int = 0
+	const KIND_TEXT:int = 1
+	const KIND_JSON:int = 2
+	const KIND_IMAGE:int = 3
+	const KIND_FONT:int = 4
+	const KIND_PALETTE:int = 5
+	const KIND_AUDIO:int = 6
+	const KIND_HTML:int = 7
+	const KIND_FONTSPRITE:int = 8
+	const KIND_MAP:int = 9
+	const KIND_WONKEY:int = 10
+	const KIND_3D:int = 11
+	const KIND_GLSL:int = 12
+	const KIND_RS:int = 13
+	const KIND_VC:int = 14
+	const KIND_IN:int = 15
+	const KIND_SYS:int = 16
+	const KIND_DISK:int = 17
+	const KIND_PSD:int = 18
+	const KIND_GLSLFX:int = 19
+	const KIND_GLSLMAT:int = 20
+	const KIND_BIN:int = 21
+
+
+	Method New( docs:DocumentManager )
+		Super.New()
+
+		ctrls.OverColor = MainWindow._theme.IDE[3] * 0.7
+
+		local control:int
+		_scale = App.Theme.Scale.x
+
+		_vFaderZoom = ctrls.AddVFader( 0,0, 40, -1, MainWindow._theme.IDE[2], True )
+		ctrls.SetValue( _vFaderZoom, 0.66 )
+
+		_openButton = ctrls.AddButton( 0,0, 100, 40, MainWindow._theme.IDE[2], "Open", True )
+		_detailsText = ctrls.AddText( 0,0, 100, 40, MainWindow._theme.IDE[1], "", ALIGN_LEFT )
+		_sizeText = ctrls.AddText( 0,0, 100, 40, MainWindow._theme.IDE[1], "", ALIGN_RIGHT )
+
+
+		_smallFolderImage = Image.Load( "asset::smallfolder.png" )
+		
+		_warningImage = Image.Load( "asset::warning.png" )
+		_folderImage = Image.Load( "asset::folder.png" )
+		
+		_fileImage[0] = Image.Load( "asset::file.png" )
+		_fileImage[1] = Image.Load( "asset::file-text.png" )
+		_fileImage[2] = Image.Load( "asset::file-script.png" )
+		_fileImage[3] = Image.Load( "asset::file-image.png" )
+		_fileImage[4] = Image.Load( "asset::file-font.png" )
+		_fileImage[5] = Image.Load( "asset::file-palette.png" )
+		_fileImage[6] = Image.Load( "asset::file-sound.png" )
+		_fileImage[7] = Image.Load( "asset::file-web.png" )
+		_fileImage[8] = Image.Load( "asset::file-imagefont.png" )
+		_fileImage[9] = Image.Load( "asset::file-fontmap.png" )
+		_fileImage[10] = Image.Load( "asset::file-wonkey.png" )
+		_fileImage[11] = Image.Load( "asset::file-3d.png" )
+		_fileImage[12] = Image.Load( "asset::file-glsl.png" )
+		_fileImage[13] = Image.Load( "asset::file-qb.png" )
+		_fileImage[14] = Image.Load( "asset::file-vc.png" )
+		_fileImage[15] = Image.Load( "asset::file-in.png" )
+		_fileImage[16] = Image.Load( "asset::file-sys.png" )
+		_fileImage[17] = Image.Load( "asset::file-disk.png" )
+		_fileImage[18] = Image.Load( "asset::file-psd.png" )
+		_fileImage[19] = Image.Load( "asset::file-glslfx.png" )
+		_fileImage[20] = Image.Load( "asset::file-glslmat.png" )
+		_fileImage[21] = Image.Load( "asset::file-bin.png" )
+
+		_birdImage = Image.Load( "asset::bird.png" )
+	End method
+	
+
+	method GetFiles( path:string )
+		path = _assetsPath + path
+
+		local f:string
+		Local dir:string[] = filesystem.LoadDir( path )
+		
+		_currentFile = -1
+		_overFile = -1
+		_fullKind = -1
+		_fullPath = ""
+		_detailsTxt = ""
+		_sizeTxt = ""
+		
+		local count:int = dir.Length
+		
+		local str:String
+
+		local k:int
+		For k = 0 To 63
+			_icons[k] = Null
+		Next
+		
+		'load the files
+		_count = -1
+		For f = Eachin dir
+			Local fpath:string = path+"/"+f
+			
+			If f <> "" Then
+				Select GetFileType( fpath )
+					Case FileType.Directory
+					Default
+						If f.Left(1) <> "." and _count < MAX_FILE-1 Then
+							_count += 1
+							
+							_filePath[_count] = fpath
+							_file[_count] = StripExt(f)
+							_size[_count] = GetFileSize( fpath )
+							str = ExtractExt( fpath )
+							Select str.ToLower()
+								Case ".bin"
+									_kind[_count] = KIND_BIN
+
+								Case ".txt"
+									_kind[_count] = KIND_TEXT
+									
+								Case ".json", ".xml"
+									_kind[_count] = KIND_JSON
+
+								Case ".png"
+									str = fpath.Right(9).ToLower()
+									If str = "_font.png" Then
+										_kind[_count] = KIND_FONTSPRITE
+									Else
+										_kind[_count] = KIND_IMAGE
+									End If
+								Case ".bmp", ".jpeg", ".jpg"
+									_kind[_count] = KIND_IMAGE
+
+								Case ".ttf", ".otf", ".fon", ".fnt"
+									_kind[_count] = KIND_FONT
+
+								Case ".ase", ".pal", ".mx2palette", ".mx2tagz"
+									_kind[_count] = KIND_PALETTE
+
+								Case ".wav", ".ogg"
+									_kind[_count] = KIND_AUDIO
+
+								Case ".htm", ".html", ".shtml"
+									_kind[_count] = KIND_HTML
+
+								Case ".mx2map"
+									_kind[_count] = KIND_MAP
+
+								Case ".wx"
+									_kind[_count] = KIND_WONKEY
+
+								Case ".mx23d", ".3do"
+									_kind[_count] = KIND_3D
+
+								Case ".glsl"
+									If _file[_count].Left(3) = "fx-" Then
+										_kind[_count] = KIND_GLSLFX
+									Else If _file[_count].Left(4) = "mat-" Then
+										_kind[_count] = KIND_GLSLMAT
+									Else
+										_kind[_count] = KIND_GLSL
+									End If
+
+								Case ".rs"
+									_kind[_count] = KIND_RS
+								Case ".vc"
+									_kind[_count] = KIND_VC
+								Case ".in"
+									_kind[_count] = KIND_IN
+								Case ".sys"
+									_kind[_count] = KIND_SYS
+
+								Case ".psd"
+									_kind[_count] = KIND_PSD
+
+'								Case ".glsl"
+'									_kind[_count] = 14
+
+								Default
+									_kind[_count] = KIND_NONE
+							End Select
+						End if
+				End Select
+			End if
+		Next
+	End method
+
+
+	method LoadMap:int( filePath:string )
+		If Not filePath Return 0
+		If ExtractExt( filePath ).ToLower() <> ".mx2map" Then Return 0
+
+		'try to open the path
+		Local fStream:Stream = Stream.Open( filePath, "r" )
+		If not fStream Then
+			Return 0
+		End If
+		
+		'read in the ID and reject making sure the Close if rejecting
+		local id:int = fStream.ReadInt()
+		If id <> -9999 Then
+			fStream.Close()
+			Return 0
+		End If
+		
+		If Not _mapPalette Then
+			_mapPalette = New ColorPalette( "asset::game.mx2palette" )
+		End If
+
+		local layers:int = fStream.ReadInt()
+'		Print layers
+		
+'		Local k:int
+'		For k = 0 To layers-1
+			LoadLayer( fStream, 0 )
+'		Next
+
+		_detailsTxt = _mapX+"x"+_mapY+" - "+layers
+				
+		fStream.Close()
+		Return layers
+	End method
+
+
+	method LoadLayer( Stream:Stream, layer:int )
+		local _loadX:int = Stream.ReadInt()
+		local _loadY:int = Stream.ReadInt()
+		
+		_mapX = _loadX + 1
+		_mapY = _loadY + 1
+		
+		_mapTile = New ubyte[ _mapX, _mapY ]
+		_mapColorTile = New ubyte[ _mapX, _mapY ]
+		
+Local rt:short
+		Local cl:short
+		
+		Local x:int
+		Local y:int
+		For x = 0 To _loadX
+			For y = 0 To _loadY
+				cl = Stream.ReadShort()
+				rt = Stream.ReadShort()
+				If x < 128 And y < 128 Then
+					_mapTile[ x, y] = Clamp(int(cl), 0, 255)
+					_mapColorTile[ x, y] = Clamp(int(rt), 0, 255)
+				End if
+			Next
+		Next
+	End method
+
+
+	method LoadAsset()
+		_fullPath = ""
+		If _currentFile < 0 Then Return
+		
+		_fullPath = _filePath[_currentFile]
+		_fullKind = _kind[_currentFile]
+		If _size[_currentFile] < 1024 Then
+			_sizeTxt = _size[_currentFile]+"b"
+		Else
+			local sz:int = int(_size[_currentFile] / 1024)
+			If sz < 1024 Then
+				_sizeTxt = sz+"k"
+			Else
+				sz = int(sz/1024)
+				_sizeTxt = sz+"m"
+			End If
+		End If
+		_detailsTxt = ""
+		
+		_sound = Null
+		Select _fullKind
+			Case KIND_3D
+				_model = New Object3D( _fullPath )
+				
+			Case KIND_MAP 'map
+				_mapLayers = LoadMap( _fullPath )
+				
+			Case KIND_GLSL
+				Print "load shader..."
+				_shader = Shader.Load( _fullPath )
+				If _shader Then ' check if shader is valid
+					If Not _shader.CheckForErrors() Then
+						_shader = Null
+					End If
+				End If
+				_drag = 0.5
+				
+			Case KIND_FONT
+				_font = App.Theme.OpenFont( _fullPath, 20 *Clamp(_heightScale,0.1, 8) )
+				
+			Case KIND_PALETTE 'palettes
+				If Not _palette Then _palette = New ColorPalette()
+				If _palette.FilePath <> _fullPath Then
+					_palette.Load( _fullPath )
+					_detailsTxt = (_palette.GridX * _palette.GridY)+" colors"
+				End If
+
+			Case KIND_IMAGE, KIND_FONTSPRITE
+				If Not _image Or (_image And _image.FilePath <> _fullPath) Then
+					_image = Image.Load( _fullPath )
+					_detailsTxt = _image.Width+" x "+_image.Height
+				End If
+				
+			Case KIND_AUDIO
+				If Not _soundData Or (_soundData And _soundData.Path <> _fullPath) Then
+					_soundData = AudioData.Load( _fullPath )
+					If _soundData Then
+						_sound = New Sound( _soundData )
+					End If
+				End If
+				If _sound Then
+					_channel.Play( _sound )
+					If _audioTimer Then _audioTimer.Suspended = False
+				End If
+		End Select
+	End Method
+
+
+	method OnMouseMove() Override
+		ctrls.Over( _mouseX, _mouseY )
+'		Print ctrls.ControlOver
+		
+		RequestRender()
+	End Method
+
+	method OnMouseUp() Override
+		_clickTime = Millisecs()
+	End Method
+	
+	
+	method OnMouseDown() Override
+		Select ctrls.ControlOver
+			Case 0
+			Default
+				If _mouseX < _xDiv1 Then 'over folders
+					If _overFolder > -1 Then
+						If _overFolder = 0 Then
+							GetFiles( "" )
+						Else
+							GetFiles( _folder[_overFolder] )
+						End If
+						_currentFolder = _overFolder
+					End If
+				Else If _mouseX > _xDiv1 And _mouseX < _xDiv2 Then 'over viewer
+					Select _fullKind
+						Case KIND_AUDIO 'audio
+							If _sound Then
+								_channel.Play( _sound )
+								If _audioTimer Then _audioTimer.Suspended = False
+							End If
+					End Select
+					
+				Else If _mouseX > _xDiv2 And _mouseX < _xDiv3 Then 'over files
+					_currentFile = _overFile
+					LoadAsset()
+				Else ' over current resource
+				End If
+		End Select
+
+		RequestRender()
+	End Method
+	
+	
+	method OnThemeChanged() Override
+		ctrls.OverColor = MainWindow._theme.IDE[3]
+
+		ctrls.SetColor( _vFaderZoom, MainWindow._theme.IDE[2] )
+	End method
+	
+
+	Method DrawAudio( canvas:Canvas, x:int, y:int, width:int, height:int )
+		local mid:int = height * 0.5
+
+		canvas.Color = MainWindow._theme.IDE[1] * 0.5
+		canvas.DrawLine( x, mid, x+width, mid )
+
+		canvas.Color = MainWindow._theme.IDE[1]
+		local xp:float
+		local sample:float
+		local p:int
+		local last:int
+		
+		If _soundData.Stereo Then
+			local half:int = mid * 0.5
+			local y1:int = half
+			local y2:int = mid + y1
+			local p1:int
+			local last1:int
+			For xp = 0 Until width
+				sample = _soundData.GetSample( (xp / width) *_soundData.Length, 0 )
+
+				p = y1 + (half * sample)
+
+				sample = _soundData.GetSample( (xp / width) * _soundData.Length, 1 )
+				p1 = y2 + (half * sample)
+
+				If xp Then
+					canvas.DrawLine( x+xp-1, y+last, x+xp,y+p )
+					canvas.DrawLine( x+xp-1, y+last1, x+xp,y+p1 )
+				End If
+
+				last = p
+				last1 = p1
+			Next
+		Else
+			For xp = 0 Until width
+				sample = _soundData.GetSample( (xp / width) * _soundData.Length, 0 )
+
+				p = mid + (mid * sample)
+				If xp Then canvas.DrawLine( x+xp-1, y+last, x+xp,y+p )
+				last = p
+			Next
+		End If
+
+		local playhead:float = float(_channel.PlayheadSample) / _soundData.Length
+		canvas.Color = MainWindow._theme.Syntax[16]
+		xp = x + (width * playhead)
+		canvas.DrawRect( xp, y, 2, height )
+		
+		If Not _channel.Playing Then
+			If _audioTimer Then _audioTimer.Suspended = True
+		End if
+	End Method
+
+
+	method Draw3d( canvas:Canvas, x:float, y:float, width:float, height:float )
+		If Not m3d Then
+			canvasImage = New Image( 256, 256 )
+			myCanvas = New Canvas( canvasImage )
+
+			'setup the 3d stuff
+			m3d = New MiniRa3D()
+			m3d.Init( 0, 0, 256, 256 )
+			m3d.CameraOrbit( -0.1, 0 ) 'up, round
+		
+			'setup a base debug grid
+			m3d.Grid()
+			Return
+		End If
+
+		myCanvas.Color = GetNewColor( MainWindow._theme.IDE[0], 0.03 )
+		myCanvas.DrawRect( 0,0, 256,256 )
+		
+		m3d.DrawGrid( myCanvas, 0, 80 )
+
+		m3d.DrawFlatObject( myCanvas,  _model, 0, 80, 0.05 )
+
+		myCanvas.Color = Color.Black
+		m3d.DrawWireObjectMono( myCanvas,  _model, 0, 80 )
+		
+		myCanvas.Flush()
+		
+		canvas.Color = Color.White
+		canvas.DrawRect( x,y,width,height, canvasImage )
+		
+	End method
+	
+
+	method DrawMap( canvas:Canvas, xs:float, ys:float, width:float, height:float )
+'	method RenderPureColor( canvas:Canvas, layer:int, xs:float, ys:float,	color:int )
+		Local x:int
+		Local y:int
+		Local xp:float
+		Local yp:float = ys
+		Local xx:int
+		Local yy:int = 0
+
+'		While yp + _divy < 0
+'			yp += _divy
+'			yst += 1
+'		Wend
+		local _divx:float = width / _mapX
+		local _divy:float = height / _mapY
+		
+		For y = 0 Until _mapY
+			For x = 0 Until _mapX
+				If x < 128 And y < 128 Then
+					If _mapTile[ x, y ] > 0 Then
+						canvas.Color = _mapPalette.GetRGBA( _mapColorTile[ x, y ] )
+						canvas.DrawRect( xp, yp, _divx, _divy )
+					End If
+				End If
+				xp += _divx
+			Next
+			xp = xs
+			yp += _divy
+		Next
+	End method
+
+
+	method DrawGLSL( canvas:Canvas, x:float, y:float, width:float, height:float )
+		If _mouseDown And _mouseX > _xDiv1 And _mouseX < _xDiv2 Then
+			_drag = Clamp( float(_mouseX-_xDiv1) / width, 0.1, 0.9 )
+		End If
+
+		If _shader Then
+			canvas.Color = Color.White
+			canvas.DrawRect( x+width * _drag,y,width-(width*_drag),height, _birdImage, _shader )
+		Else
+			canvas.Color = GetNewColor( MainWindow._theme.IDE[0], -0.3 )
+			canvas.DrawRect( x,y,width,height )
+			canvas.LineWidth = 4
+			canvas.Color = Color.Red
+			canvas.DrawLine( x + width*_drag,y, x+width,y+height )
+			canvas.LineWidth = 1
+		End If
+
+		canvas.Color = Color.White
+		canvas.DrawRect( x,y,width * _drag, height, _birdImage )
+
+		canvas.Color = MainWindow._theme.IDE[3]
+		canvas.DrawRect( x + width * _drag, 0, 4, height )
+
+		canvas.Color = MainWindow._theme.IDE[1]
+		canvas.DrawText( "Drag with Mouse", x+(width*0.5), height*0.92, 0.5,0.5 )
+	End Method
+	
+
+	method DrawPalette( canvas:Canvas, palette:ColorPalette, x:float, y:float, width:float, height:float )
+		local xp:float
+		local yp:float = y
+		local xx:int
+		local yy:int
+		local cellWidth:float = width / palette.GridX
+		local cellHeight:float = height / palette.GridY
+		local col:Int = 0
+		
+'		Print palette.GridX+" "+palette.GridY
+'		Print width
+'		Print col+" "+palette.GetRGBA( col )+" "+palette.GetRGBA( 1 )
+
+		canvas.Color = GetNewColor( MainWindow._theme.IDE[0], 0.03 )
+		canvas.DrawRect( x,y, width,height)
+		
+		If palette.GridY * palette.GridX < 96 And width > 127 Then
+			For yy = 1 To palette.GridY
+				xp = x
+				For xx = 1 To palette.GridX
+					canvas.Color = palette.GetRGBA( col )
+					canvas.DrawRect( xp, yp, cellWidth, cellHeight )
+	
+					canvas.Color = Color.Black * 0.5
+					canvas.DrawText( col, xp-1,yp)
+					canvas.DrawText( col, xp+1,yp)
+					canvas.DrawText( col, xp,yp-1)
+					canvas.DrawText( col, xp,yp+1)
+					canvas.Color = Color.White
+					canvas.DrawText( col, xp,yp)
+	
+					xp += cellWidth
+					col += 1
+				Next
+				yp += cellHeight
+			Next
+		Else
+			For yy = 1 To palette.GridY
+				xp = x
+				For xx = 1 To palette.GridX
+					canvas.Color = palette.GetRGBA( col )
+					canvas.DrawRect( xp, yp, cellWidth, cellHeight )
+					
+					xp += cellWidth
+					col += 1
+				Next
+				yp += cellHeight
+			Next
+		End If
+	End Method
+	
+
+	method RenderWide( canvas:Canvas )
+		local sc:float = (ctrls.GetValue( _vFaderZoom )*1.33)+0.2
+'		Print sc
+		Local scale:float = App.Theme.Scale.x * sc
+		
+		local str:String
+		local scale32:float = 32 * scale
+		local scale38:float = 38 * scale
+		local scale40:float = 40 * scale
+		local scale42:float = 42 * scale
+		local scale52:float = 52 * scale
+		local scale64:float = 64 * scale
+		local scale80:float = 80 * scale
+		local scale90:float = 90 * scale
+
+		local x:int = scale52
+		local y:int = scale52
+		local lastX:int
+		
+		_overFolder = -1
+		
+		'draw folders
+		local folder:Int
+		For folder = 0 To _folderCount
+			str = _folder[folder]
+			If str.Left(12) <> "" Then
+			If _mouseX > x-scale40 And _mouseX < x+scale40 And _mouseY > y-scale42 And _mouseY < y+scale52 Then
+				_overFolder = folder
+			End If
+
+			If _currentFolder = folder Or _overFolder = folder Then
+				canvas.Color = MainWindow._theme.IDE[3] * 0.8
+				canvas.DrawRoundedRect( x-scale40, y-scale42, scale80, scale90, 5 )
+			End If
+
+			canvas.Color = Color.White
+			canvas.DrawRect( x-scale32, y-scale38, scale64, scale64, _folderImage )
+		
+			canvas.Color = MainWindow._theme.IDE[1]
+			canvas.DrawText( str.Left(12), x,y+scale32, 0.5,0.5 )
+			lastX = x
+			
+			y += scale90
+			If y+scale42 > Height Then
+				y = scale52
+				x += scale80
+			End If
+			End If
+		Next
+		
+		'draw highlighted file
+		x = lastX + scale40
+		_xDiv1 = x
+		canvas.Color = MainWindow._theme.IDE[0]
+		canvas.DrawRect( x, 0, Height, Height )
+		canvas.Color = GetNewColor( MainWindow._theme.IDE[0], -0.01 )
+		canvas.DrawRect( x+2, 0, Height-4, Height )
+		Select _fullKind
+			Case KIND_3D
+				Draw3d( canvas, x+2, 0, Height-4, Height * 0.8 )
+				
+			Case KIND_FONT
+				If _font Then
+					_heightScale = float(Height) / 200.0
+					local font:Font = canvas.Font
+					canvas.Font = _font
+					canvas.Color = Color.White
+					canvas.DrawText( "1234567890", x+Height*0.5, Height * 0.2, 0.5,0.5 )
+					canvas.DrawText( "ABCDEFGHIJKLM", x+Height*0.5, Height * 0.35, 0.5,0.5 )
+					canvas.DrawText( "NOPQRSTUVWXYZ", x+Height*0.5, Height * 0.45, 0.5,0.5 )
+					canvas.DrawText( "abcdefghijklm", x+Height*0.5, Height * 0.6, 0.5,0.5 )
+					canvas.DrawText( "nopqrstuvwxyz", x+Height*0.5, Height * 0.7, 0.5,0.5 )
+					canvas.Font = font
+				End If
+					
+			Case KIND_PALETTE
+				DrawPalette( canvas, _palette, x+2, 0, Height-4, Height * 0.8 )
+				
+			Case KIND_MAP
+				DrawMap( canvas, x+2, 0, Height-4, Height * 0.8 )
+
+			Case KIND_GLSL
+				DrawGLSL( canvas, x+2, 0, Height-4, Height * 0.8 )
+
+			Case KIND_IMAGE, KIND_FONTSPRITE
+				If _image Then
+					canvas.Color = Color.White
+					canvas.TextureFilteringEnabled = False
+					canvas.DrawRect( x+2, 0, Height-4, Height * 0.8, _image )
+				End If
+				
+			Case KIND_AUDIO
+				DrawAudio( canvas, x+2, 0, Height-4, Height * 0.8 )
+		End Select
+		If _fullPath Then
+			canvas.Color = MainWindow._theme.IDE[1]
+			canvas.DrawText( StripDir(_fullPath), _xDiv1+Height*0.5, Height*0.9, 0.5,1.3 )
+		End If
+
+		'draw files
+		_xDiv2 = x+Height
+		lastX = _xDiv2
+		
+		x = x + Height + scale52
+		y = scale52
+		local file:Int
+		For file = 0 To _count
+			If _mouseX > x-scale40 And _mouseX < x+scale40 And _mouseY > y-scale42 And _mouseY < y+scale52 Then
+				_overFile = file
+			End If
+
+			If _currentFile = file Or _overFile = file Then
+				canvas.Color = MainWindow._theme.IDE[3] * 0.8
+				canvas.DrawRoundedRect( x-scale40, y-scale42, scale80, scale90, 5 )
+			End If
+
+			canvas.Color = Color.White
+			Select _kind[file]
+				Case KIND_PALETTE
+					If file > -1 And file < 64 Then
+						If Not _icons[file] Then
+							local palette:ColorPalette = New ColorPalette( _filePath[file] )
+							_icons[file] = New Image( 128, 128 )
+							local tCanvas:Canvas = New Canvas( _icons[file] )
+							tCanvas.Color = Color.None
+							tCanvas.DrawRect( 0,0,128,128 )
+							DrawPalette( tCanvas, palette, 0,0,127,127 )
+							tCanvas.Flush()
+							canvas.DrawRect( x-scale32, y-scale38, scale64, scale64, _fileImage[_kind[file]] )
+						Else
+							canvas.Color = Color.Black * 0.3
+							canvas.DrawRoundedRect( x-scale32, y-scale42, scale64, scale64, 5 )
+							canvas.Color = Color.White
+							canvas.DrawRect( x-scale32, y-scale38, scale64, scale64, _icons[file] )
+						End If
+					Else
+						canvas.DrawRect( x-scale32, y-scale38, scale64, scale64, _fileImage[_kind[file]] )
+					End If
+				
+				Case KIND_IMAGE, KIND_FONTSPRITE 'image
+					If file > -1 And file < 64 Then
+						If Not _icons[file] Then
+							_icons[file] = Image.Load( _filePath[file] )
+							canvas.DrawRect( x-scale32, y-scale38, scale64, scale64, _fileImage[_kind[file]] )
+						Else
+							canvas.Color = Color.Black * 0.3
+							canvas.DrawRoundedRect( x-scale32, y-scale42, scale64, scale64, 5 )
+							canvas.Color = Color.White
+							canvas.DrawRect( x-scale32, y-scale38, scale64, scale64, _icons[file] )
+						End If
+					Else
+						canvas.DrawRect( x-scale32, y-scale38, scale64, scale64, _fileImage[_kind[file]] )
+					End If
+				Default
+					canvas.DrawRect( x-scale32, y-scale38, scale64, scale64, _fileImage[_kind[file]] )
+			End Select
+
+		
+			canvas.Color = MainWindow._theme.IDE[1]
+			str = _file[file]
+			canvas.DrawText( str.Left(12), x,y+scale32, 0.5,0.5 )
+			
+			lastX = x
+		
+			y += scale90
+			If y+scale42 > Height Then
+				y = scale52
+				x += scale80
+			End If
+		Next
+
+		_xDiv3 = lastX + scale80
+		
+		If ctrls.GetXPos( _vFaderZoom ) <> Width-40 Then
+			ctrls.SetXPos( _vFaderZoom, Width-40 )
+		End If
+		
+		local xwidth:int = _xDiv2-_xDiv1
+		local wd:int = xwidth * 0.3
+		ctrls.SetXYWidthHeight( _openButton, _xDiv1+(xwidth-wd)*0.5, Height*0.89, wd, Height * 0.1 )
+		ctrls.SetVisible( _openButton, _fullPath <> "" )
+
+		ctrls.SetXYWidthHeight( _detailsText, _xDiv1+Height*0.05, Height*0.89, wd, Height * 0.1 )
+		ctrls.SetText( _detailsText, _detailsTxt )
+
+		ctrls.SetXYWidthHeight( _sizeText, _xDiv2-wd-Height*0.05, Height*0.89, wd, Height * 0.1 )
+		ctrls.SetText( _sizeText, _sizeTxt )
+		
+		ctrls.DrawControls( canvas, _mouseX, _mouseY, _mouseDown )
+	End method
+	
+
+End class

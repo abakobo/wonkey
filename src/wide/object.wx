@@ -1,0 +1,1062 @@
+Namespace MiniRa
+Using MiniRa
+
+#Import "projection.wx"
+
+class ShaderBank
+	field shader:Shader[] = New Shader[16]
+	
+	method New()
+	End method
+End Class
+
+
+Class Object3D
+	const MAX_VERT:int = 5000
+	const MAX_TRI:int = MAX_VERT * 2
+	
+	field kind:int = -1
+	
+	field vertexCount:int = -1
+	field xx:float[]
+	field yy:float[]
+
+	field vX:float[]
+	field vY:float[]
+	field vZ:float[]
+	field visible:float[]
+
+	field triangleCount:int = -1
+	field triVert1:int[]
+	field triVert2:int[]
+	field triVert3:int[]
+
+	field triVert1Color:UInt[]
+	field triVert2Color:UInt[]
+	field triVert3Color:UInt[]
+
+	field triVert1U:float[]
+	field triVert1V:Float[]
+	field triVert2U:float[]
+	field triVert2V:Float[]
+	field triVert3U:float[]
+	field triVert3V:Float[]
+
+	field triVert1U2:float[]
+	field triVert1V2:Float[]
+	field triVert2U2:float[]
+	field triVert2V2:Float[]
+	field triVert3U2:float[]
+	field triVert3V2:Float[]
+
+	field triCenterX:float[]
+	field triCenterY:float[]
+	field triCenterZ:float[]
+
+	field triNormalX:float[]
+	field triNormalY:float[]
+	field triNormalZ:float[]
+	
+	field triDist:float[]
+
+	field triShader:int
+	field Name:string = ""
+	field triData0:UByte[] = New UByte[MAX_TRI]
+	field triData1:UByte[] = New UByte[MAX_TRI]
+	field triData2:UByte[] = New UByte[MAX_TRI]
+	field triDataCol:UByte[] = New UByte[MAX_TRI]
+
+	field triData3r:UByte[] = New UByte[MAX_TRI]
+	field triData3g:UByte[] = New UByte[MAX_TRI]
+	field triData3b:UByte[] = New UByte[MAX_TRI]
+	field triData3a:UByte[] = New UByte[MAX_TRI]
+
+	field triRefCount:int = -1
+	field triRef:int[]
+	field triDel:bool[]
+
+	'internal editor stuff
+	'screen triangle center
+	field cx:float[]
+	field cy:float[]
+
+	'screen triangle normal
+	field nx:float[]
+	field ny:float[]
+
+
+	method New()
+		xx = New float[MAX_VERT]
+		yy = New float[MAX_VERT]
+
+		vX = New float[MAX_VERT]
+		vY = New float[MAX_VERT]
+		vZ = New float[MAX_VERT]
+
+		cx = New float[MAX_TRI]
+		cy = New float[MAX_TRI]
+
+		nx = New float[MAX_TRI]
+		ny = New float[MAX_TRI]
+
+		triVert1 = New int[MAX_TRI]
+		triVert2 = New int[MAX_TRI]
+		triVert3 = New int[MAX_TRI]
+		triVert1Color = New UInt[MAX_TRI]
+		triVert2Color = New UInt[MAX_TRI]
+		triVert3Color = New UInt[MAX_TRI]
+
+		triVert1U = New float[MAX_TRI]
+		triVert1V = New float[MAX_TRI]
+		triVert2U = New float[MAX_TRI]
+		triVert2V = New float[MAX_TRI]
+		triVert3U = New float[MAX_TRI]
+		triVert3V = New float[MAX_TRI]
+
+		triVert1U2 = New float[MAX_TRI]
+		triVert1V2 = New float[MAX_TRI]
+		triVert2U2 = New float[MAX_TRI]
+		triVert2V2 = New float[MAX_TRI]
+		triVert3U2 = New float[MAX_TRI]
+		triVert3V2 = New float[MAX_TRI]
+
+		triCenterX = New float[MAX_TRI]
+		triCenterY = New float[MAX_TRI]
+		triCenterZ = New float[MAX_TRI]
+
+		triNormalX = New float[MAX_TRI]
+		triNormalY = New float[MAX_TRI]
+		triNormalZ = New float[MAX_TRI]
+	
+		triDist = New float[MAX_TRI]
+
+		triData0 = New UByte[MAX_TRI]
+		triData1 = New UByte[MAX_TRI]
+		triData2 = New UByte[MAX_TRI]
+		triDataCol = New UByte[MAX_TRI]
+
+		triData3r = New UByte[MAX_TRI]
+		triData3g = New UByte[MAX_TRI]
+		triData3b = New UByte[MAX_TRI]
+		triData3a = New UByte[MAX_TRI]
+
+		visible = New float[MAX_TRI]
+
+		triRef = New int[MAX_TRI]
+		triDel = New bool[MAX_TRI]
+	End method
+
+
+
+	method New( vertex:int, triangle:int )
+		xx = New float[vertex]
+		yy = New float[vertex]
+
+		vX = New float[vertex]
+		vY = New float[vertex]
+		vZ = New float[vertex]
+		visible = New float[vertex]
+
+		cx = New float[triangle]
+		cy = New float[triangle]
+
+		nx = New float[triangle]
+		ny = New float[triangle]
+
+		triVert1 = New int[triangle]
+		triVert2 = New int[triangle]
+		triVert3 = New int[triangle]
+		triVert1Color = New UInt[triangle]
+		triVert2Color = New UInt[triangle]
+		triVert3Color = New UInt[triangle]
+
+		triVert1U = New float[triangle]
+		triVert1V = New float[triangle]
+		triVert2U = New float[triangle]
+		triVert2V = New float[triangle]
+		triVert3U = New float[triangle]
+		triVert3V = New float[triangle]
+
+		triVert1U2 = New float[triangle]
+		triVert1V2 = New float[triangle]
+		triVert2U2 = New float[triangle]
+		triVert2V2 = New float[triangle]
+		triVert3U2 = New float[triangle]
+		triVert3V2 = New float[triangle]
+
+		triCenterX = New float[triangle]
+		triCenterY = New float[triangle]
+		triCenterZ = New float[triangle]
+
+		triNormalX = New float[triangle]
+		triNormalY = New float[triangle]
+		triNormalZ = New float[triangle]
+	
+		triDist = New float[triangle]
+
+		triData0 = New UByte[triangle]
+		triData1 = New UByte[triangle]
+		triData2 = New UByte[triangle]
+		triDataCol = New UByte[triangle]
+
+		triData3r = New UByte[triangle]
+		triData3g = New UByte[triangle]
+		triData3b = New UByte[triangle]
+		triData3a = New UByte[triangle]
+
+		triRef = New int[triangle]
+		triDel = New bool[triangle]
+	End method
+	
+
+	method New( path:string, scale:float = 1 )
+		Self.New()
+		LoadMx3d( path, scale )
+	End method
+	
+	
+	method     LoadMx3d:bool( path:string, scale:float = 1 )
+		Local Stream:FileStream = FileStream.Open( path, "r" )
+		If not Stream Then
+			Print path + " not opened"
+			Return false
+		End If
+
+		Print "Loading file v1:"+path
+		
+		'file id -2112 is mx23d
+		local ver:int = Stream.ReadInt()
+		Print "version:"+ver
+		If ver < -2113 or ver > -2112 Then
+			Print "Error: Bad Header! "
+			Stream.Close()
+			Return False
+		End If
+
+		local vc:int = Stream.ReadInt()
+		Print "vertex:"+vc
+		local k:int
+		local x:float
+		local y:float
+		local z:float
+		vertexCount = -1
+		For k = 0 To vc
+			x = Stream.ReadFloat()
+			y = Stream.ReadFloat()
+			z = Stream.ReadFloat()
+
+			Vertex( x*scale, y*scale, z*scale )
+		Next
+
+		local tc:int = Stream.ReadInt()
+		Print "triangle:"+tc
+		triangleCount = -1
+		local col:Uint = UInt(255) Shl 24 | UInt(10) Shl 16 | UInt(128) Shl 8 | UInt(255)
+		local v1:int
+		local v2:int
+		local v3:int
+		local tri:int
+		For k = 0 To tc
+			v1 = Stream.ReadInt()
+			v2 = Stream.ReadInt()
+			v3 = Stream.ReadInt()
+			
+			If (v1 < 0 or v1 > vc) or  (v2 < 0 or v2 > vc) or  (v3 < 0 or v3 > vc) Then
+				Print "Read ERROR"
+				v1 = 0
+				v2 = 0
+				v3 = 0
+			End If
+			
+				tri = Triangle( v3, v2, v1, col )
+				
+				triVert3Color[tri] = Stream.ReadUInt()
+				triVert2Color[tri] = Stream.ReadUInt()
+				triVert1Color[tri] = Stream.ReadUInt()
+				
+				triVert1U[tri] = Stream.ReadFloat()
+				triVert1V[tri] = Stream.ReadFloat()
+				triVert2U[tri] = Stream.ReadFloat()
+				triVert2V[tri] = Stream.ReadFloat()
+				triVert3U[tri] = Stream.ReadFloat()
+				triVert3V[tri] = Stream.ReadFloat()
+	
+				triVert1U2[tri] = Stream.ReadFloat()
+				triVert1V2[tri] = Stream.ReadFloat()
+				triVert2U2[tri] = Stream.ReadFloat()
+				triVert2V2[tri] = Stream.ReadFloat()
+				triVert3U2[tri] = Stream.ReadFloat()
+				triVert3V2[tri] = Stream.ReadFloat()
+				
+				triData0[tri] = Stream.ReadUByte()
+				triData1[tri] = Stream.ReadUByte()
+				triData2[tri] = Stream.ReadUByte()
+				triDataCol[tri] = Stream.ReadUByte()
+				
+				If ver = -2113 Then
+					triData3r[tri] = Stream.ReadUByte()
+					triData3g[tri] = Stream.ReadUByte()
+					triData3b[tri] = Stream.ReadUByte()
+					triData3a[tri] = Stream.ReadUByte()
+				End If
+'			End if
+		Next
+		
+'		GetCenters()
+'		GetNormals()
+		
+'		Print Stream.ReadInt()
+'		Print Stream.ReadInt()
+'		Print Stream.ReadInt()
+'		Print Stream.ReadInt()
+'		If Stream.Eof Then
+'			Print "FileEnd"
+'		Else
+'			Print "More Data"
+'		End if
+		
+		Stream.Close()
+
+		Return true
+	End method
+		
+	method Vertex:int( x:float, y:float, z:float ) virtual
+		vertexCount += 1
+		vX[vertexCount] = x
+		vY[vertexCount] = y
+		vZ[vertexCount] = z
+		Return vertexCount
+	End method
+
+
+	method Triangle:int( v1:float, v2:float, v3:float, col:UInt )
+		triangleCount += 1
+		triVert1[triangleCount] = v1
+		triVert2[triangleCount] = v2
+		triVert3[triangleCount] = v3
+
+		'center of a line is (v1+v2)/2
+		'center of a triangle is (v1+v2+v3) / 2
+'		Print triangleCount +" "+v1+" "+v2+" "+v3
+		triCenterX[triangleCount] = (vX[ v1 ] + vX[ v2 ] + vX[ v3 ]) / 3.0
+		triCenterY[triangleCount] = (vY[ v1 ] + vY[ v2 ] + vY[ v3 ]) / 3.0
+		triCenterZ[triangleCount] = (vZ[ v1 ] + vZ[ v2 ] + vZ[ v3 ]) / 3.0
+		
+		triVert1Color[triangleCount] = col
+		triVert2Color[triangleCount] = col
+		triVert3Color[triangleCount] = col
+
+		triVert1U[triangleCount] = 0
+		triVert1V[triangleCount] = 0
+		triVert2U[triangleCount] = 0
+		triVert2V[triangleCount] = 0
+		triVert3U[triangleCount] = 0
+		triVert3V[triangleCount] = 0
+
+		triVert1U2[triangleCount] = 0
+		triVert1V2[triangleCount] = 0
+		triVert2U2[triangleCount] = 0
+		triVert2V2[triangleCount] = 0
+		triVert3U2[triangleCount] = 0
+		triVert3V2[triangleCount] = 0
+
+		local x1:float
+		local y1:float
+		local z1:float
+		
+		local x2:float
+		local y2:float
+		local z2:float
+
+		'get the normal
+'		vector3 N = (vA - vB) % (vB - vC)
+			x1 = vX[ v1 ] - vX[ v2 ]
+			y1 = vY[ v1 ] - vY[ v2 ]
+			z1 = vZ[ v1 ] - vZ[ v2 ]
+
+			x2 = vX[ v2 ] - vX[ v3 ]
+			y2 = vY[ v2 ] - vY[ v3 ]
+			z2 = vZ[ v2 ] - vZ[ v3 ]
+
+		'% is cross (or dot)
+			triNormalX[triangleCount] = y1*z2 - z1*y2
+			triNormalY[triangleCount] = z1*x2 - x1*z2
+			triNormalZ[triangleCount] = x1*y2 - y1*x2
+
+		'normalize
+			local tm:float = Length( triNormalX[triangleCount], triNormalY[triangleCount], triNormalZ[triangleCount] ) * 4
+			triNormalX[triangleCount] /= tm
+			triNormalY[triangleCount] /= tm
+			triNormalZ[triangleCount] /= tm
+
+			visible[triangleCount] = true
+			triDel[triangleCount] = false
+
+		triData0[triangleCount] = 0
+		triData1[triangleCount] = 0
+		triData2[triangleCount] = 0
+		triDataCol[triangleCount] = 0
+
+		triData3r[triangleCount] = 0
+		triData3g[triangleCount] = 0
+		triData3b[triangleCount] = 0
+		triData3a[triangleCount] = 0
+		
+'		Print "center:"+triCenterX[triangleCount]+" "+triCenterY[triangleCount]+" "+triCenterZ[triangleCount]
+'		Print "normal:"+triNormalX[triangleCount]+" "+triNormalY[triangleCount]+" "+triNormalZ[triangleCount]
+		Return triangleCount
+	End method
+
+
+	method Triangle:int( v1:float, v2:float, v3:float, col:UInt, uvu1:float, uvv1:float, uvu2:float, uvv2:float, uvu3:float, uvv3:float )
+		triangleCount += 1
+		triVert1[triangleCount] = v1
+		triVert2[triangleCount] = v2
+		triVert3[triangleCount] = v3
+
+		'center of a line is (v1+v2)/2
+		'center of a triangle is (v1+v2+v3) / 2
+		triCenterX[triangleCount] = (vX[ v1 ] + vX[ v2 ] + vX[ v3 ]) / 3.0
+		triCenterY[triangleCount] = (vY[ v1 ] + vY[ v2 ] + vY[ v3 ]) / 3.0
+		triCenterZ[triangleCount] = (vZ[ v1 ] + vZ[ v2 ] + vZ[ v3 ]) / 3.0
+		
+		triVert1Color[triangleCount] = col
+		triVert2Color[triangleCount] = col
+		triVert3Color[triangleCount] = col
+
+		triVert1U[triangleCount] = uvu1
+		triVert1V[triangleCount] = uvv1
+		triVert2U[triangleCount] = uvu2
+		triVert2V[triangleCount] = uvv2
+		triVert3U[triangleCount] = uvu3
+		triVert3V[triangleCount] = uvv3
+
+		triVert1U2[triangleCount] = uvu1
+		triVert1V2[triangleCount] = uvv1
+		triVert2U2[triangleCount] = uvu2
+		triVert2V2[triangleCount] = uvv2
+		triVert3U2[triangleCount] = uvu3
+		triVert3V2[triangleCount] = uvv3
+
+		local x1:float
+		local y1:float
+		local z1:float
+		
+		local x2:float
+		local y2:float
+		local z2:float
+
+		'get the normal
+'		vector3 N = (vA - vB) % (vB - vC)
+			x1 = vX[ v1 ] - vX[ v2 ]
+			y1 = vY[ v1 ] - vY[ v2 ]
+			z1 = vZ[ v1 ] - vZ[ v2 ]
+
+			x2 = vX[ v2 ] - vX[ v3 ]
+			y2 = vY[ v2 ] - vY[ v3 ]
+			z2 = vZ[ v2 ] - vZ[ v3 ]
+
+		'% is cross (or dot)
+			triNormalX[triangleCount] = y1*z2 - z1*y2
+			triNormalY[triangleCount] = z1*x2 - x1*z2
+			triNormalZ[triangleCount] = x1*y2 - y1*x2
+
+		'normalize
+			local tm:float = Length( triNormalX[triangleCount], triNormalY[triangleCount], triNormalZ[triangleCount] ) * 4
+			triNormalX[triangleCount] /= tm
+			triNormalY[triangleCount] /= tm
+			triNormalZ[triangleCount] /= tm
+
+'		Print triangleCount
+			visible[triangleCount] = true
+			triDel[triangleCount] = false
+
+		triData0[triangleCount] = 0
+		triData1[triangleCount] = 0
+		triData2[triangleCount] = 0
+		triDataCol[triangleCount] = 0
+
+		triData3r[triangleCount] = 0
+		triData3g[triangleCount] = 0
+		triData3b[triangleCount] = 0
+		triData3a[triangleCount] = 0
+		
+'		Print "center:"+triCenterX[triangleCount]+" "+triCenterY[triangleCount]+" "+triCenterZ[triangleCount]
+'		Print "normal:"+triNormalX[triangleCount]+" "+triNormalY[triangleCount]+" "+triNormalZ[triangleCount]
+		Return triangleCount
+	End method
+
+
+	method Sort3D( x:float, y:float, w:float, h:float )
+		local k:int
+
+		local x0:float
+		local y0:float
+		local x1:float
+		local y1:float
+		local x2:float
+		local y2:float
+		
+		local xw:float = x + w
+		local yh:float = y + h
+
+		local sum:float
+		
+		local bork:bool
+		
+		triRefCount = -1
+		For k = 0 To triangleCount
+			x0 = xx[triVert1[k]]
+			y0 = yy[triVert1[k]]
+			x1 = xx[triVert2[k]]
+			y1 = yy[triVert2[k]]
+			x2 = xx[triVert3[k]]
+			y2 = yy[triVert3[k]]
+
+			bork = False
+			If x0 < x And x1 < x And x2 < x Then
+				bork = true
+			Else If x0 > xw And x1 > xw And x2 > xw Then
+				bork = true
+			Else if y0 < y And y1 < y And y2 < y Then
+				bork = true
+			Else If y0 > yh And y1 > yh And y2 > yh Then
+				bork = true
+			End If
+			
+			If triDel[k] Then bork = true
+			
+			If Not bork then
+				sum = 0
+				sum += (x1 - x0) * (y1 + y0)
+				sum += (x2 - x1) * (y2 + y1)
+				sum += (x0 - x2) * (y0 + y2)
+			
+				If sum > 0 Then 'draw this triangle
+					If visible[k] Then
+						triRefCount += 1
+						triRef[triRefCount] = k
+					End If
+				Else 'ignore this one
+				End If
+			End if
+		Next
+		
+		'sort tri center depths/dist
+		local l:int
+		local tmp:int
+		For l = 0 To triRefCount
+			For k = l + 1 To triRefCount
+				If triDist[ triRef[k] ] > triDist[ triRef[l] ] Then
+					tmp = triRef[k]
+					triRef[k] = triRef[l]
+					triRef[l] = tmp
+				End If
+			Next
+		Next
+	End method
+
+
+
+	method Sort3D2( x:float, y:float, w:float, h:float )
+		local k:int
+
+		local x0:float
+		local y0:float
+		local x1:float
+		local y1:float
+		local x2:float
+		local y2:float
+		
+		local xw:float = x + w
+		local yh:float = y + h
+
+		local sum:float
+		
+		local bork:bool
+		
+		triRefCount = -1
+		For k = 0 To triangleCount
+			x0 = xx[triVert1[k]]
+			y0 = yy[triVert1[k]]
+			x1 = xx[triVert2[k]]
+			y1 = yy[triVert2[k]]
+			x2 = xx[triVert3[k]]
+			y2 = yy[triVert3[k]]
+
+			bork = False
+			If x0 < x And x1 < x And x2 < x Then
+				bork = true
+			Else If x0 > xw And x1 > xw And x2 > xw Then
+				bork = true
+			Else if y0 < y And y1 < y And y2 < y Then
+				bork = true
+			Else If y0 > yh And y1 > yh And y2 > yh Then
+				bork = true
+			End If
+			
+			If triDel[k] Then bork = true
+			
+			If Not bork then
+				sum = 0
+				sum += (x1 - x0) * (y1 + y0)
+				sum += (x2 - x1) * (y2 + y1)
+				sum += (x0 - x2) * (y0 + y2)
+			
+				If sum <= 0 Then 'draw this triangle
+					If visible[k] Then
+						triRefCount += 1
+						triRef[triRefCount] = k
+					End If
+				Else 'ignore this one
+				End If
+			End if
+		Next
+		
+		'sort tri center depths/dist
+		local l:int
+		local tmp:int
+		For l = 0 To triRefCount
+			For k = l + 1 To triRefCount
+				If triDist[ triRef[k] ] > triDist[ triRef[l] ] Then
+					tmp = triRef[k]
+					triRef[k] = triRef[l]
+					triRef[l] = tmp
+				End If
+			Next
+		Next
+	End method
+
+
+	method SortWire3D( x:float, y:float, w:float, h:float )
+		local k:int
+
+		local x0:float
+		local y0:float
+		local x1:float
+		local y1:float
+		local x2:float
+		local y2:float
+		
+		local xw:float = x + w
+		local yh:float = y + h
+
+		local bork:bool
+		
+		triRefCount = -1
+		For k = 0 To triangleCount
+			x0 = xx[triVert1[k]]
+			y0 = yy[triVert1[k]]
+			x1 = xx[triVert2[k]]
+			y1 = yy[triVert2[k]]
+			x2 = xx[triVert3[k]]
+			y2 = yy[triVert3[k]]
+
+			bork = False
+			If x0 < x And x1 < x And x2 < x Then
+				bork = true
+			Else If x0 > xw And x1 > xw And x2 > xw Then
+				bork = true
+			Else if y0 < y And y1 < y And y2 < y Then
+				bork = true
+			Else If y0 > yh And y1 > yh And y2 > yh Then
+				bork = true
+			End If
+
+			If triDel[k] Then bork = true
+			
+			If Not bork then
+				If visible[k] Then
+					triRefCount += 1
+					triRef[triRefCount] = k
+				End If
+			End if
+		Next
+	End method
+
+
+	method Draw3D( canvas:Canvas, x:float, y:float, w:float, h:float )
+		local k:int
+		local x0:float
+		local y0:float
+		local x1:float
+		local y1:float
+		local x2:float
+		local y2:float
+		
+		local light:float
+		
+		local ref:int
+		
+		local r:float = 0.5
+		local g:float = 0
+		local b:float = 0
+		
+		For k = 0 To triRefCount
+			ref = triRef[k]
+			x0 = xx[triVert1[ ref ]]
+			y0 = yy[triVert1[ ref ]]
+			x1 = xx[triVert2[ ref ]]
+			y1 = yy[triVert2[ ref ]]
+			x2 = xx[triVert3[ ref ]]
+			y2 = yy[triVert3[ ref ]]
+			
+			canvas.DrawTriangle( x0, y0, x1, y1, x2, y2, triVert1Color[ ref ], triVert2Color[ ref ], triVert3Color[ ref ] )
+		next
+	End method
+
+
+	method Draw3D( canvas:Canvas, x:float, y:float, w:float, h:float, col:Color )
+		local k:int
+		local x0:float
+		local y0:float
+		local x1:float
+		local y1:float
+		local x2:float
+		local y2:float
+		
+		local light:float
+		
+		local ref:int
+		
+		local r:float = 0.5
+		local g:float = 0
+		local b:float = 0
+		
+		local col0:uint = UInt(col.a*255) Shl 24 | UInt(col.b*255) Shl 16 | UInt(col.g*255) Shl 8 | UInt(col.r*255)
+		
+		For k = 0 To triRefCount
+			ref = triRef[k]
+			x0 = xx[triVert1[ ref ]]
+			y0 = yy[triVert1[ ref ]]
+			x1 = xx[triVert2[ ref ]]
+			y1 = yy[triVert2[ ref ]]
+			x2 = xx[triVert3[ ref ]]
+			y2 = yy[triVert3[ ref ]]
+			
+			canvas.DrawTriangle( x0, y0, x1, y1, x2, y2, triVert1Color[ ref ] & col0, triVert2Color[ ref ] & col0, triVert3Color[ ref ] & col0 )
+		next
+	End method
+
+
+	method Draw3D( canvas:Canvas, x:float, y:float, w:float, h:float, img:Image, shader:Shader )
+		local k:int
+		local x0:float
+		local y0:float
+		local x1:float
+		local y1:float
+		local x2:float
+		local y2:float
+		
+		local light:float
+		
+		local ref:int
+		
+		local r:float = 0.5
+		local g:float = 0
+		local b:float = 0
+
+		canvas.Color = Color.LightGrey
+		For k = 0 To vertexCount
+'			If vDel[k] = -1 Then
+				canvas.DrawText( k, xx[ k ], yy[ k ] )
+'			End if
+		Next
+		
+		For k = 0 To triRefCount
+			ref = triRef[k]
+			x0 = xx[triVert1[ ref ]]
+			y0 = yy[triVert1[ ref ]]
+			x1 = xx[triVert2[ ref ]]
+			y1 = yy[triVert2[ ref ]]
+			x2 = xx[triVert3[ ref ]]
+			y2 = yy[triVert3[ ref ]]
+			canvas.DrawTriangle( x0, y0, x1, y1, x2, y2, triVert1Color[ ref ], triVert2Color[ ref ], triVert3Color[ ref ],
+				triVert1U[ ref ], triVert1V[ ref ], triVert2U[ ref ], triVert2V[ ref ], triVert3U[ ref ], triVert3V[ ref ],
+				img, shader )
+		next
+	End method
+
+
+	method Draw3D( canvas:Canvas, x:float, y:float, w:float, h:float, img:Image, shader:Shader, material:UniformBlock )
+		local k:int
+		local x0:float
+		local y0:float
+		local x1:float
+		local y1:float
+		local x2:float
+		local y2:float
+		
+		local light:float
+		
+		local ref:int
+		
+		local r:float = 0.5
+		local g:float = 0
+		local b:float = 0
+		For k = 0 To triRefCount
+			ref = triRef[k]
+			x0 = xx[triVert1[ ref ]]
+			y0 = yy[triVert1[ ref ]]
+			x1 = xx[triVert2[ ref ]]
+			y1 = yy[triVert2[ ref ]]
+			x2 = xx[triVert3[ ref ]]
+			y2 = yy[triVert3[ ref ]]
+			
+			canvas.DrawTriangle( x0, y0, x1, y1, x2, y2, triVert1Color[ ref ], triVert2Color[ ref ], triVert3Color[ ref ],
+				triVert1U[ ref ], triVert1V[ ref ], triVert2U[ ref ], triVert2V[ ref ], triVert3U[ ref ], triVert3V[ ref ],
+				img, shader, material )
+		next
+	End method
+
+
+	method Draw3DWire( canvas:Canvas, x:float, y:float, w:float, h:float, col:Color = Color.Cyan*0.8 )
+		local k:int
+		local x0:float
+		local y0:float
+		local x1:float
+		local y1:float
+		local x2:float
+		local y2:float
+		
+		local light:float
+		
+		local ref:int
+		
+		local r:float = 0.5
+		local g:float = 0
+		local b:float = 0
+		
+'		canvas.Color = Color.LightGrey
+'		For k = 0 To vertexCount
+'			canvas.DrawText( k, xx[ k ], yy[ k ] )
+'		Next
+		
+		canvas.Color = col
+		For k = 0 To triRefCount
+			ref = triRef[k]
+			x0 = xx[triVert1[ ref ]]
+			y0 = yy[triVert1[ ref ]]
+			x1 = xx[triVert2[ ref ]]
+			y1 = yy[triVert2[ ref ]]
+			x2 = xx[triVert3[ ref ]]
+			y2 = yy[triVert3[ ref ]]
+
+			canvas.DrawLine( x0, y0, x1, y1 )
+			canvas.DrawLine( x1, y1, x2, y2 )
+			canvas.DrawLine( x2, y2, x0, y0 )
+		next
+	End method
+
+	
+	method Draw3DWire1( canvas:Canvas, x:float, y:float, w:float, h:float )
+		local k:int
+		local x0:float
+		local y0:float
+		local x1:float
+		local y1:float
+		
+		local light:float
+		
+		local ref:int
+		
+		local r:float = 0.5
+		local g:float = 0
+		local b:float = 0
+		
+		For k = 0 To triRefCount
+			ref = triRef[k]
+			x0 = xx[triVert1[ ref ]]
+			y0 = yy[triVert1[ ref ]]
+			x1 = xx[triVert2[ ref ]]
+			y1 = yy[triVert2[ ref ]]
+
+			canvas.SetCol( triVert1Color[ ref ] )
+
+			canvas.DrawLine( x0, y0, x1, y1 )
+		next
+	End method
+
+
+	method Draw3DWire2( canvas:Canvas, x:float, y:float, w:float, h:float )
+		local k:int
+		local x0:float
+		local y0:float
+		local x1:float
+		local y1:float
+		local x2:float
+		local y2:float
+		
+		local light:float
+		
+		local ref:int
+		
+		local r:float = 0.5
+		local g:float = 0
+		local b:float = 0
+		
+		local cxp:float
+		local cyp:float
+		local nxp:float
+		local nyp:float
+
+		canvas.SetCol( triVert1Color[ ref ] )
+		
+		For k = 0 To triRefCount
+			ref = triRef[k]
+
+			'draw normals
+'			cxp = cx[ ref ]
+'			cyp = cy[ ref ]
+'			nxp = nx[ ref ]
+'			nyp = ny[ ref ]
+'
+'			canvas.DrawDiamond( cxp, cyp, 3 )
+'			canvas.DrawLine( cxp, cyp, nxp, nyp )
+
+			'draw triangles
+			x0 = xx[triVert1[ ref ]]
+			y0 = yy[triVert1[ ref ]]
+			x1 = xx[triVert2[ ref ]]
+			y1 = yy[triVert2[ ref ]]
+			x2 = xx[triVert3[ ref ]]
+			y2 = yy[triVert3[ ref ]]
+
+			canvas.SetCol( triVert1Color[ ref ] )
+
+			canvas.DrawLine( x0, y0, x1, y1 )
+			canvas.DrawLine( x0, y0, x2, y2 )
+			canvas.DrawLine( x2, y2, x1, y1 )
+		next
+	End method
+
+
+	method Draw3DNormals( canvas:Canvas, x:float, y:float, w:float, h:float )
+		local k:int
+		local x0:float
+		local y0:float
+		local x1:float
+		local y1:float
+		local x2:float
+		local y2:float
+		
+		local light:float
+		
+		local ref:int
+		
+		local r:float = 0.5
+		local g:float = 0
+		local b:float = 0
+		
+		local cxp:float
+		local cyp:float
+		local nxp:float
+		local nyp:float
+
+		For k = 0 To triRefCount
+			ref = triRef[k]
+
+			'draw normals
+			cxp = cx[ ref ]
+			cyp = cy[ ref ]
+			nxp = nx[ ref ]
+			nyp = ny[ ref ]
+
+			canvas.DrawDiamond( cxp, cyp, 3 )
+			canvas.DrawLine( cxp, cyp, nxp, nyp )
+		next
+	End method
+
+
+
+	method SetTriangleColor( tri:int, red:Ubyte, green:UByte, blue:UByte )
+		If tri < 0 or tri > triangleCount Then Return
+		
+		local col:uint = UInt(255) Shl 24 | UInt(red) Shl 16 | UInt(green) Shl 8 | UInt(blue)
+		triVert1Color[ tri ] = col
+		triVert2Color[ tri ] = col
+		triVert3Color[ tri ] = col
+	End method
+	
+	method SetTriangleColors( tri:int, red1:Ubyte, green1:UByte, blue1:UByte, red2:Ubyte, green2:UByte, blue2:UByte,  red3:Ubyte, green3:UByte, blue3:UByte )
+		If tri < 0 or tri > triangleCount Then Return
+		
+		local col:uint = UInt(255) Shl 24 | UInt(red1) Shl 16 | UInt(green1) Shl 8 | UInt(blue1)
+		triVert1Color[ tri ] = col
+		
+		col = UInt(255) Shl 24 | UInt(red2) Shl 16 | UInt(green2) Shl 8 | UInt(blue2)
+		triVert2Color[ tri ] = col
+		
+		col = UInt(255) Shl 24 | UInt(red3) Shl 16 | UInt(green3) Shl 8 | UInt(blue3)
+		triVert3Color[ tri ] = col
+	End method
+
+	method SetTriangleUV1( tri:int, u1:float, v1:float, u2:float, v2:float, u3:float, v3:float )
+		If tri < 0 or tri > triangleCount Then Return
+
+		triVert1U[tri] = u1
+		triVert1V[tri] = v1
+		triVert2U[tri] = u2
+		triVert2V[tri] = v2
+		triVert3U[tri] = u3
+		triVert3V[tri] = v3
+	End method
+	
+	method SetTriangleUV2( tri:int, u1:float, v1:float, u2:float, v2:float, u3:float, v3:float )
+		If tri < 0 or tri > triangleCount Then Return
+
+		triVert1U2[tri] = u1
+		triVert1V2[tri] = v1
+		triVert2U2[tri] = u2
+		triVert2V2[tri] = v2
+		triVert3U2[tri] = u3
+		triVert3V2[tri] = v3
+	End method
+
+	method GetCenters()
+		local k:int
+		For k = 0 To triangleCount
+			If not triDel[k] Then
+			triCenterX[k] = (vX[ triVert1[k] ] + vX[ triVert2[k] ] + vX[ triVert3[k] ]) / 3.0
+			triCenterY[k] = (vY[ triVert1[k] ] + vY[ triVert2[k] ] + vY[ triVert3[k] ]) / 3.0
+			triCenterZ[k] = (vZ[ triVert1[k] ] + vZ[ triVert2[k] ] + vZ[ triVert3[k] ]) / 3.0
+			End if
+		Next
+	End method
+
+	
+	method GetNormals()
+		local k:int = 0
+		
+		local x1:float
+		local y1:float
+		local z1:float
+		
+		local x2:float
+		local y2:float
+		local z2:float
+		
+		For k = 0 To triangleCount
+'			vector3 N = (A - B) % (B - C)
+			x1 = vX[ triVert1[k] ] - vX[ triVert2[k] ]
+			y1 = vY[ triVert1[k] ] - vY[ triVert2[k] ]
+			z1 = vZ[ triVert1[k] ] - vZ[ triVert2[k] ]
+
+			x2 = vX[ triVert2[k] ] - vX[ triVert3[k] ]
+			y2 = vY[ triVert2[k] ] - vY[ triVert3[k] ]
+			z2 = vZ[ triVert2[k] ] - vZ[ triVert3[k] ]
+
+			'% is cross
+			triNormalX[k] = y1*z2 - z1*y2
+			triNormalY[k] = z1*x2 - x1*z2
+			triNormalZ[k] = x1*y2 - y1*x2
+			
+			x1 = Length( triNormalX[k], triNormalY[k], triNormalZ[k] ) * 4
+			triNormalX[k] /= x1
+			triNormalY[k] /= x1
+			triNormalZ[k] /= x1
+		next
+	End method
+
+End Class
+

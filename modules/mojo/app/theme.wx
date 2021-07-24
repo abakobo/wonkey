@@ -5,15 +5,15 @@ Class Theme
 
 	Field ThemeChanged:Void()
 
+
 	Method New()
 		_defaultStyle=New Style
 		_defaultStyle.Font=App.DefaultFont
 	End
+
 	
 	Property Scale:Vec2f()
-	
 		Return _themeScale
-	
 	Setter( scale:Vec2f )
 		If scale=_themeScale Return
 		
@@ -21,60 +21,50 @@ Class Theme
 		
 		Reload()
 	End
+
 	
 	Property DefaultStyle:Style()
-	
 		Return _defaultStyle
 	End
+
 	
 	#rem wonkeydoc Gets a font from the theme.
-	
 	If no font named `name` is found, [[AppInstance.DefaultFont|App.DefaultFont]] is returned.
-
 	#end
 	Method GetFont:Font( name:String )
-	
 		Local font:=_fonts[name]
 		If font Return font
 		
 		Return App.DefaultFont
 	End
+
 	
 	#rem wonkeydoc Gets a color from the theme.
-	
 	If no color named `name` is found, [[std:std.graphics.Color.Grey|Color.Grey]] is returned.
-	
 	#end
 	Method GetColor:Color( name:String )
-	
 		If _colors.Contains( name ) Return _colors[name]
 		
 		Return Color.Grey
 	End
+
 	
 	#rem wonkeydoc Gets a style from the theme.
-	
 	If no style named `name` is found, the [[DefaultStyle]] for the theme is returned.
-	
 	#end
 	Method GetStyle:Style( name:String )
-	
 		Local style:=_styles[name]
 		If style Return style
 		
 		Return _defaultStyle
 	End
+
 	
 	#rem wonkeydoc Loads a font from a file.
-	
 	If `file` is an absolute path, this method is effectively the same as calling [[Font.Load]].
-	
 	If `file` is not an absolute path, the font is searched for in the following locations:
-	
 	* The theme's directory.
-	
 	* The asset::fonts/ directory.
-	
 	#end
 	Method OpenFont:Font( path:String,size:Float )
 		If Not path Then Return Null
@@ -88,6 +78,7 @@ Class Theme
 		
 		Return font
 	End
+
 	
 	Method OpenImage:Image( path:String )
 		If Not path Then Return Null
@@ -101,25 +92,19 @@ Class Theme
 		
 		Return image
 	End
+
 	
 	#rem wonkeydoc Loads an array of icon images from a file.
-	
 	Loads an array of icons from an image file.
-	
 	The icons should be square, and laid out in a horizontal 'strip' within the image file.
-	
 	The width and height of each image is taken from the height of the image file.
-	
 	The number of icons loaded is the width of the image file divided by its height.
-	
 	#end
 	Method OpenIcons:Image[]( path:String )
-	
 		Local slug:="Icons:"+StripDir( StripExt( path ) )
 		
 		Local icons:=Cast<Icons>( _res.OpenResource( slug ) )
 		If Not icons
-
 			Local atlas:=OpenImage( path )
 			If Not atlas Return Null
 		
@@ -144,17 +129,13 @@ Class Theme
 		
 		Return icons.images
 	End
+
 	
 	#rem wonkeydoc Loads a skin from a file.
-	
 	If `file` is an absolute path, this method is effectively the same as calling [[Skin.Load]].
-	
 	If `file` is not an absolute path, the skin is searched for in the following locations:
-	
 	* The theme directory.
-	
 	* The asset::images/ directory.
-	
 	#end
 	Method OpenSkin:Skin( path:String )
 		If Not path Then Return Null
@@ -169,10 +150,11 @@ Class Theme
 		
 		Return skin
 	End
+
 	
 	#rem wonkeydoc Loads a theme from a JSON file.
 	#end
-	Method Load:Bool( path:String,scale:Vec2f=New Vec2f( 1 ) )
+	Method Load:Bool( path:String, scale:Vec2f = New Vec2f( 1 ) )
 		If Not path Then Return False
 	
 		If Not LoadJson( path )
@@ -187,8 +169,8 @@ Class Theme
 		Return True
 	End
 
+
 	#rem wonkeydoc Loads a theme from a JSON string.
-	
 	@example
 	App.Theme.LoadFromString("
 	{
@@ -207,7 +189,6 @@ Class Theme
 	@end
 	#end
 	Method LoadFromString:Bool( text:String,scale:Vec2f=New Vec2f( 1 ) )
-
 		Local jobj:=JsonObject.Parse( text )
 		If Not jobj Then Return False
 
@@ -237,13 +218,15 @@ Class Theme
 	End
 
 
-	Private
+Private
+
 	
 	Class Icons Extends Resource
 		Field atlas:Image
 		Field images:Image[]
 	End
 	
+
 	Const _jdefault:=New JsonString( "default" )
 	
 	Field _res:ResourceManager
@@ -260,6 +243,7 @@ Class Theme
 	Field _colors:=New StringMap<Color>
 	Field _styles:=New StringMap<Style>
 	Field _cstyles:=New StringMap<Style>
+
 	
 	Method LoadJson:Bool( path:String )
 		If Not path Then Return False
@@ -272,7 +256,6 @@ Class Theme
 		If Not jobj Return False
 		
 		If jobj.Contains( "extends" ) 
-
 			If Not LoadJson( jobj.GetString( "extends" ) ) Return False
 			
 			If jobj.Contains( "colors" )
@@ -302,6 +285,7 @@ Class Theme
 
 		Return True
 	End
+
 	
 	Method Unload()
 		_fonts.Clear()
@@ -310,36 +294,44 @@ Class Theme
 		_defaultStyle=New Style
 		_defaultStyle.Font=App.DefaultFont
 	End
+
 	
 	Method Reload()
-	
+'		Print "unload"
 		Unload()
 		
 		Local res:=_res
 		
+'		Print "new resource manager"
 		_res=New ResourceManager
 
 		_defaultStyle=LoadStyle( _jdefault )
 		
+'		Print "load colors"
 		For Local it:=Eachin _jcolors
 			LoadColor( New JsonString( it.Key ) )
 		Next
 		
+'		Print "load fonts"
 		For Local it:=Eachin _jfonts
 			LoadFont( New JsonString( it.Key ) )
 		Next
 		
+'		Print "load styles"
 		For Local it:=Eachin _jstyles
 			LoadStyle( New JsonString( it.Key ) )
 		Next
+
+'		Print "res discard"
 		
-		If res res.Discard()
+		If res Then res.Discard()
 		
+'		Print "theme changed"
 		ThemeChanged()
 	End
+
 	
 	Method ToRect:Recti( jrect:JsonValue )
-	
 		Local arr:=jrect.ToArray()
 		
 		Local l:=0,t:=0,r:=0,b:=0
@@ -365,30 +357,29 @@ Class Theme
 		
 		Return New Recti( -l,-t,r,b )
 	End
-	
+
+
 	Method LoadColor:Color( jcolor:JsonValue )
-	
 		Local jarr:=Cast<JsonArray>( jcolor )
 		If jarr
-		
 			Local r:=0.0,g:=0.0,b:=0.0,a:=1.0
 
 			Select jarr.Length
-			Case 1
-				r=jarr[0].ToNumber()
-				g=jarr[0].ToNumber()
-				b=jarr[0].ToNumber()
-			Case 3
-				r=jarr[0].ToNumber()
-				g=jarr[1].ToNumber()
-				b=jarr[2].ToNumber()
-			Case 4
-				r=jarr[0].ToNumber()
-				g=jarr[1].ToNumber()
-				b=jarr[2].ToNumber()
-				a=jarr[3].ToNumber()
-			Default
-				Return Color.Magenta
+				Case 1
+					r=jarr[0].ToNumber()
+					g=jarr[0].ToNumber()
+					b=jarr[0].ToNumber()
+				Case 3
+					r=jarr[0].ToNumber()
+					g=jarr[1].ToNumber()
+					b=jarr[2].ToNumber()
+				Case 4
+					r=jarr[0].ToNumber()
+					g=jarr[1].ToNumber()
+					b=jarr[2].ToNumber()
+					a=jarr[3].ToNumber()
+				Default
+					Return Color.Magenta
 			End
 			
 			Return New Color( r,g,b,a )
@@ -397,9 +388,8 @@ Class Theme
 		Local str:=jcolor.ToString()
 		
 		If str.StartsWith( "#" )
-		
 			Local a:=1.0,r:=0.0,g:=0.0,b:=0.0
-		
+
 			If str.Length=4			'#RGB
 				r=StringToULong( str.Slice( 1,2 ),16 )/15.0
 				g=StringToULong( str.Slice( 2,3 ),16 )/15.0
@@ -437,9 +427,9 @@ Class Theme
 		
 		Return color
 	End
-	
+
+
 	Method LoadFont:Font( name:JsonValue )
-	
 		Local str:=name.ToString()
 	
 		If _fonts.Contains( str ) Return _fonts[str]
@@ -462,9 +452,9 @@ Class Theme
 		
 		Return font
 	End
-	
+
+
 	Method SetStyle( style:Style,jstyle:StringMap<JsonValue> )
-	
 		If jstyle.Contains( "backgroundColor" ) style.BackgroundColor=LoadColor( jstyle["backgroundColor"] )
 		If jstyle.Contains( "borderColor" ) style.BorderColor=LoadColor( jstyle["borderColor"] )
 		If jstyle.Contains( "textColor" ) style.TextColor=LoadColor( jstyle["textColor"] )
@@ -480,9 +470,9 @@ Class Theme
 
 		If jstyle.Contains( "font" ) style.Font=LoadFont( jstyle["font"] )
 	End
-	
+
+
 	Method LoadStyle:Style( name:JsonValue )
-	
 		Local str:=name.ToString()
 		
 		If _styles.Contains( str ) Return _styles[str]
@@ -526,7 +516,6 @@ Class Theme
 		'create states
 		'
 		If jstyle.Contains( "states" )
-		
 			local jstates:=jstyle["states"].ToObject()
 			
 			For Local it:=Eachin jstates

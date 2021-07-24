@@ -1,0 +1,649 @@
+//Theme by @Adam
+{
+	"extends":"wide-default",
+	
+	"fonts":{
+		"small":"Roboto-Medium.ttf,13",
+		"medium":"Roboto-Medium.ttf,15",
+		"normal":"Roboto-Medium.ttf,16",
+		"fixedWidth":"RobotoMono-Medium.ttf,18",
+		"editor":"SourceCodePro-Medium.otf,19"
+	},
+	
+	"colors":{
+		"picoblack": "#181818",
+		"picoblack-dark": "#101010",
+		"picoblack-darkish": "#141414",
+		"linenumbers": "#717171",
+		"hint-bg": "#1F1F1F",
+		"scrollbar-bg": "#1D1D1D",
+		"scrollbar": "#666666",
+		"separator": "#444444",
+		"white": "#FAFAFA",
+		"blue": "#007FFF",
+		"blue-over": "#135098",
+		"blue-dark": "#0F3A6E",
+		"red": "#AC1212",
+		"text": "#B2B2B2",
+		"method": "#429AD2",
+		"function": "#9C5CB8",
+		"property": "#D6CF29",
+		"none": "#00000000",
+		
+		
+		"accent": "#3CD6E7",
+		"accentDark": "#0F3E4D",
+
+		"transparent": "#0000",
+		"darkest": "#010101",
+		"darker": "#171717",
+		"dark": "#1A1A1A",
+		"bright": "#222222",
+		"brightish": "#282828",
+		"brighter": "#2D2D2D",
+		"brightest": "#333333",
+		
+		"text-default": "text",
+		"text-highlight": "text",
+		"text-disabled": "#555555",
+		"text-linenumbers": "#656565",
+		"text-background": "#888",
+		
+		"textview-cursor":"blue",
+		"textview-selection":"blue-over",
+		"textview-cursor-line":"#2A2A2A",
+		"textview-whitespaces":"#2A2A2A",
+
+		"textview-color0":"#FF00FF", 	//When is this used?
+		"textview-color1": "#ECF0F1",	//identifiers
+		"textview-color2": "#597FBA",	//keywords *
+		"textview-color3": "#B27F7F",	//strings *
+		"textview-color4": "#00CC99",	//numbers *
+		"textview-color5": "#667F66",	//comment *
+		"textview-color6": "#FFBF00",	//preproc *
+		"textview-color7": "#3298DB",
+		"textview-color8":"#51CC4F", //core types like Int, Bool *
+
+		"windowClearColor":"bright",
+		"menu-shortcut":"text-background",
+
+		"statusbar": "#194c99",
+		"statusbar-active": "accentDark"
+	},
+
+	
+	"styles":{
+	
+		"default":{
+			"font":"normal",
+			"textColor":"text-default",
+			"iconColor":"#ffff",
+			"states":{
+				"disabled":{
+					"textColor":"text-disabled",
+					"iconColor":"#8fff"
+				}
+			}
+		},
+
+
+		"FindReplaceView2":{
+			"extends":"DockingView",
+//			"padding":[ 0,4,0,2 ]
+			"padding":[ 0,2,0,2 ]
+		},
+
+		"ColoredToolButton2":{
+//			"padding":[ -4 ],
+			"margin":[ 6 ],
+//			"border":[ -4 ],
+			"states":{
+				"hover":{
+					"backgroundColor":"none"
+				},
+				"active":{
+					"backgroundColor":"none"
+				},
+				"selected":{
+					"backgroundColor":"none"
+				}
+			}
+		},
+
+
+
+		"GutterView":{
+//			"padding":[ -12,0,12,0 ],
+			"padding":[ 0,0,0,0 ],
+			"extends":"TextView",
+			"skinColor":"blue",
+			"textColor":"linenumbers",
+			"backgroundColor":"bright",
+			"font":"editor"
+		},
+		
+		"DebugToolBar":{
+			"extends":"ToolBarExt",
+//			"border":[ 1 ],
+//			"borderColor":"bright",
+			"icons":"debug_icons.png"
+		},
+		
+		"HelpTextField":{
+			"extends":"TextField",
+			"skinColor":"darker"
+		},
+
+		"Hint":{
+			"font":"small",
+			"textColor":"white",
+			"backgroundColor":"hint-bg"
+		},
+
+		"ToolBarExt":{
+			"extends":"ToolBar",
+			"padding":[ 0 ],
+			"margin":[ 0 ],
+			"backgroundColor":"dark",
+			"border":[ 0 ],
+			"states":{
+				"hover":{
+					"backgroundColor":"none"
+				},
+				"active":{
+					"backgroundColor":"none"
+				},
+				"selected":{
+					"backgroundColor":"none"
+				}
+			}
+		},
+
+		"EditorToolBar":{
+			"extends":"ToolBarExt"
+		},
+
+		"SourceToolBar":{
+			"extends":"ToolBarExt",
+			"states":{
+				"hover":{
+					"backgroundColor":"blue-over"
+				},
+				"active":{
+					"backgroundColor":"blue-over"
+				},
+				"selected":{
+					"backgroundColor":"blue-over"
+				}
+			}
+		},
+
+		"SourceToolButton":{
+			"extends":"ToolButton",
+			"padding":[ 0 ],
+			"skinColor":"transparent",
+			"backgroundColor":"transparent"
+		},
+
+		"MainToolBar":{
+			"extends":"ToolBarExt",
+            "backgroundColor":"brighter",
+			"iconColor":"white"
+		},
+
+		"ToolButton":{
+			"extends":"Button",
+			"backgroundColor":"brighter",
+			"padding":[ 4,4 ],
+			"iconColor":"white",
+
+			"states":{
+				"hover":{
+					"backgroundColor":"none"
+				},
+				"active":{
+					"backgroundColor":"none"
+				},
+				"selected":{
+					"backgroundColor":"none"
+				}
+			}
+		},
+
+		"TabViewArrowPrev":{
+			"extends":"Button",
+			"padding":[ 8,4 ],
+			"margin":[ 2,0,2,0 ]
+		},
+
+		"TabViewArrowNext":{
+			"extends":"Button",
+			"padding":[ 8,4 ],
+			"margin":[ 2,0,12,0 ]
+		},
+
+
+
+		"ProgressBar":{
+			"iconColor":"accent",
+			"icons":"prime_assets/progressbar_icon.png"
+		},
+
+
+
+		"StatusBar":{
+			"extends":"DockingView",
+			"padding":[ 0,6,0,6 ],
+			"backgroundColor":"statusbar"
+		},
+		"StatusBarText":{
+			"extends":"Label",
+			"textColor":"white",
+			"font":"normal"
+		},
+		"StatusBarLineInfo":{
+			"extends":"Label",
+			"margin":[ 40,0,0,0 ],
+			"textColor":"white",
+			"font":"normal"
+		},
+		"StatusBarIns":{
+			"extends":"Label",
+			"textColor":"white",
+			"font":"normal"
+		},
+		"StatusBarProgress":{
+			"extends":"ProgressBar",
+			"margin":[ 6,0 ]
+		},
+
+		"StatusBarButton":{
+			"extends":"ToolButton",
+			"margin":[ 6 ],
+			"skinColor":"none",
+			"backgroundColor":"none",
+			"states":{
+				"hover":{
+					"backgroundColor":"none"
+				},
+				"active":{
+					"backgroundColor":"none"
+				},
+				"selected":{
+					"backgroundColor":"none"
+				}
+			}
+		},
+
+		
+
+
+		"CompletionDialog":{
+			"extends":"Dialog"
+		},
+		"CompletionDialogContent":{
+			"padding":[ 1 ]
+		},
+
+		
+		"ProjectTabView":{
+			"extends":"TabView",
+			"backgroundColor":"dark"
+		},
+
+		
+		"Label":{
+			"padding":[8,4]
+		},
+
+		
+		"Button":{
+			"extends":"Label",
+			"padding":[4,2],
+			"textColor":"white",
+			"backgroundColor":"scrollbar",
+			
+			"states":{
+				"hover":{
+					"textColor":"white",
+					"backgroundColor":"blue-over"
+				},
+				"active":{
+					"textColor":"white",
+					"backgroundColor":"blue-over"
+				},
+				"selected":{
+					"textColor":"white",
+					"backgroundColor":"dark"
+				}
+			}
+		},
+		
+		"PushButton":{
+			"extends":"Button",
+			"margin":[4,4]
+		},
+		
+		"CheckButton":{
+			"extends":"Label"
+		},
+		
+		"CheckBox":{
+			"icons":"prime_assets/checkbox_icon.png",
+			"iconColor":"text",
+			"margin":[0,0,0,0]
+		},
+
+
+		
+		"ScrollView":{
+		},
+		
+		"ScrollBar":{
+			"backgroundColor":"scrollbar-bg"
+		},
+		
+		"ScrollKnob":{
+			"padding":[ 6 ],
+			"border":[ 0 ],
+			"backgroundColor":"scrollbar",
+			"states":{
+				"hover":{
+					"backgroundColor":"blue-over"
+				},
+				"active":{
+//					"backgroundColor":"brightest"
+				}
+			}
+		},
+
+
+		
+		"TextView":{
+			"font":"editor",
+			"textColor":"text",
+			"backgroundColor":"picoblack"
+		},
+		
+		"TextViewContent":{
+			"padding":[4]
+		},
+
+
+		
+		"TextField":{
+			"font":"normal",
+			"padding":[ 4 ],
+			"margin":[ 2 ],
+			"backgroundColor":"picoblack-darkish"
+		},
+
+
+		
+		"DockingView":{
+		},
+		
+		"DockedView":{
+		},
+		
+		"DockKnob":{
+			"padding":[ 3 ],
+			"backgroundColor":"brighter",
+			"states":{
+				"hover":{
+					"backgroundColor":"blue-over"
+				},
+				"active":{
+					"backgroundColor":"accent"
+				}
+			}
+		},
+		
+		"ToolBar":{
+			"padding":[ 0 ],
+			"backgroundColor":"darker"
+		},
+
+
+		
+		"Menu":{
+			"extends":"DockingView",
+			"padding":[ 1 ],
+			"skin":"prime_assets/dialog_skin.png",
+			"skinColor":"brightest"
+		},
+		
+		"MenuButton":{
+			"extends":"Label",
+			"padding":[8,3],
+			"states":{
+				"hover":{
+					"textColor":"none",
+//					"backgroundColor":"blue-over"
+					"backgroundColor":"none"
+				},
+				"active":{
+					"textColor":"none",
+//					"backgroundColor":"blue-over"
+					"backgroundColor":"none"
+				},
+				"selected":{
+					"textColor":"none",
+//					"backgroundColor":"blue-over"
+					"backgroundColor":"none"
+				}
+			}
+		},
+		
+		"MenuBar":{
+			"extends":"ToolBar",
+			"backgroundColor":"brighter",
+			"margin":[ 0 ],
+			"states":{
+				"hover":{
+					"textColor":"none",
+//					"backgroundColor":"blue-over"
+					"backgroundColor":"none"
+				},
+				"active":{
+					"textColor":"none",
+//					"backgroundColor":"blue-over"
+					"backgroundColor":"none"
+				},
+				"selected":{
+					"textColor":"none",
+//					"backgroundColor":"blue-over"
+					"backgroundColor":"none"
+				}
+			}
+		},
+		
+		"MenuSeparator":{
+			"padding":[ 0,0,0,1 ],
+			"backgroundColor":"separator",
+			"border":[ 8,8,7,7 ]
+		},
+
+
+
+		"TabView":{ //this is the actual tab control background
+//			"padding":[ 0,10,0,0 ],
+			"border":[0,2,0,0],
+			"borderColor":"picoblack-dark",
+			"skinColor":"none",
+			"backgroundColor":"bright"
+		},
+
+
+		
+		"TabBar":{ // behind the tab button only shown on the far right!!
+			"extends":"ToolBar",
+			"padding":[ 1,-5,0,-1 ],
+//			"backgroundColor":"bright"
+			"backgroundColor":"none"
+		},
+		
+		"TabButton":{
+            "backgroundColor":"brightest",
+			"extends":"Button",
+			"font":"normal",
+			"padding":[8,11,8,11],
+			"border":[0,0,0,4],
+			"borderColor":"blue",
+			"textColor":"text-background",
+			"states":{
+				"hover":{
+//					"backgroundColor":"blue-over"
+					"backgroundColor":"none",
+					"textColor":"white"
+				},
+				"active":{
+					"textColor":"text-default"
+				},
+				"selected":{
+//					"backgroundColor":"blue-over"
+					"backgroundColor":"none",
+					"textColor":"white",
+					"borderColor":"blue"
+				}
+			}
+		},
+
+		"TabButtonLocked":{
+			"extends":"TabButton",
+			"borderColor":"accent"
+		},
+		
+		"TabClose":{
+			"margin":[16,2,0,0 ],
+			"icons":"prime_assets/tabclose_icon.png",
+			"iconColor":"white",
+			"states":{
+				"hover":{
+					"backgroundColor":"red",
+					"iconColor":"white"
+				},
+				"active":{
+					"backgroundColor":"red",
+					"iconColor":"white"
+				}
+			}
+		},
+
+
+		
+		"TableView":{
+			"extends":"DockingView"
+		},
+
+		"TableHeader":{
+			"extends":"Label",
+			"textColor":"text-highlight",
+			"borderColor":"darker"
+		},
+
+		"TableColumn":{
+		},
+
+
+		
+		"TreeView":{
+//			"backgroundColor":"dark",
+			"backgroundColor":"picoblack-darkish",
+			"icons":"prime_assets/treeview_icons.png",
+			"iconColor":"#8fff",
+			"skinColor":"blue-dark",
+			"states":{
+				"hover":{
+					"textColor":"text-highlight"
+				},
+				"selected":{
+					"backgroundColor":"blue-over",
+					"textColor":"white"
+				}
+			}
+		},
+
+		"TreeViewContent":{
+			"padding":[3]
+		},
+
+		"TreeViewNode":{
+			"font":"medium",
+			"padding":[0,2,0,2],
+			"skinColor":"blue",
+			"states":{
+				"hover":{
+					// "backgroundColor":"darker",
+					"textColor":"text-highlight"
+				},
+				"selected":{
+					"row":"blue-over",
+					"backgroundColor":"blue-over",
+					"textColor":"white"
+				}
+			}
+		},
+
+
+		
+		"ListView":{
+			"backgroundColor":"dark"
+		},
+		
+		"ListViewContent":{
+			"padding":[2]
+		},
+		
+		"ListViewItem":{
+			"padding":[1],
+			"states":{
+				"hover":{
+					"backgroundColor":"darker"
+				},
+				"selected":{
+					"backgroundColor":"blue-over",
+					"textColor":"text-highlight"
+				}
+			}
+		},
+		
+		"FileBrowser":{
+			"extends":"TreeView"
+		},
+		
+		"HtmlView":{
+		},
+		
+		"Console":{
+			"backgroundColor":"dark"
+		},
+		
+		"Dialog":{
+			"skin":"prime_assets/dialog_skin.png",
+			"skinColor":"bright"
+		},
+		
+		"DialogTitle":{
+			"extends":"Label",
+			"backgroundColor":"brightest"
+		
+		},
+		
+		"DialogContent":{
+			"padding":[ 8,8,8,4 ]
+		},
+		
+		"DialogActions":{
+			"padding":[ 8,4,8,4 ]
+		},
+		
+		"ColoredToolButton":{
+			"extends":"ToolButton",
+			"iconColor":"text-default",
+//					"backgroundColor":"blue-over"
+					"backgroundColor":"none"
+		}
+
+	}
+}

@@ -3,9 +3,9 @@ Namespace wide
 
 
 Class FindInFilesDialog Extends DialogExt
+
 	
 	Method New( actions:FindActions,projView:ProjectView )
-		
 		_findField=New TextFieldExt
 		
 		_findField.Entered+=Lambda()
@@ -54,11 +54,10 @@ Class FindInFilesDialog Extends DialogExt
 		Deactivated+=MainWindow.UpdateKeyView
 		
 		OnShow+=Lambda()
-			
-			If CustomFolder Return
+			If CustomFolder Then Return
 			
 			Local projs:=projView.OpenProjectsFolders
-			If Not projs Return
+			If Not projs Then Return
 			
 			_projList.RemoveAllItems()
 			
@@ -73,52 +72,51 @@ Class FindInFilesDialog Extends DialogExt
 		End
 		
 	End
+
 	
 	Property CustomFolder:String()
-		
 		Return _customFolder
-		
 	Setter( value:String )
-		
 		_customFolder=value
 		If Not _customFolder Return
 		
 		_projList.RemoveAllItems()
 		_projList.Selected=_projList.AddItem( _customFolder )
 	End
+
 	
 	Property FindText:String()
-	
 		Return _findField.Text
 	End
+
 	
 	Property FilterText:String()
-	
 		Return _filterField.Text.Trim()
 	End
+
 	
 	Property SelectedProject:String()
-	
 		Return _projList.Selected.Text
 	End
+
 	
 	Property CaseSensitive:Bool()
-	
 		Return _caseSensitive.Checked
 	End
+
 	
 	Method SetInitialText( find:String )
-		
 		_findField.Text=find
 		_findField.SelectAll()
 	End
+
 	
 	Method SetSelectedProject( proj:String )
-	
 		_selProj=proj
 	End
+
 	
-	Private
+Private
 	
 	Field _findField:TextFieldExt
 	Field _filterField:TextFieldExt

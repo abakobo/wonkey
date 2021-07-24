@@ -1,0 +1,137 @@
+Namespace wide
+
+
+Class PaletteDocumentView Extends View
+
+	Method New( doc:PaletteDocument )
+		_doc = doc
+		
+		Layout = "fill"
+		
+		Style.BackgroundColor = Color.PicoBlack
+	End
+
+	
+Protected
+
+	
+	Method OnRender( canvas:Canvas ) Override
+		local scale:float = App.Theme.Scale.x
+		local pos:int = 10 * scale
+		
+		local cell:int = 20 * scale
+
+		local width:int = (Width - cell) / _doc.Data.GridX
+		local height:int = (Height - 50*scale) / _doc.Data.GridY
+
+
+		'draw some palette details
+		canvas.Color = Color.White
+		canvas.DrawText( "grid: "+_doc.Data.GridX+", "+_doc.Data.GridY, pos, pos )
+		canvas.DrawText( "Colors: "+_doc.Data.Count, pos, pos*3 )
+
+		'draw the palette colors plus there numbers
+		local x:int
+		local y:int
+		local xp:int
+		local yp:int = 50*scale
+		local col:Int = 0
+		For y = 1 To _doc.Data.GridY
+			xp = pos
+			For x = 1 To _doc.Data.GridX
+				canvas.Color = _doc.Data.GetRGBA( col )
+				canvas.DrawRect( xp, yp, width,height )
+				
+				canvas.Color = Color.Black * 0.5
+				canvas.DrawText( col, xp-1,yp)
+				canvas.DrawText( col, xp+1,yp)
+				canvas.DrawText( col, xp,yp-1)
+				canvas.DrawText( col, xp,yp+1)
+				canvas.Color = Color.White
+				canvas.DrawText( col, xp,yp)
+
+				xp += width
+				col += 1
+			Next
+			yp += height
+		Next
+	End
+
+
+Private
+
+	Field _doc:PaletteDocument
+End
+
+
+Class PaletteDocument Extends WideDocument
+	Method New( path:String )
+		Super.New( path )
+		
+		_view = New PaletteDocumentView( Self )
+	End
+
+	
+	Property Data:ColorPalette()
+		Return _data
+	End
+
+	
+
+
+Protected
+	
+
+	Method OnLoad:Bool() Override
+		If Not _data Then _data = New ColorPalette()
+		If Not _data.Load( Path ) Then Return False
+'		If Not _data Return False
+		
+		Return True
+	End
+
+	
+	Method OnSave:Bool() Override
+		Return False
+	End
+
+	
+	Method OnClose() Override
+		_data = Null
+	End
+
+	
+	Method OnCreateView:PaletteDocumentView() Override
+		Return _view
+	End
+
+	
+Private
+
+	Field _view:PaletteDocumentView
+	Field _data:ColorPalette
+End
+
+
+Class PaletteDocumentType Extends WideDocumentType
+	Property Name:String() Override
+		Return "PaletteDocumentType"
+	End
+
+Protected
+
+	Method New()
+		AddPlugin( Self )
+		
+		Extensions = New String[]( ".wxpalette", ".mx2palette", ".wxtagz", ".mx2tagz", ".pal", ".ase" )
+	End
+
+	
+	Method OnCreateDocument:WideDocument( path:String ) Override
+		Return New PaletteDocument( path )
+	End
+
+	
+Private
+	Global _instance:=New PaletteDocumentType
+End

@@ -126,7 +126,7 @@ Class Font Extends Resource
 	Field _firstChar:Int
 	Field _numChars:Int
 	'jladded
-	Field _path:String = ""
+	field _path:string = ""
 End
 
 Class ResourceManager Extension

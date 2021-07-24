@@ -1,0 +1,213 @@
+Namespace StormCore
+Using StormCore
+
+#Import "<std>"
+#Import "<mojo>"
+Using std..
+Using mojo..
+
+
+Class StormSystem
+	const pMax:int = 512
+
+	field _stormAlpha:float[] = New float[ pMax ]
+	
+	field _stormCount:int = -1
+	field _stormKind:int[] = New int[ pMax ]
+	field _stormLife:int[] = New int[ pMax ]
+	field _stormColor:Color[] = New Color[ pMax ]
+	
+	field _stormScale:float[] = New float[ pMax ]
+	field _stormAngle:float[] = New float[ pMax ]
+	
+	field _stormX:float[] = New float[ pMax ]
+	field _stormY:float[] = New float[ pMax ]
+	field _stormZ:float[] = New float[ pMax ]
+	
+	field _stormX1:float[] = New float[ pMax ]
+	field _stormY1:float[] = New float[ pMax ]
+	field _stormZ1:float[] = New float[ pMax ]
+	
+	Field _stormGravity:float[] = New float[ pMax ]
+	Field _stormGravityDiff:float[] = New float[ pMax ]
+	
+	field _stormScaleDiff:float[] = New float[ pMax ]
+	field _stormAngleDiff:float[] = New float[ pMax ]
+	field _stormXDiff:float[] = New float[ pMax ]
+	field _stormYDiff:float[] = New float[ pMax ]
+	field _stormZDiff:float[] = New float[ pMax ]
+
+
+
+	property Count:int()
+		Return _stormCount
+	End
+	
+	
+	method New()
+		Reset()
+	End method
+	
+	
+	method Reset()
+		_stormCount = -1
+		local k:int
+		For k = 0 until pMax
+			_stormLife[k] = -1
+			_stormKind[k] = -1
+		next
+	End method
+	
+	
+	method AddAlpha2d:int( alpha:float, life:int, kind:int, col:Color,  x:float, y:float, xdiff:float, ydiff:float, scale:float = 1, scaleDiff:float = 0,  angle:float = 0, angleDiff:float = 0 )
+		local ret:int = Add2d( life, kind, col, x, y, xdiff, ydiff, scale, scaleDiff, angle, angleDiff )
+		If ret = -1 Then Return -1
+		
+		_stormAlpha[ret] = alpha
+		Return ret
+	End method
+
+
+	method AddAlphaGravity2d:int( alpha:float, gravity:float, life:int, kind:int, col:Color,  x:float, y:float, xdiff:float, ydiff:float, scale:float = 1, scaleDiff:float = 0,  angle:float = 0, angleDiff:float = 0 )
+		local ret:int = Add2d( life, kind, col, x, y, xdiff, ydiff, scale, scaleDiff, angle, angleDiff )
+		If ret = -1 Then Return -1
+		
+		_stormAlpha[ret] = alpha
+		_stormGravityDiff[ret] = gravity * 0.01
+		Return ret
+	End method
+		
+	
+	method AddGravity2d:int( gravity:float, life:int, kind:int, col:Color,  x:float, y:float, xdiff:float, ydiff:float, scale:float = 1, scaleDiff:float = 0,  angle:float = 0, angleDiff:float = 0 )
+		local ret:int = Add2d( life, kind, col, x, y, xdiff, ydiff, scale, scaleDiff, angle, angleDiff )
+		If ret = -1 Then Return -1
+		
+		_stormGravityDiff[ret] = gravity * 0.01
+		Return ret
+	End method
+
+
+	method Add2d:int( life:int, kind:int, col:Color,  x:float, y:float, xdiff:float, ydiff:float, scale:float = 1, scaleDiff:float = 0,  angle:float = 0, angleDiff:float = 0 )
+		local get:int = Get()
+		If get < 0 Then Return -1
+
+		_stormKind[get] = -1
+
+		_stormLife[get] = -1
+		
+		_stormGravity[get] = 0
+		_stormGravityDiff[get] = 0
+
+		_stormX[get] = x
+		_stormY[get] = y
+		
+		_stormX1[get] = x
+		_stormY1[get] = y
+		
+		_stormXDiff[get] = xdiff
+		_stormYDiff[get] = ydiff
+
+		_stormAngle[get] = angle
+		_stormScale[get] = scale
+
+		_stormAngleDiff[get] = angleDiff
+		_stormScaleDiff[get] = scaleDiff
+
+		_stormColor[get] = col
+
+		_stormKind[get] = kind
+
+		_stormLife[get] = life
+		
+		Return get
+	End method
+
+
+	method Add3d:int( life:int, kind:int,  col:Color,  x:float, y:float, z:float,  xdiff:float, ydiff:float, zdiff:float,  scale:float = 1, scaleDiff:float = 0,  angle:float = 0, angleDiff:float = 0 )
+		local get:int = Get()
+		If get < 0 Then Return -1
+
+		_stormLife[get] = -1
+
+		_stormGravity[get] = 0
+		_stormGravityDiff[get] = 0
+
+		_stormX[get] = x
+		_stormY[get] = y
+		_stormZ[get] = z
+		
+		_stormX1[get] = x
+		_stormY1[get] = y
+		_stormZ1[get] = z
+		
+		_stormXDiff[get] = xdiff
+		_stormYDiff[get] = ydiff
+		_stormZDiff[get] = zdiff
+
+		_stormAngle[get] = angle
+		_stormScale[get] = scale
+
+		_stormAngleDiff[get] = angleDiff
+		_stormScaleDiff[get] = scaleDiff
+
+		_stormColor[get] = col
+
+		_stormKind[get] = kind
+
+		_stormLife[get] = life
+		
+		Return get
+	End method
+
+
+	method Get:int()
+		If _stormCount = -1 Then
+			_stormCount = 0
+			Return 0
+		End If
+		
+		local k:int
+		For k = 0 To _stormCount
+			If _stormLife[k] < 1 Then Return k
+		next
+		
+		If _stormCount < pMax-1 Then
+			_stormCount += 1
+			Return _stormCount
+		End If
+		
+		Return -1
+	End method
+
+
+	method Update()
+		local k:int
+		For k = 0 to _stormCount
+			If _stormLife[k] > 0 Then
+				_stormLife[k] -= 1
+				
+				If _stormLife[k] > 0 and _stormScale[k] > 0 Then
+					_stormAngle[k] += _stormAngleDiff[k]
+					_stormScale[k] += _stormScaleDiff[k]
+					
+					_stormX1[k] = _stormX[k]
+					_stormY1[k] = _stormY[k]
+					_stormZ1[k] = _stormZ[k]
+
+					_stormX[k] += _stormXDiff[k]
+					_stormY[k] += _stormYDiff[k] + _stormGravity[k]
+					_stormZ[k] += _stormZDiff[k]
+
+					_stormGravity[k] += _stormGravityDiff[k] 
+					
+				Else
+					If _stormCount = k Then _stormCount -= 1
+					_stormLife[k] = -1
+					_stormKind[k] = -999
+				End If
+				
+			End If
+		Next
+	End method
+	
+End class

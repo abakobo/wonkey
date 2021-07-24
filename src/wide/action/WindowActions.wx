@@ -2,52 +2,72 @@
 Namespace wide
 
 
-Class WindowActions
+#Import "../dialog/NewThemeDialog"
 
+Class WindowActions
 	Field nextTab:Action
 	Field prevTab:Action
 	Field zoomIn:Action
 	Field zoomOut:Action
 	Field zoomDefault:Action
 	Field themes:Action
+	field newTheme:Action
 	Field fullscreenWindow:Action
 	Field fullscreenEditor:Action
-	
+
+
 	Method New( docs:DocumentManager )
+		nextTab = docs.nextDocument
+		prevTab = docs.prevDocument
 		
-		nextTab=docs.nextDocument
-		prevTab=docs.prevDocument
+		fullscreenWindow = ActionById( ActionId.FullscreenWindow )
+		fullscreenWindow.Triggered = MainWindow.SwapFullscreenWindow
 		
-		fullscreenWindow=ActionById( ActionId.FullscreenWindow )
-		fullscreenWindow.Triggered=MainWindow.SwapFullscreenWindow
-		
-		fullscreenEditor=ActionById( ActionId.FullscreenEditor )
-		fullscreenEditor.Triggered=Lambda()
+		fullscreenEditor = ActionById( ActionId.FullscreenEditor )
+		fullscreenEditor.Triggered = Lambda()
 			MainWindow.SwapFullscreenEditor()
 		End
 		
+		newTheme = New Action( "Theme..." )
+		newTheme.Triggered = Lambda()
+			If OnThemeDlg() Then
+				MainWindow._theme.Copy( themeView.theme[ themeView._currentTheme ] )
+
+'				App.Theme.SetStyle( "HelpPageAddress" )
+				
+				'call the theme engine to update and validate
+				App.Theme.ThemeChanged()
+
+				MainWindow.DocsManager.ThemeChanged()
+			End If
+		End
+
 		zoomIn=ActionById( ActionId.ZoomIn )
-		zoomIn.Triggered=Lambda()
-		
-			Local sc:=App.Theme.Scale.x
-			If sc>=4 Return
-			sc+=.125
-			App.Theme.Scale=New Vec2f( sc )
+		zoomIn.Triggered = Lambda()
+			Local sc := App.Theme.Scale.x
+			If sc >= 4 Return
+			sc += .125
+			
+'			DebugStop()
+			Print "theme scale start"
+			App.Theme.Scale = New Vec2f( sc )
+			Print "theme scale End"
 		End
 		
 		zoomOut=ActionById( ActionId.ZoomOut )
-		zoomOut.Triggered=Lambda()
-		
-			Local sc:=App.Theme.Scale.x
-			If sc<=.5 Return
-			sc-=.125
-			App.Theme.Scale=New Vec2f( sc )
+		zoomOut.Triggered = Lambda()
+			Local sc := App.Theme.Scale.x
+			If sc <= .5 Return
+			sc -= .125
+			
+			Print "theme scale start"
+			App.Theme.Scale = New Vec2f( sc )
+			Print "theme scale end"
 		End
 		
-		zoomDefault=ActionById( ActionId.ZoomDefault )
-		zoomDefault.Triggered=Lambda()
-		
-			App.Theme.Scale=New Vec2f( 1 )
+		zoomDefault = ActionById( ActionId.ZoomDefault )
+		zoomDefault.Triggered = Lambda()
+			App.Theme.Scale = New Vec2f( 1 )
 		End
 		
 	End

@@ -1,0 +1,254 @@
+Namespace wide
+
+
+#Import "../miniui.wx"
+
+#Import "../minira"
+
+
+Private
+
+
+Class Mx23dDocumentView Extends View
+	field font:Font
+
+	field ctrls:MiniUI = New MiniUI( 10 )
+	field _scale:float = 1
+	
+	field _panel:int
+	field _wireSwitch:int
+	field _normalSwitch:int
+
+
+	Method New( doc:Mx23dDocument )
+		_doc = doc
+		
+		Layout = "fill"
+		
+		Style.BackgroundColor = MainWindow._theme.Syntax[14]
+		
+		ctrls.OverColor = MainWindow._theme.IDE[3] * 0.7
+		_scale = App.Theme.Scale.x
+		
+		_panel = ctrls.AddPanel( 0,0, 180, 90, Color.Black * 0.125, True )
+
+		_wireSwitch = ctrls.AddTextSwitch( 10,10, 160, 30, MainWindow._theme.IDE[2], "Wireframe" )
+		_normalSwitch = ctrls.AddTextSwitch( 10,50, 160, 30, MainWindow._theme.IDE[2], "Normals" )
+
+		ctrls.Clicked = lambda( ctrl:int )
+			Select ctrl
+				Case _wireSwitch
+					ctrls.ToggleCheck( _wireSwitch )
+
+				Case _normalSwitch
+					ctrls.ToggleCheck( _normalSwitch )
+			End Select
+			RequestRender()
+		End
+		
+	End
+
+	method OnThemeChanged() Override
+		ctrls.OverColor = MainWindow._theme.IDE[3] * 0.7
+		ctrls.TextColor = MainWindow._theme.IDE[1]
+
+		ctrls.SetColor( _panel, MainWindow._theme.IDE[2] )
+		ctrls.SetColor( _wireSwitch, MainWindow._theme.IDE[2] )
+		ctrls.SetColor( _normalSwitch, MainWindow._theme.IDE[2] )
+	End Method
+
+	Method OnLayout() Override
+	End
+	
+Protected
+
+
+
+	Method OnMouseWheel( x:float, y:float) Override
+		_zoom = Clamp( _zoom - float(y)*0.005, 0.1,4 )
+
+		m3d.Camera.Zoom = _zoom
+
+		RequestRender()
+	End
+
+
+	method OnMouseMove() Override
+'		Print _mouseX+" "+_mouseY
+		If ctrls.Over( _mouseX, _mouseY ) Then
+			App.RequestRender()
+		End If
+
+		If Not _mouseDown Then Return
+		
+		local xDiff:float = _mouseX - _oldMouseX
+		local yDiff:float = _mouseY - _oldMouseY
+		
+		m3d.CameraOrbit( yDiff*0.01, -xDiff*0.01 ) 'up, round
+
+		RequestRender()
+	End Method
+
+
+'	method OnMouseUp() Override
+'	End Method
+	
+	
+	method OnMouseDown() Override
+		ctrls.SendClick( _mouseX, _mouseY )
+	End Method
+	
+
+	Method OnRender( canvas:Canvas ) Override
+		If _audioTimer Then _audioTimer.Suspended = True
+		
+		'get the global scaling system
+		_scale = App.Theme.Scale.x
+		ctrls.Scale = _scale
+
+		If width <> Width Or height <> Height then
+			width = Width
+			height = Height
+			
+			If Not m3d Then
+				'setup the 3d stuff
+				m3d = New MiniRa3D()
+				m3d.Init( 0, 0, width, height )
+				m3d.CameraOrbit( -0.1, 0 ) 'up, round
+		
+				'setup a base debug grid
+				m3d.Grid()
+
+				_model = New Object3D( _doc.Data )
+			Else
+				m3d.Init( 0, 0, width, height )
+			End If
+		End if
+		
+		canvas.Color = MainWindow._theme.Syntax[14]
+		canvas.DrawRect( 0,0, Width, Height )
+
+		m3d.DrawGrid( canvas, 0, 80 )
+
+		If ctrls.GetCheck( _wireSwitch ) Then
+			canvas.Color = Color.Silver
+			m3d.DrawWireObjectMono( canvas,  _model, 0, 80 )
+		Else
+			m3d.DrawFlatObject( canvas,  _model, 0, 80 )
+			canvas.Color = Color.Black
+			m3d.DrawWireObjectMono( canvas,  _model, 0, 80 )
+		End If
+
+		If ctrls.GetCheck( _normalSwitch ) Then
+			m3d.DrawObjectNormals( canvas,  _model, 0, 80 )
+		End If
+
+		ctrls.DrawControls( canvas, _mouseX, _mouseY, _mouseDown )
+
+'		local size:int = 60 * App.Theme.Scale.x
+'		If Not font Then
+'			font = App.Theme.OpenFont( _doc.Data, size )
+'		End If
+'		
+'		If Not font Then
+'			Print "bad font "+_doc.Data
+'			Return
+'		End If
+'
+'		canvas.Font = font
+'		local midX:int = Width * 0.5
+'		canvas.Color = MainWindow._theme.IDE[1]
+'		
+'		canvas.DrawText( "0 1 2 3 4 5 6 7 8 9", midX, size* 0.5,  0.5,0.5 )
+'		canvas.DrawText( "A B C D E F G H I J K L M", midX, size*1.5,  0.5,0.5 )
+'		canvas.DrawText( "N O P Q R S T U V W X Y Z", midX, size*2.25,  0.5,0.5 )
+'		canvas.DrawText( "a b c d e f g h i j k l m", midX, size*3.25,  0.5,0.5 )
+'		canvas.DrawText( "n o p q r s t u v w x y z", midX, size*4,  0.5,0.5 )
+	End
+
+
+Private
+	Field _doc:Mx23dDocument
+
+	field m3d:MiniRa3D
+	field _model:Object3D
+	
+	field _zoom:float = 1
+	
+	field width:int
+	field height:int
+
+End
+
+
+Class Mx23dDocument Extends WideDocument
+	Method New( path:String )
+		Super.New( path )
+		
+		_view = New Mx23dDocumentView( Self )
+	End
+
+	
+	Property Data:string()
+		Return _data
+	End
+
+	
+Protected
+	
+
+	Method OnLoad:Bool() Override
+		_data = Path'App.Theme.OpenFont( Path, 14 )
+
+'		If Not _data Return False
+		
+		Return True
+	End
+
+	
+	Method OnSave:Bool() Override
+		Return False
+	End
+
+	
+	Method OnClose() Override
+		_data = ""
+	End
+
+	
+	Method OnCreateView:Mx23dDocumentView() Override
+		Return _view
+	End
+
+	
+Private
+
+	Field _view:Mx23dDocumentView
+	Field _data:string
+End
+
+
+Class Mx23dDocumentType Extends WideDocumentType
+	Property Name:String() Override
+		Return "Mx23dDocumentType"
+	End
+
+	
+Protected
+
+
+	Method New()
+		AddPlugin( Self )
+		
+		Extensions = New String[]( ".mx23d", ".3do" )
+	End
+
+	
+	Method OnCreateDocument:WideDocument( path:String ) Override
+		Return New Mx23dDocument( path )
+	End
+
+	
+Private
+	Global _instance := New Mx23dDocumentType
+End

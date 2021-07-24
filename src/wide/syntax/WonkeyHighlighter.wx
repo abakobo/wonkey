@@ -9,180 +9,187 @@ Class WonkeyHighlighter Extends HighlighterPlugin
 	End
 
 	
-	Private
+Private
+
 	
-	Global _instance:=New WonkeyHighlighter
+	Global _instance:WonkeyHighlighter = New WonkeyHighlighter
 	
+
 	Method New()
 		Super.New()
-		_types=New String[]( ".wx",".monkey2",".json" )
-		_hl=New Highlighter
-		_hl.Painter=HL
+		_types = New String[]( ".wx", ".monkey2", ".json" )
+		_hl = New Highlighter
+		_hl.Painter = HL
 	End
+
 	
-	Method HL:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
+	Method HL:Int( text:String, colors:Byte[], sol:Int, eol:Int, state:Int )
+		If Not _keywords Then _keywords = KeywordsManager.Get( GetMainFileType() )
+		If Not _parser Then _parser = ParsersManager.Get( GetMainFileType() )
 
-        If Not _keywords Then _keywords=KeywordsManager.Get( GetMainFileType() )
-        If Not _parser Then _parser=ParsersManager.Get( GetMainFileType() )
-
-		Local i0:=sol
+		Local i0 := sol
 		
-		Local icolor:=0
-		Local istart:=sol
-		Local preproc:=False
+		Local icolor := 0
+		Local istart := sol
+		Local preproc := False
 	
 		'comment nest
-		'
-		Local cnest:=state & 255
-		If cnest=255 cnest=-1
+		Local cnest := state & 255
+		If cnest = 255 cnest = -1
 		
 		'block string flag
-		'	
-		Local blkstr:=(state & 256)=0
+		Local blkstr := (state & 256)=0
 		
-		If cnest<>-1 
-			icolor=Highlighter.COLOR_COMMENT
+		If cnest <> -1
+			icolor = Highlighter.COLOR_COMMENT
 		Else If blkstr
-			icolor=Highlighter.COLOR_STRING
+			icolor = Highlighter.COLOR_STRING
 		Endif
 		
-		While i0<eol
-		
-			Local start:=i0
-			Local chr:=text[i0]
-			i0+=1
+		While i0 < eol
+			Local start := i0
+			Local chr := text[i0]
+			i0 += 1
 			
 			If IsSpace( chr ) Continue
 			
 			If blkstr
-				If chr=34 blkstr=False
+				If chr = 34 Then blkstr = False '"
 				Continue
 			Endif
 			
-			If chr=35 And istart=sol
-				preproc=True
-				If cnest=-1 icolor=Highlighter.COLOR_PREPROC
+			If chr = 35 And istart = sol Then '#
+				preproc = True
+				If cnest = -1 icolor = Highlighter.COLOR_PREPROC
 				Continue
 			Endif
 			
-			If preproc And (IsAlpha( chr ) Or chr=95)
-	
-				While i0<eol And (IsAlpha( text[i0] ) Or IsDigit( text[i0] )  Or text[i0]=95)
-					i0+=1
+			If preproc And (IsAlpha( chr ) Or chr=95) '–
+				While i0 < eol And (IsAlpha( text[i0] ) Or IsDigit( text[i0] )	Or text[i0]=95)
+					i0 += 1
 				Wend
 				
 				Local id:=text.Slice( start,i0 )
 				
 				Select id.ToLower()
-				Case "rem"
-					cnest+=1
-					icolor=Highlighter.COLOR_COMMENT
-				Case "end"
-					If cnest<>-1
-						cnest-=1
-						icolor=Highlighter.COLOR_COMMENT
-					Endif
+					Case "rem"
+						cnest += 1
+						icolor = Highlighter.COLOR_COMMENT
+					Case "end"
+						If cnest <> -1
+							cnest -= 1
+							icolor = Highlighter.COLOR_COMMENT
+						Endif
 				End
 				
 				Exit
-			
 			Endif
 			
-			If cnest<>-1 Or preproc Exit
+			If cnest <> -1 Or preproc Exit
 			
-			Local color:=icolor
+			Local color := icolor
 			
-			If chr=39
-			
-				i0=eol
+			If chr = 39 then ''
+				i0 = eol
 				
-				color=Highlighter.COLOR_COMMENT
+				color = Highlighter.COLOR_COMMENT
 				
-			Else If chr=34
-			
+			Else If chr = 34 '"
 				While i0<eol And text[i0]<>34
-					i0+=1
+					i0 += 1
 				Wend
-				If i0<eol
-					i0+=1
+				If i0 < eol Then
+					i0 += 1
 				Else
 					blkstr=True
 				Endif
 				
-				color=Highlighter.COLOR_STRING
+				color = Highlighter.COLOR_STRING
 				
-			Else If IsAlpha( chr ) Or chr=95
-	
-				While i0<eol And (IsAlpha( text[i0] ) Or IsDigit( text[i0] )  Or text[i0]=95)
-					i0+=1
+			Else If IsAlpha( chr ) Or chr = 95 '_
+				While i0 < eol And (IsAlpha( text[i0] ) Or IsDigit( text[i0] )	Or text[i0]=95)
+					i0 += 1
 				Wend
 				
-				Local id:=text.Slice( start,i0 )
+				Local id := text.Slice( start,i0 )
 				
-				If preproc And istart=sol
-				
+				If preproc And istart = sol
 					Select id.ToLower()
 					Case "rem"
 						cnest+=1
 					Case "end"
-						cnest=Max( cnest-1,-1 )
+						cnest = Max( cnest-1,-1 )
 					End
 					
-					icolor=Highlighter.COLOR_COMMENT
+					icolor = Highlighter.COLOR_COMMENT
 					
 					Exit
 				Else
-				
-					color=Highlighter.COLOR_IDENT
+					color = Highlighter.COLOR_IDENT
 					
 					If _keywords.ContainsCoreType( id )
-						color=Highlighter.COLOR_CORETYPE
+						color = Highlighter.COLOR_CORETYPE
+						
 					Elseif _keywords.Contains( id )
-						color=Highlighter.COLOR_KEYWORD
+						
+						Select id.ToLower()
+							Case "method"
+								color = Highlighter.COLOR_METHOD
+							Case "function"
+								color = Highlighter.COLOR_FUNCTION
+							Case "property"
+								color = Highlighter.COLOR_PROPERTY
+							Case "lambda"
+								color = Highlighter.COLOR_LAMBDA
+							Case "local", "field", "const", "global"
+								color = Highlighter.COLOR_VARIABLE
+							Case "class", "private", "public", "protected"
+								color = Highlighter.COLOR_CLASS
+							Default
+								color = Highlighter.COLOR_KEYWORD
+						End
+'						Print id
+'						color = Highlighter.COLOR_NONE
 					Endif
 				Endif
 				
-			Else If IsDigit( chr )
-			
+			Else If IsDigit( chr ) Then
 				While i0<eol And IsDigit( text[i0] )
-					i0+=1
+					i0 += 1
 				Wend
 				
-				color=Highlighter.COLOR_NUMBER
+				color = Highlighter.COLOR_NUMBER
 				
-			Else If chr=36 And i0<eol And IsHexDigit( text[i0] )
-			
-				i0+=1
-				While i0<eol And IsHexDigit( text[i0] )
-					i0+=1
+			Else If chr = 36 And i0<eol And IsHexDigit( text[i0] ) Then '$
+				i0 += 1
+				While i0 < eol And IsHexDigit( text[i0] )
+					i0 += 1
 				Wend
 				
-				color=Highlighter.COLOR_NUMBER
+				color = Highlighter.COLOR_NUMBER
 				
 			Else
-				
-				color=Highlighter.COLOR_NONE
+				color = Highlighter.COLOR_NONE
 				
 			Endif
 			
-			If color=icolor Continue
+			If color = icolor Continue
 			
-			For Local i:=istart Until start
-				colors[i]=icolor
+			For Local i := istart Until start
+				colors[i] = icolor
 			Next
 			
-			icolor=color
-			istart=start
-		
+			icolor = color
+			istart = start
 		Wend
 		
-		For Local i:=istart Until eol
-			colors[i]=icolor
+		For Local i := istart Until eol
+			colors[i] = icolor
 		Next
 		
-		state=cnest & 255
+		state = cnest & 255
 		
-		If Not blkstr state|=256
+		If Not blkstr Then state |= 256
 		
 		Return state
 	End

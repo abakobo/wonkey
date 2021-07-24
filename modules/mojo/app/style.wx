@@ -5,26 +5,32 @@ Namespace mojo.app
 #end
 Class Style
 
+
 	Method New()
-		_font=App.DefaultFont		
+		_font=App.DefaultFont
 	End
+
 	
 	Method New( style:Style )
 		Init( style )
 	End
+
 	
 	Method New( name:String,style:Style )
 		_name=name
 		Init( style )
 	End
+
 	
 	Method Copy:Style()
 		Return New Style( Self )
 	End
+
 	
 	Method Set( style:Style )
 		Init( style )
 	End
+
 	
 	Method GetState:Style( name:String )
 		Local state:=_states[name]
@@ -32,6 +38,7 @@ Class Style
 		
 		Return state
 	End
+
 
 	Method AddState:Style( name:String )
 		Local state:=_states[name]
@@ -42,12 +49,14 @@ Class Style
 
 		Return state
 	End
+
 	
 	#rem wonkeydoc Name of the style.
 	#end
 	Property Name:String()
 		Return _name
 	End
+
 
 	#rem wonkeydoc Background color.
 	#end
@@ -56,6 +65,7 @@ Class Style
 	Setter( backgroundColor:Color )
 		_bgcolor=backgroundColor
 	End
+
 	
 	#rem wonkeydoc Padding rect.
 	#end
@@ -64,6 +74,7 @@ Class Style
 	Setter( padding:Recti )
 		_padding=padding
 	End
+
 	
 	#rem wonkeydoc @hidden
 	#end
@@ -72,6 +83,7 @@ Class Style
 	Setter( skin:Skin )
 		_skin=skin
 	End
+
 	
 	#rem wonkeydoc @hidden
 	#end
@@ -80,6 +92,7 @@ Class Style
 	Setter( skinColor:Color )
 		_skcolor=skinColor
 	End
+
 		
 	#rem wonkeydoc Border rect.
 	#end
@@ -88,6 +101,7 @@ Class Style
 	Setter( border:Recti )
 		_border=border
 	End
+
 	
 	#rem wonkeydoc Border color.
 	#End
@@ -97,6 +111,7 @@ Class Style
 		_bdcolor=borderColor
 	End
 
+
 	#rem wonkeydoc Margin rect.
 	#end
 	Property Margin:Recti()
@@ -104,6 +119,7 @@ Class Style
 	Setter( margin:Recti )
 		_margin=margin
 	End
+
 	
 	#rem wonkeydoc Color to use when drawing text.
 	#end
@@ -112,6 +128,7 @@ Class Style
 	Setter( color:Color )
 		_textColor=color
 	End
+
 	
 	#rem wonkeydoc Color to use when drawing icons.
 	#end
@@ -120,17 +137,17 @@ Class Style
 	Setter( color:Color )
 		_iconColor=color
 	End
+
 	
 	#rem wonkeydoc Font to use when drawing text.
-	
 	Deprecated! Just use [[Font]] instead...
-	
 	#end
 	Property DefaultFont:Font()
 		Return _font
 	Setter( font:Font )
 		_font=font
 	End
+
 	
 	#rem wonkeydoc Font to use when drawing text.
 	#end
@@ -139,6 +156,7 @@ Class Style
 	Setter( font:Font )
 		_font=font
 	End
+
 	
 	#rem wonkeydoc Custom icons.
 	#end
@@ -147,6 +165,7 @@ Class Style
 	Setter( icons:Image[] )
 		_icons=icons
 	End
+
 	
 	#rem wonkeydoc Total style bounds.
 	#end
@@ -158,14 +177,13 @@ Class Style
 		Return bounds
 	End
 
+
 	#rem wonkeydoc Measure text.
 	#end
 	Method MeasureText:Vec2i( text:String )
-	
 		If Not text Return New Vec2i( 0,0 )
 		
 		If text.Contains( "~n" )
-
 			Local lines:=text.Split( "~n" ),w:=0
 
 			For Local line:=Eachin lines
@@ -176,9 +194,9 @@ Class Style
 			Return New Vec2i( _font.TextWidth( text ),_font.Height )
 		Endif
 	End
-	
-	Method DrawText( canvas:Canvas,text:String,x:Int,y:Int,handlex:Float=0,handley:Float=0 )
 
+	
+	Method DrawText( canvas:Canvas, text:String, x:Int, y:Int, handlex:Float=0, handley:Float=0 )
 		Local font:=canvas.Font
 		Local color:=canvas.Color
 		
@@ -190,9 +208,9 @@ Class Style
 		canvas.Font=font
 		canvas.Color=color
 	End
+
 	
-	Method DrawText( canvas:Canvas,text:String,rect:Recti,gravity:Vec2f )
-	
+	Method DrawText( canvas:Canvas, text:String, rect:Recti, gravity:Vec2f )
 		If Not text Return
 	
 		Local size:=MeasureText( text )
@@ -207,26 +225,23 @@ Class Style
 		canvas.Color=_textColor
 		
 		If text.Contains( "~n" )
-		
 			Local lines:=text.Split( "~n" )
 			
 			For Local line:=Eachin lines
-			
 				If line canvas.DrawText( line,x + (size.x-_font.TextWidth( line )) * gravity.x,y )
 				y+=_font.Height
 			Next
 		
 		Else If text<>"~n"
-		
 			canvas.DrawText( text,x,y )
 		Endif
 		
 		canvas.Font=font
 		canvas.Color=color
 	End
+
 	
-	Method DrawIcon( canvas:Canvas,icon:Image,x:Int,y:Int )
-	
+	Method DrawIcon( canvas:Canvas, icon:Image, x:Int, y:Int )
 		Local color:=canvas.Color
 		canvas.Color=_iconColor
 		
@@ -234,18 +249,17 @@ Class Style
 		
 		canvas.Color=color
 	End
+
 	
 	#rem wonkeydoc @hidden 
 	#end
-	Method Render( canvas:Canvas,bounds:Recti )
-	
+	Method Render( canvas:Canvas, bounds:Recti )
 		bounds-=_margin
 
 		Local border:=Border
 		Local bdcolor:=BorderColor
 		
 		If (border.Width Or border.Height) And bdcolor.a
-		
 			canvas.Color=bdcolor
 			
 			Local x:=bounds.X,y:=bounds.Y
@@ -257,7 +271,6 @@ Class Style
 			canvas.DrawRect( x+l,y,w-l,t )
 			canvas.DrawRect( x+w-r,y+t,r,h-t )
 			canvas.DrawRect( x,y+h-b,w-r,b )
-
 		Endif
 		
 		bounds-=border
@@ -279,8 +292,9 @@ Class Style
 		canvas.Font=_font
 		canvas.Color=Color.White
 	End
+
 	
-	'***** INTERNAL *****
+'***** INTERNAL *****
 
 	#rem wonkeydoc @hidden
 	#end
@@ -288,40 +302,42 @@ Class Style
 		If Not _states _states=New StringMap<Style>
 		Return _states
 	End
+
 	
-	Private
-	
-	Field _name:String
-	Field _bgcolor:Color=Color.None
+Private
+
+Field _name:String
+	Field _bgcolor:Color = Color.None
 	Field _padding:Recti
 	Field _skin:Skin
-	Field _skcolor:Color=Color.White
+	Field _skcolor:Color = Color.White
 	Field _border:Recti
-	Field _bdcolor:Color=Color.None
+	Field _bdcolor:Color = Color.None
 	Field _margin:Recti
-	Field _textColor:Color=Color.Black
-	Field _iconColor:Color=Color.White
+	Field _textColor:Color = Color.Black
+	Field _iconColor:Color = Color.White
 	Field _icons:Image[]
 	Field _font:Font
-	Field _states:=New StringMap<Style>
+	Field _states := New StringMap<Style>
+
 
 	Method Init( style:Style )
 		If Not style Return
-		_bgcolor=style._bgcolor
-		_padding=style._padding
-		_skin=style._skin
-		_skcolor=style._skcolor
-		_border=style._border
-		_bdcolor=style._bdcolor
-		_margin=style._margin
-		_textColor=style._textColor
-		_iconColor=style._iconColor
-		_icons=style._icons.Slice( 0 )
-		_font=style._font
+		_bgcolor = style._bgcolor
+		_padding = style._padding
+		_skin = style._skin
+		_skcolor = style._skcolor
+		_border = style._border
+		_bdcolor = style._bdcolor
+		_margin = style._margin
+		_textColor = style._textColor
+		_iconColor = style._iconColor
+		_icons = style._icons.Slice( 0 )
+		_font = style._font
 		_states.Clear()
 		If style._states
-			For Local it:=Eachin style._states
-				_states[it.Key]=New Style( it.Value )
+			For Local it := Eachin style._states
+				_states[it.Key] = New Style( it.Value )
 			Next
 		Endif
 	End

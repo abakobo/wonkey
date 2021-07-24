@@ -4,36 +4,39 @@ Namespace wide
 
 Class GutterView Extends View
 
+
 	Method New( textView:TextView )
-		Style=GetStyle( "GutterView" )
+		Style = GetStyle( "GutterView" )
 	
-		_textView=textView
+		_textView = textView
 	End
+
 	
-	Protected
+Protected
+
 	
 	Method OnValidateStyle() Override
-	
 		Local font:=RenderStyle.Font
 	
-		_width=font.TextWidth( "1234567" )
+		_width = font.TextWidth( "1234567" )
 
-		_size=New Vec2i( font.TextWidth( "12345678" ),0 )
+		_size = New Vec2i( font.TextWidth( "12345678" ),0 )
 	End
+
 	
 	Method OnMeasure:Vec2i() Override
-	
 		Return _size
 	End
+
 	
 	Method OnRender( canvas:Canvas ) Override
-	
-		canvas.Color=RenderStyle.BackgroundColor
-		
+'		Print "gutterView"
+'		canvas.Color = RenderStyle.BackgroundColor
+		canvas.Color = GetNewColor( MainWindow._theme.Syntax[14], 0.05 )
 		canvas.DrawRect( Rect.X,Rect.Y,Rect.Width,Rect.Height )
 		
-		canvas.Color=RenderStyle.TextColor
-		
+'		canvas.Color = Color.Grey'RenderStyle.TextColor
+		canvas.Color = MainWindow._theme.IDE[1] * 0.8
 		Local vrect:=_textView.VisibleRect
 		
 		Local firstLine:=_textView.LineAtPoint( vrect.TopLeft )
@@ -41,17 +44,17 @@ Class GutterView Extends View
 		Local lastLine:=_textView.LineAtPoint( vrect.BottomLeft )+1
 		
 		canvas.Translate( 0,-vrect.Top )
-		
-		For Local i:=firstLine Until lastLine
-		
+
+		Local i:int
+		For i = firstLine Until lastLine
 			Local rect:=_textView.LineRect( i )
-		
+
 			canvas.DrawText( i+1,_width,rect.Top,1,0 )
 		Next
-		
 	End
+
 	
-	Private
+Private
 	
 	Field _width:Int
 	Field _size:Vec2i

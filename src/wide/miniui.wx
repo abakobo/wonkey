@@ -1,0 +1,1825 @@
+Namespace miniui
+Using miniui
+
+
+#Import "<std>"
+#Import "<mojo>"
+Using std..
+Using mojo..
+
+
+const ALIGN_LEFT:int = 0
+const ALIGN_RIGHT:int = 1
+const ALIGN_CENTER:int = 2
+
+const CTRL_NULL:int = 0
+const CTRL_BUTTON:int = 1
+const CTRL_BUTTONROUND:int = 2
+const CTRL_IMAGEBUTTON:int = 3
+const CTRL_IMAGEBUTTONROUND:int = 4
+const CTRL_VFADER:int = 5
+const CTRL_VFADERROUND:int = 6
+const CTRL_TEXT:int = 7
+const CTRL_PANEL:int = 8
+const CTRL_PANELROUND:int = 9
+const CTRL_PANELTEXT:int = 10
+const CTRL_PANELTEXTROUND:int = 11
+const CTRL_TEXTBOLD:int = 12
+const CTRL_LIST:int = 13
+const CTRL_LISTROUND:int = 14
+const CTRL_TABLIST:int = 15
+const CTRL_IMAGE:int = 16
+const CTRL_CHECKBOX:int = 17
+const CTRL_CHECKBOXROUND:int = 18
+const CTRL_SWITCH:int = 19
+const CTRL_GRID:int = 20
+const CTRL_FONT:int = 21
+const CTRL_CHECKBUTTON:int = 22
+const CTRL_CHECKBUTTONROUND:int = 23
+const CTRL_TEXTSWITCH:int = 24
+
+const CTRL_CUSTOM:int = 100
+	
+const CTRL_CUSTOMBUTTON:int = CTRL_BUTTON + CTRL_CUSTOM
+const CTRL_CUSTOMBUTTONROUND:int = CTRL_BUTTONROUND + CTRL_CUSTOM
+const CTRL_CUSTOMIMAGEBUTTON:int = CTRL_IMAGEBUTTON + CTRL_CUSTOM
+const CTRL_CUSTOMIMAGEBUTTONROUND:int = CTRL_IMAGEBUTTONROUND + CTRL_CUSTOM
+const CTRL_CUSTOMVFADER:int = CTRL_VFADER + CTRL_CUSTOM
+const CTRL_CUSTOMVFADERROUND:int = CTRL_VFADERROUND + CTRL_CUSTOM
+const CTRL_CUSTOMTEXT:int = CTRL_TEXT + CTRL_CUSTOM
+const CTRL_CUSTOMPANEL:int = CTRL_PANEL + CTRL_CUSTOM
+const CTRL_CUSTOMPANELROUND:int = CTRL_PANELROUND + CTRL_CUSTOM
+const CTRL_CUSTOMPANELTEXT:int = CTRL_PANELTEXT + CTRL_CUSTOM
+const CTRL_CUSTOMPANELTEXTROUND:int = CTRL_PANELTEXTROUND + CTRL_CUSTOM
+const CTRL_CUSTOMTEXTBOLD:int = CTRL_TEXTBOLD + CTRL_CUSTOM
+const CTRL_CUSTOMLIST:int = CTRL_LIST + CTRL_CUSTOM
+const CTRL_CUSTOMLISTROUND:int = CTRL_LISTROUND + CTRL_CUSTOM
+const CTRL_CUSTOMTABLIST:int = CTRL_TABLIST + CTRL_CUSTOM
+const CTRL_CUSTOMIMAGE:int = CTRL_IMAGE + CTRL_CUSTOM
+const CTRL_CUSTOMCHECKBOX:int = CTRL_CHECKBOX + CTRL_CUSTOM
+const CTRL_CUSTOMCHECKBOXROUND:int = CTRL_CHECKBOXROUND + CTRL_CUSTOM
+const CTRL_CUSTOMSWITCH:int = CTRL_SWITCH + CTRL_CUSTOM
+const CTRL_CUSTOMGRID:int = CTRL_GRID + CTRL_CUSTOM
+const CTRL_CUSTOMFONT:int = CTRL_FONT + CTRL_CUSTOM
+const CTRL_CUSTOMCHECKBUTTON:int = CTRL_CHECKBUTTON + CTRL_CUSTOM
+const CTRL_CUSTOMCHECKBUTTONROUND:int = CTRL_CHECKBUTTONROUND + CTRL_CUSTOM
+const CTRL_CUSTOMTEXTSWITCH:int = CTRL_TEXTSWITCH + CTRL_CUSTOM
+
+
+Class MiniUI
+	field Clicked:Void( ctrl:int )
+
+	field OnDraw:void( canvas:Canvas, ctrl:int, x:int, y:int, width:int, height:int, color:Color, border:int )
+	field OnDrawItem:void( canvas:Canvas, ctrl:int, item:int, selected:bool, x:int, y:int, width:int, height:int, border:int )
+
+	field CONTROL_MAX:int = 128
+	
+	
+private
+	field _scale:float = 1
+	
+	field _canvasWidth:int
+	field _canvasHeight:int
+
+	field _overColor:Color = Color.UIBlue
+	field _textColor:Color = Color.White
+
+	field _gridShow:bool = False
+	field _gridX:float = -1
+	field _gridY:float = -1
+	field _gridInset:float = 0
+	field _guideShow:bool = False
+	field _cellX:float = -1
+	field _cellY:float = -1
+	
+	field _currentPage:int = 0
+
+
+	field _ctrlCount:int = -1
+	field _ctrlOver:int = -1
+	
+	field _prevMouseDown:bool = False
+	
+	
+	field _ctrlBorder:float[]
+	
+	field _x:float[]
+	field _y:float[]
+	field _width:float[]
+	field _height:float[]
+
+	field _ctrlX0:float[]
+	field _ctrlY0:float[]
+	field _ctrlX1:float[]
+	field _ctrlY1:float[]
+	
+	field _ctrlMidX:float[]
+	field _ctrlMidY:float[]
+	
+	field _ctrlWidth:float[]
+	field _ctrlHeight:float[]
+	
+	field _ctrlColor:Color[]
+	
+	field _ctrlText:string[]
+	field _ctrlTextAlign:int[]
+	field _ctrlValue:float[]
+	field _ctrlImage:Image[]
+	
+	field _ctrlItemCount:int[]
+	field _ctrlItemSelected:int[]
+	field _ctrlStrings:List<String>[]
+	
+	field _ctrlGridX:int[]
+	field _ctrlGridY:int[]
+	field _ctrlCellX:float[]
+	field _ctrlCellY:float[]
+	
+	field _ctrlActive:Bool[]
+	field _ctrlEnabled:Bool[]
+	field _ctrlVisible:Bool[]
+
+	field _ctrlKind:int[]
+
+	field _ctrlPage:int[]
+	
+public
+
+	method New()
+		Init( 128 )
+	End method
+
+	
+	method New( size:int )
+		If size > 0 And size < 1024 Then
+			Init( size )
+		Else
+			Init( 128 )
+		End If
+	End Method
+	
+	
+	method Init( size:int )
+		CONTROL_MAX = size
+		
+		_ctrlBorder = New float[CONTROL_MAX]
+
+		_x = New float[CONTROL_MAX]
+		_y = New float[CONTROL_MAX]
+		_width = New float[CONTROL_MAX]
+		_height = New float[CONTROL_MAX]
+
+		_ctrlX0 = New float[CONTROL_MAX]
+		_ctrlY0 = New float[CONTROL_MAX]
+		_ctrlX1 = New float[CONTROL_MAX]
+		_ctrlY1 = New float[CONTROL_MAX]
+	
+		_ctrlMidX = New float[CONTROL_MAX]
+		_ctrlMidY = New float[CONTROL_MAX]
+	
+		_ctrlWidth = New float[CONTROL_MAX]
+		_ctrlHeight = New float[CONTROL_MAX]
+	
+		_ctrlColor = New Color[CONTROL_MAX]
+	
+		_ctrlText = New string[CONTROL_MAX]
+		_ctrlTextAlign = New int[CONTROL_MAX]
+		_ctrlValue = New float[CONTROL_MAX]
+		_ctrlImage = New Image[CONTROL_MAX]
+	
+		_ctrlItemCount = New int[CONTROL_MAX]
+		_ctrlItemSelected = New int[CONTROL_MAX]
+		_ctrlStrings = New List<string>[CONTROL_MAX]
+	
+		_ctrlGridX = New int[CONTROL_MAX]
+		_ctrlGridY = New int[CONTROL_MAX]
+		_ctrlCellX = New float[CONTROL_MAX]
+		_ctrlCellY = New float[CONTROL_MAX]
+	
+		_ctrlActive = New bool[CONTROL_MAX]
+		_ctrlEnabled = New bool[CONTROL_MAX]
+		_ctrlVisible = New bool[CONTROL_MAX]
+
+		_ctrlKind = New int[CONTROL_MAX]
+
+		_ctrlPage = New int[CONTROL_MAX]
+	End method
+
+
+	property Scale:float()
+		Return _scale
+	Setter( value:float )
+		If _scale = value Then Return
+		
+		_scale = value
+		_ctrlOver = -1
+		Layout()
+	End
+
+
+	property Page:int()
+		Return _currentPage
+	Setter( value:int )
+		If _currentPage = value Then Return
+		
+		_currentPage = value
+	End
+
+
+	property ControlOver:int()
+		Return _ctrlOver
+	End
+	
+	property ControlCount:int()
+		Return _ctrlCount
+	End
+
+
+	property OverColor:Color()
+		Return _overColor
+	Setter( value:Color )
+		_overColor = value
+	End
+
+
+	property TextColor:Color()
+		Return _textColor
+	Setter( value:Color )
+		_textColor = value
+	End
+
+
+	property ShowGrid:bool()
+		Return _gridShow
+	Setter( value:bool )
+		_gridShow = value
+	End
+
+
+	property ShowGuides:bool()
+		Return _guideShow
+	Setter( value:bool )
+		_guideShow = value
+	End
+
+
+	property GridInset:float()
+		Return _gridInset
+	Setter( value:float )
+		If _gridInset = value Then Return
+		
+		_gridInset = Clamp( value, 0, 1000 )
+	End
+
+
+	method SetGrid( x:int, y:int )
+		_gridX = x
+		_gridY = y
+	End Method
+	
+	
+	method SetCustomRender( ctrl:int )
+		If ctrl < 0 Then Return
+		
+		If _ctrlKind[ctrl] < CTRL_CUSTOM Then
+			_ctrlKind[ctrl] += 100
+		Else
+			_ctrlKind[ctrl] -= 100
+		End If
+	End Method
+	
+
+	method GetKind:int( ctrl:int )
+		If ctrl < 0 Then Return 0
+		
+		Return _ctrlKind[ctrl]
+	End Method
+
+
+	method GetImage:Image( ctrl:int )
+		If ctrl < 0 Then Return Null
+		
+		Return _ctrlImage[ctrl]
+	End Method
+
+
+	method SendClick( mx:int, my:int )
+		If _ctrlOver = -1 Then Return
+		
+		'are we over the previous control?
+		If mx > _ctrlX0[_ctrlOver] And mx < _ctrlX1[_ctrlOver] And my > _ctrlY0[_ctrlOver] And my < _ctrlY1[_ctrlOver] Then
+			Clicked( _ctrlOver )
+		End If
+	End method
+	
+	
+	method ToggleCheck( ctrl:int )
+		If ctrl < 0 Then Return
+		
+		Select _ctrlItemSelected[ctrl]
+			Case 1
+				_ctrlItemSelected[ctrl] = 0
+			Case 0
+				_ctrlItemSelected[ctrl] = 1
+		End Select
+	End Method
+
+
+	method SetCheck( ctrl:int, check:bool )
+		If ctrl < 0 Then Return
+		
+		Select check
+			Case False
+				_ctrlItemSelected[ctrl] = 0
+			Case True
+				_ctrlItemSelected[ctrl] = 1
+		End Select
+	End Method
+
+
+	method GetCheck:bool( ctrl:int )
+		If ctrl < 0 Then Return False
+		
+		If _ctrlItemSelected[ctrl] = 1 Then Return True
+
+		Return False
+	End Method
+
+
+	method SetSelected( ctrl:int, item:int )
+		If ctrl < 0 Then Return
+		
+		If _ctrlItemCount[ctrl] = -1 Then
+			_ctrlItemSelected[ctrl] = item
+		Else
+			_ctrlItemSelected[ctrl] = Clamp( item, -1, _ctrlItemCount[ctrl]-1 )
+		End If
+	End Method
+	
+	
+	method GetSelected:int( ctrl:int )
+		If ctrl < 0 Then Return 0
+		
+		Return _ctrlItemSelected[ctrl]
+	End Method
+
+
+	method SetTextAlign( ctrl:int, align:int )
+		If ctrl < 0 Then Return
+		
+		_ctrlTextAlign[ctrl] = align
+	End Method
+	
+	
+	method GetTextAlign:int( ctrl:int )
+		If ctrl < 0 Then Return 0
+		
+		Return _ctrlTextAlign[ctrl]
+	End Method
+
+
+	method SetBorder( ctrl:int, value:int )
+		If ctrl < 0 Then Return
+		
+		_ctrlBorder[ctrl] = value
+	End Method
+	
+	
+	method GetBorder:int( ctrl:int )
+		If ctrl < 0 Then Return 0
+		
+		Return _ctrlBorder[ctrl]
+	End Method
+	
+	
+	method GetValue:float( ctrl:int )
+		If ctrl < 0 Then Return 0
+		Return _ctrlValue[ctrl]
+	End Method
+
+
+	method SetValue( ctrl:int, value:float )
+		If ctrl < 0 Then Return
+		_ctrlValue[ctrl] = Clamp( value, 0, 1 )
+	End Method
+
+
+	method GetEnabled:bool( ctrl:int )
+		If ctrl < 0 Then Return False
+		Return _ctrlEnabled[ctrl]
+	End Method
+
+
+	method SetEnabled( ctrl:int, value:bool )
+		If ctrl < 0 Then Return
+		_ctrlEnabled[ctrl] = value
+	End Method
+
+
+	method GetActive:bool( ctrl:int )
+		If ctrl < 0 Then Return False
+		Return _ctrlActive[ctrl]
+	End Method
+
+
+	method SetActive( ctrl:int, value:bool )
+		If ctrl < 0 Then Return
+		_ctrlActive[ctrl] = value
+	End Method
+
+
+	method GetVisible:bool( ctrl:int )
+		If ctrl < 0 Then Return False
+		Return _ctrlVisible[ctrl]
+	End Method
+
+
+	method SetVisible( ctrl:int, value:bool )
+		If ctrl < 0 Then Return
+		_ctrlVisible[ctrl] = value
+	End Method
+
+
+	method SetText( ctrl:int, text:string )
+		If ctrl < 0 Then Return
+		
+		_ctrlText[ctrl] = text
+	End Method
+	
+	
+	method GetText:string( ctrl:int )
+		If ctrl < 0 Then Return ""
+		
+		Return _ctrlText[ctrl]
+	End Method
+
+
+	method SetColor( ctrl:int, color:Color )
+		If ctrl < 0 Then Return
+		
+		_ctrlColor[ctrl] = color
+	End Method
+	
+	
+	method GetColor:Color( ctrl:int )
+		If ctrl < 0 Then Return Color.None
+		
+		Return _ctrlColor[ctrl]
+	End Method
+
+
+	method SetXYPos( ctrl:int, xpos:int, ypos:int )
+		If ctrl < 0 Then Return
+		
+		_x[ctrl] = xpos
+		_y[ctrl] = ypos
+		LayoutCtrl( ctrl )
+	End Method
+
+
+	method SetXYWidthHeight( ctrl:int, xpos:int, ypos:int, width:int, height:int )
+		If ctrl < 0 Then Return
+		
+		_x[ctrl] = xpos
+		_y[ctrl] = ypos
+		_width[ctrl] = width
+		_height[ctrl] = height
+		LayoutCtrl( ctrl )
+	End Method
+
+
+	method SetWidth( ctrl:int, width:int )
+		If ctrl < 0 Then Return
+		
+		_width[ctrl] = width
+		LayoutCtrl( ctrl )
+	End Method
+
+
+	method SetHeight( ctrl:int, height:int )
+		If ctrl < 0 Then Return
+		
+		_height[ctrl] = height
+		LayoutCtrl( ctrl )
+	End Method
+
+
+	method SetXPos( ctrl:int, xpos:int )
+		If ctrl < 0 Then Return
+		
+		_x[ctrl] = xpos
+		LayoutCtrl( ctrl )
+	End Method
+
+
+	method GetXPos:int( ctrl:int )
+		If ctrl < 0 Then Return 0
+		
+		Return _x[ctrl]
+	End Method
+
+
+	method SetYPos( ctrl:int, ypos:int )
+		If ctrl < 0 Then Return
+		
+		_y[ctrl] = ypos
+		LayoutCtrl( ctrl )
+	End Method
+
+
+	method GetYPos:int( ctrl:int )
+		If ctrl < 0 Then Return 0
+		
+		Return _y[ctrl]
+	End Method
+
+
+	method AddTabList:int( x:float, y:float, width:float, height:float, color:Color, lst:string[] )
+		local ctrl:int
+		
+		ctrl = AddCtrl( CTRL_TABLIST, x,y, width,height, color )
+		_ctrlItemSelected[ctrl] = 0
+
+		If ctrl > -1 Then
+			_ctrlActive[ctrl] = True
+			If lst Then
+				_ctrlItemCount[ctrl] = lst.Length
+				local k:int
+				_ctrlStrings[ctrl] = New List<string>
+				For k =0 To lst.Length - 1
+					_ctrlStrings[ctrl].Add( lst[k] )
+				Next
+			End If
+		End If
+
+		Return ctrl
+	End Method
+
+
+	method AddList:int( x:float, y:float, width:float, height:float, color:Color, lst:string[], itemHeight:int, round:bool = False )
+		local ctrl:int
+		
+		If round Then
+			ctrl = AddCtrl( CTRL_LISTROUND, x,y, width,height, color )
+		Else
+			ctrl = AddCtrl( CTRL_LIST, x,y, width,height, color )
+		End If
+
+		If ctrl > -1 Then
+			_ctrlActive[ctrl] = True
+			If lst Then
+				_ctrlItemCount[ctrl] = lst.Length
+				_ctrlValue[ctrl] = itemHeight * App.Theme.Scale.x
+				local k:int
+				_ctrlStrings[ctrl] = New List<string>
+				For k =0 To lst.Length - 1
+					_ctrlStrings[ctrl].Add( lst[k] )
+				Next
+			End If
+		End If
+
+		Return ctrl
+	End Method
+
+
+	method AddCustomList:int( x:float, y:float, width:float, height:float, color:Color, itemCount:int, itemHeight:int, round:bool = False )
+		local ctrl:int
+		
+		If round Then
+			ctrl = AddCtrl( CTRL_CUSTOMLISTROUND, x,y, width,height, color )
+		Else
+			ctrl = AddCtrl( CTRL_CUSTOMLIST, x,y, width,height, color )
+		End If
+
+		If ctrl > -1 Then
+			_ctrlActive[ctrl] = True
+			_ctrlValue[ctrl] = itemHeight * App.Theme.Scale.x
+			_ctrlItemCount[ctrl] = itemCount
+		End If
+
+		Return ctrl
+	End Method
+
+
+	method AddGrid:int( x:float, y:float, width:float, height:float, color:Color, gridX:int, gridY:int, max:int = -1 )
+		local ctrl:int
+		
+		ctrl = AddCtrl( CTRL_GRID, x,y, width, height, color )
+
+		If ctrl > -1 Then
+			_ctrlActive[ctrl] = True
+			_ctrlGridX[ctrl] = gridX
+			_ctrlGridY[ctrl] = gridY
+			If max > 0 Then
+				_ctrlItemCount[ctrl] = max
+			Else
+				_ctrlItemCount[ctrl] = gridX * gridY
+			End If
+		End If
+
+		Return ctrl
+	End Method
+
+
+	method AddCustomGrid:int( x:float, y:float, width:float, height:float, color:Color, gridX:int, gridY:int, max:int = -1 )
+		local ctrl:int
+		
+		ctrl = AddCtrl( CTRL_CUSTOMGRID, x,y, width, height, color )
+
+		If ctrl > -1 Then
+			_ctrlActive[ctrl] = True
+			_ctrlGridX[ctrl] = gridX
+			_ctrlGridY[ctrl] = gridY
+			If max > 0 Then
+				_ctrlItemCount[ctrl] = max
+			Else
+				_ctrlItemCount[ctrl] = gridX * gridY
+			End If
+		End If
+
+		Return ctrl
+	End Method
+
+
+	method AddImage:int( x:float, y:float, width:float, height:float, color:Color, image:Image )
+		local ctrl:int = AddCtrl( CTRL_IMAGE, x,y, width,height, color )
+
+		If ctrl > -1 Then
+			_ctrlImage[ctrl] = image
+		End If
+
+		Return ctrl
+	End Method
+
+
+	method AddCustomImage:int( x:float, y:float, width:float, height:float, color:Color, image:Image )
+		local ctrl:int = AddCtrl( CTRL_IMAGE, x,y, width,height, color )
+
+		If ctrl > -1 Then
+			_ctrlImage[ctrl] = image
+			_ctrlKind[ctrl] += CTRL_CUSTOM
+		End If
+
+		Return ctrl
+	End Method
+
+
+	method AddCustomFont:int( x:float, y:float, width:float, height:float, color:Color, text:string, font:String )
+		local ctrl:int = AddFont( x,y, width,height, color, text, font )
+		If ctrl Then
+			_ctrlKind[ctrl] += CTRL_CUSTOM
+		End If
+		
+		Return ctrl
+	End Method
+	
+	
+	method AddFont:int( x:float, y:float, width:float, height:float, color:Color, text:string, font:String )
+		local ctrl:int = AddCtrl( CTRL_FONT, x,y, width,height, color )
+
+		If ctrl > -1 Then
+			_ctrlImage[ctrl] = New Image( 100, 20 )
+			local myCanvas:Canvas = New Canvas( _ctrlImage[ctrl] )
+			myCanvas.Clear( Color.None )
+			myCanvas.TextureFilteringEnabled = False
+'			myCanvas.Color = Color.Black
+'			myCanvas.DrawRect( 0,0, 100,20 )
+'			myCanvas.Color = Color.VicLime
+'			myCanvas.DrawRect( 0,0, 30,20 )
+
+			local newFont:Font = App.Theme.OpenFont( font, 14 )
+			If newFont Then
+				myCanvas.Font = newFont
+				myCanvas.Color = _textColor
+				myCanvas.DrawText( text, 50,10, 0.5,0.5 )
+			End If
+'			_ctrlImage[ctrl] = image
+
+			myCanvas.Flush()
+		End If
+
+		Return ctrl
+	End Method
+
+
+	method AddSwitch:int( x:float, y:float, width:float, height:float, color:Color )
+		local ctrl:int = AddCtrl( CTRL_SWITCH, x,y, width,height, color )
+
+		If ctrl > -1 Then _ctrlActive[ctrl] = True
+
+		Return ctrl
+	End Method
+
+
+	method AddTextSwitch:int( x:float, y:float, width:float, height:float, color:Color, text:string, align:int = ALIGN_LEFT )
+		local ctrl:int = AddCtrl( CTRL_TEXTSWITCH, x,y, width,height, color, text, align )
+
+		If ctrl > -1 Then _ctrlActive[ctrl] = True
+
+		Return ctrl
+	End Method
+
+
+	method AddText:int( x:float, y:float, color:Color, text:string, align:int = ALIGN_LEFT )
+		local ctrl:int = AddCtrl( CTRL_TEXT, x,y, 10,10, color, text, align )
+
+		Return ctrl
+	End Method
+
+
+	method AddText:int( x:float, y:float, width:float, height:float, color:Color, text:string, align:int = ALIGN_LEFT )
+		local ctrl:int = AddCtrl( CTRL_TEXT, x,y, width,height, color, text, align )
+
+		Return ctrl
+	End Method
+
+
+	method AddTextBold:int( x:float, y:float, width:float, height:float, color:Color, text:string, align:int = ALIGN_LEFT )
+		local ctrl:int = AddCtrl( CTRL_TEXTBOLD, x,y, width,height, color, text, align )
+
+		Return ctrl
+	End Method
+
+
+	method AddCheckBox:int( x:float, y:float, width:float, height:float, color:Color, text:string, align:int = ALIGN_LEFT, round:bool = False )
+		local ctrl:int
+		
+		If round Then
+			ctrl = AddCtrl( CTRL_CHECKBOXROUND, x,y, width,height, color, text, align )
+		Else
+			ctrl = AddCtrl( CTRL_CHECKBOX, x,y, width,height, color, text, align )
+		End If
+
+		If ctrl > -1 Then _ctrlActive[ctrl] = True
+
+		Return ctrl
+	End Method
+
+
+	method AddButton:int( x:float, y:float, width:float, height:float, color:Color, text:string, round:bool = False )
+		local ctrl:int
+		
+		If round Then
+			ctrl = AddCtrl( CTRL_BUTTONROUND, x,y, width,height, color, text )
+		Else
+			ctrl = AddCtrl( CTRL_BUTTON, x,y, width,height, color, text )
+		End If
+
+		If ctrl > -1 Then _ctrlActive[ctrl] = True
+
+		Return ctrl
+	End Method
+
+
+	method AddCheckButton:int( x:float, y:float, width:float, height:float, color:Color, text:string, round:bool = False )
+		local ctrl:int
+		
+		If round Then
+			ctrl = AddCtrl( CTRL_CHECKBUTTONROUND, x,y, width,height, color, text )
+		Else
+			ctrl = AddCtrl( CTRL_CHECKBUTTON, x,y, width,height, color, text )
+		End If
+
+		If ctrl > -1 Then _ctrlActive[ctrl] = True
+
+		Return ctrl
+	End Method
+
+
+	method AddImageButton:int( x:float, y:float, width:float, height:float, color:Color, text:string, image:Image, round:bool = False )
+		local ctrl:int
+		
+		If round Then
+			ctrl = AddCtrl( CTRL_IMAGEBUTTONROUND, x,y, width,height, color, text )
+		Else
+			ctrl = AddCtrl( CTRL_IMAGEBUTTON, x,y, width,height, color, text )
+		End If
+		
+		If ctrl > -1 Then
+			_ctrlImage[ctrl] = image
+			_ctrlActive[ctrl] = True
+		End If
+
+		Return ctrl
+	End Method
+
+
+	method AddPanel:int( x:float, y:float, width:float, height:float, color:Color, round:bool = False )
+		local ctrl:int
+		
+		If round Then
+			ctrl = AddCtrl( CTRL_PANELROUND, x,y, width,height, color )
+		Else
+			ctrl = AddCtrl( CTRL_PANEL, x,y, width,height, color )
+		End If
+		
+		Return ctrl
+	End Method
+
+
+	method AddCustomPanel:int( x:float, y:float, width:float, height:float, color:Color, round:bool = False )
+		local ctrl:int
+		
+		If round Then
+			ctrl = AddCtrl( CTRL_CUSTOMPANELROUND, x,y, width,height, color )
+		Else
+			ctrl = AddCtrl( CTRL_CUSTOMPANEL, x,y, width,height, color )
+		End If
+
+		Return ctrl
+	End Method
+
+
+	method AddTextPanel:int( x:float, y:float, width:float, height:float, color:Color, text:string, align:int = ALIGN_LEFT, round:bool = False )
+		local ctrl:int
+		
+		If round Then
+			ctrl = AddCtrl( CTRL_PANELTEXTROUND, x,y, width,height, color, text, align )
+		Else
+			ctrl = AddCtrl( CTRL_PANELTEXT, x,y, width,height, color, text, align )
+		End If
+		
+		Return ctrl
+	End Method
+
+	method AddPanelText:int( x:float, y:float, width:float, height:float, color:Color, text:string, align:int = ALIGN_LEFT, round:bool = False )
+		local ctrl:int
+		
+		If round Then
+			ctrl = AddCtrl( CTRL_PANELTEXTROUND, x,y, width,height, color, text, align )
+		Else
+			ctrl = AddCtrl( CTRL_PANELTEXT, x,y, width,height, color, text, align )
+		End If
+		
+		Return ctrl
+	End Method
+
+
+	method AddVFader:int( x:float, y:float, width:float, height:float, color:Color, round:bool = False )
+		local ctrl:int
+		
+		If round Then
+			ctrl = AddCtrl( CTRL_VFADERROUND, x,y, width,height, color, "" )
+		Else
+			ctrl = AddCtrl( CTRL_VFADER, x,y, width,height, color, "" )
+		End If
+
+		If ctrl > -1 Then _ctrlActive[ctrl] = True
+
+		Return ctrl
+	End Method
+
+
+	Method DrawGrid( canvas:Canvas, x:float, y:float, width:float, height:float, cellX:float, cellY:float )
+		canvas.Color = Color.LightGrey * 0.5
+
+		width -= 1
+		height -= 1
+		Local k:float
+		For k = x To x+width Step cellX
+			canvas.DrawLine( k, y, k, y+height )
+		Next
+'		If height < 0 Then cell = -cell
+		For k = y To y+height Step cellY
+			canvas.DrawLine( x, k, x+width, k )
+		Next
+		canvas.DrawLine( x, y+height, x+width, y+height )
+		canvas.DrawLine( x+width, y, x+width, y+height )
+	End
+
+
+	method DrawControls( canvas:Canvas, mouseX:int, mouseY:int, mouseDown:bool )
+		canvas.BlendMode = BlendMode.Alpha
+		
+		If _canvasWidth <> canvas.Viewport.Width Or _canvasHeight <> canvas.Viewport.Height Then
+'			Print "-drawcontrols "+_canvasHeight +" "+ canvas.Viewport.Height
+			_canvasWidth = canvas.Viewport.Width
+			_canvasHeight = canvas.Viewport.Height
+			
+			If _gridX > 0 Then
+				_cellX = float(_canvasWidth) / _gridX
+				_cellY = float(_canvasHeight) / _gridY
+				
+				LayoutToGrid()
+			Else
+				Layout()
+			End If
+		End if
+		
+		If _gridShow And _gridX > 0 Then
+			DrawGrid( canvas, 0,0, _canvasWidth, _canvasHeight, _cellX, _cellY )
+		End If
+		
+		local k:int
+
+		If _guideShow Then
+			canvas.Color = Color.Red*0.5
+			For k = 0 To _ctrlCount
+				If _ctrlPage[k] = 0 Or _ctrlPage[k] = _currentPage Then
+					canvas.DrawFrame( _ctrlX0[k], _ctrlY0[k], _ctrlWidth[k], _ctrlHeight[k] )
+				End If
+			Next
+		End If
+			
+		For k = 0 To _ctrlCount
+			If (_ctrlPage[k] = 0 Or _ctrlPage[k] = _currentPage) And _ctrlVisible[k] Then
+				If _ctrlEnabled[k] Then
+					canvas.Alpha = 1
+				Else
+					canvas.Alpha = 0.3
+				End If
+					
+				Select _ctrlKind[k]
+					Case CTRL_BUTTON, CTRL_IMAGEBUTTON, CTRL_BUTTONROUND, CTRL_IMAGEBUTTONROUND
+						DrawButton( canvas, k, mouseX, mouseY, mouseDown )
+	
+					Case CTRL_CHECKBUTTON, CTRL_CHECKBUTTONROUND
+						DrawCheckButton( canvas, k, mouseX, mouseY, mouseDown )
+
+					Case CTRL_SWITCH
+						DrawSwitch( canvas, k, mouseX, mouseY, mouseDown )
+
+					Case CTRL_TEXTSWITCH
+						DrawTextSwitch( canvas, k, mouseX, mouseY, mouseDown )
+
+					Case CTRL_GRID
+						DrawGrid( canvas, k, mouseX, mouseY, mouseDown )
+
+					Case CTRL_CUSTOMGRID
+						DrawCustomGrid( canvas, k, mouseX, mouseY, mouseDown )
+
+					Case CTRL_CHECKBOX, CTRL_CHECKBOXROUND
+						DrawCheckbox( canvas, k, mouseX, mouseY, mouseDown )
+
+					Case CTRL_VFADER, CTRL_VFADERROUND
+						DrawVFader( canvas, k, mouseX, mouseY, mouseDown )
+	
+					Case CTRL_TABLIST
+						DrawTabList( canvas, k, mouseX, mouseY, mouseDown )
+	
+					Case CTRL_LIST, CTRL_LISTROUND
+						DrawList( canvas, k, mouseX, mouseY, mouseDown )
+	
+					Case CTRL_CUSTOMLIST, CTRL_CUSTOMLISTROUND
+						DrawCustomList( canvas, k, mouseX, mouseY, mouseDown )
+	
+					Case CTRL_PANEL, CTRL_PANELROUND
+						DrawPanel( canvas, k )
+
+					Case CTRL_PANELTEXT, CTRL_PANELTEXTROUND
+						DrawPanelText( canvas, k )
+	
+					Case CTRL_FONT
+						DrawFont( canvas, k )
+
+					Case CTRL_IMAGE
+						DrawImage( canvas, k )
+
+					Case CTRL_TEXT
+						DrawText( canvas, k )
+	
+					Case CTRL_TEXTBOLD
+						DrawTextBold( canvas, k )
+						
+					Default
+						If _ctrlKind[k] > CTRL_CUSTOM Then
+							OnDraw( canvas, k, _ctrlX0[k], _ctrlY0[k], _ctrlWidth[k], _ctrlHeight[k], _ctrlColor[k], _ctrlBorder[k] )
+						End If
+				End
+			End If
+		Next
+
+		If mouseDown And Not _prevMouseDown And _ctrlOver > -1 Then
+			If _ctrlActive[_ctrlOver] And _ctrlEnabled[_ctrlOver] Then
+				If _ctrlPage[_ctrlOver] = 0 Or _currentPage = _ctrlPage[_ctrlOver] Then
+					Select _ctrlKind[_ctrlOver]
+						Case CTRL_CHECKBOX, CTRL_CHECKBOXROUND, CTRL_SWITCH, CTRL_TEXTSWITCH, CTRL_CHECKBUTTON, CTRL_CHECKBUTTONROUND
+'							Print "check "+_ctrlOver+" "+GetCheck( _ctrlOver )
+							SetCheck( _ctrlOver, Not GetCheck( _ctrlOver ) )
+					End Select
+					
+					Clicked( _ctrlOver )
+				End If
+			End If
+		End If
+			
+		_prevMouseDown = mouseDown
+	End method
+
+
+	method Over:bool( mx:int, my:int )
+		'are we on the same page?
+		local pageOK:bool = False
+		
+		If _ctrlOver > -1 Then
+			If _ctrlPage[_ctrlOver] = 0 Or _ctrlPage[_ctrlOver] = _currentPage Then pageOK = True
+		
+			'are we over the previous control?
+			If mx > _ctrlX0[_ctrlOver] And mx < _ctrlX1[_ctrlOver] And my > _ctrlY0[_ctrlOver] And my < _ctrlY1[_ctrlOver] Then
+				Return Not pageOK
+			End If
+		End If
+
+		'check if we are over any controls
+		local k:int
+		_ctrlOver = -1
+		For k = 0 To _ctrlCount
+			If mx > _ctrlX0[k] And mx < _ctrlX1[k] And my > _ctrlY0[k] And my < _ctrlY1[k] Then
+				If _ctrlPage[k] = 0 Or _ctrlPage[k] = _currentPage Then
+					If _ctrlVisible[k] And _ctrlActive[k] And _ctrlEnabled[k] Then
+						_ctrlOver = k
+						Return True
+					End If
+				End If
+			End If
+		Next
+		
+		Return True
+	End Method
+	
+	
+private
+
+	method AddCtrl:int( kind:int, x:float, y:float, width:float, height:float, color:Color, text:string = "", align:int = ALIGN_LEFT )
+		local ctrl:int = GetFree()
+		If ctrl = -1 Then Return -1
+		
+		_ctrlBorder[ctrl] = 0
+
+		_x[ctrl] = x
+		_y[ctrl] = y
+		_width[ctrl] = width
+		_height[ctrl] = height
+		
+		LayoutCtrl( ctrl )
+
+		_ctrlPage[ctrl] = _currentPage
+
+		_ctrlColor[ctrl] = color
+		_ctrlText[ctrl] = text
+		_ctrlTextAlign[ctrl] = align
+
+		_ctrlKind[ctrl] = kind
+		
+		_ctrlActive[ctrl] = False
+		_ctrlEnabled[ctrl] = true
+		_ctrlVisible[ctrl] = True
+		
+		_ctrlItemCount[ctrl] = -1
+		_ctrlItemSelected[ctrl] = 0
+		
+		Return ctrl
+	End method
+
+
+	method GetFree:int()
+		If _ctrlCount = -1 Then
+			_ctrlCount = 0
+			Return 0
+		End If
+		
+		local k:int
+		For k = 0 To _ctrlCount
+			If _ctrlKind[k] = CTRL_NULL Then Return k
+		Next
+		
+		If _ctrlCount < CONTROL_MAX-1 Then
+			_ctrlCount += 1
+			Return _ctrlCount
+		End If
+		
+		Return -1
+	End Method
+
+
+
+	method LayoutToGrid()
+'		Print "-layouttogrid"
+		local k:int
+		For k = 0 To _ctrlCount
+			LayoutGridCtrl( k )
+		Next
+	End Method
+	
+	
+	method LayoutGridCtrl( ctrl:int )
+		If ctrl < 0 Then Return
+		
+		local border:int = _ctrlBorder[ctrl] * _scale
+		local inset:int = _gridInset * _scale
+		local inset2:int = _gridInset * _scale * 2
+		
+		local x:float = _x[ctrl] * _cellX'_scale
+		local y:float = _y[ctrl] * _cellY'_scale
+		local width:float = _width[ctrl] * _cellX'_scale
+		local height:float = _height[ctrl] * _cellY'_scale
+		
+		x += inset
+		y += inset
+		width -= inset2
+		height -= inset2
+
+		If _width[ctrl] = -1 Then width = _canvasWidth - x
+		If _height[ctrl] = -1 Then height = _canvasHeight - y
+
+		_ctrlX0[ctrl] = x
+		_ctrlY0[ctrl] = y
+		_ctrlX1[ctrl] = x + width
+		_ctrlY1[ctrl] = y + height
+		
+		_ctrlMidX[ctrl] = x + width * 0.5
+		_ctrlMidY[ctrl] = y + height * 0.5
+		
+		_ctrlWidth[ctrl] = width
+		_ctrlHeight[ctrl] = height
+
+		Select _ctrlKind[ctrl]
+			Case CTRL_GRID, CTRL_CUSTOMGRID
+				_ctrlCellX[ctrl] = width / _ctrlGridX[ctrl]
+				_ctrlCellY[ctrl] = height / _ctrlGridY[ctrl]
+		End Select
+	End Method
+
+
+	method Layout()
+'		Print "-layout"
+		If _gridX > -1 Then
+			LayoutToGrid()
+			Return
+		End If
+		
+		local k:int
+		For k = 0 To _ctrlCount
+			LayoutCtrl( k )
+		Next
+	End Method
+	
+	
+	method LayoutCtrl( ctrl:int )
+		If ctrl < 0 Then Return
+		
+		local border:int = _ctrlBorder[ctrl] * _scale
+		
+		local x:float = _x[ctrl] * _scale
+		local y:float = _y[ctrl] * _scale
+		local width:float = _width[ctrl] * _scale
+		local height:float = _height[ctrl] * _scale
+
+		If _width[ctrl] = -1 Then width = _canvasWidth - x
+		If _height[ctrl] = -1 Then height = _canvasHeight - y
+
+		_ctrlX0[ctrl] = x
+		_ctrlY0[ctrl] = y
+		_ctrlX1[ctrl] = x + width
+		_ctrlY1[ctrl] = y + height
+		
+		_ctrlMidX[ctrl] = x + width * 0.5
+		_ctrlMidY[ctrl] = y + height * 0.5
+		
+		_ctrlWidth[ctrl] = width
+		_ctrlHeight[ctrl] = height
+		
+		Select _ctrlKind[ctrl]
+			Case CTRL_GRID, CTRL_CUSTOMGRID
+				_ctrlCellX[ctrl] = width / _ctrlGridX[ctrl]
+				_ctrlCellY[ctrl] = height / _ctrlGridY[ctrl]
+		End Select
+	End Method
+	
+
+
+	method DrawTabList( canvas:Canvas, ctrl:int, mouseX:int, mouseY:int, mouseDown:bool )
+		local mx:int = mouseX
+		local my:int = mouseY
+		local down:int = mouseDown
+		
+		canvas.Color = _ctrlColor[ctrl]
+		canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl] )
+
+'		DrawListBase( canvas, ctrl, mouseX, mouseY, mouseDown )
+
+'		local ypos:int = _ctrlValue[ctrl] * _scale
+		local border:int = _ctrlBorder[ctrl] * _scale
+		local x:int = _ctrlX0[ctrl] + border + 10*_scale
+		
+		local scale8:int = _scale * 8
+		local scale14:int = _scale * 14
+		local scale16:int = _scale * 16
+'
+		local items:List<String> = _ctrlStrings[ctrl]
+		local str:String
+		local width:int
+		local item:int = 0
+		canvas.Color = Color.LightGrey
+		For str = Eachin items
+			width = canvas.Font.TextWidth( str )
+			
+			If mouseX > x-scale8 And mouseX < x+width+scale8 And mouseY > _ctrlY0[ctrl] And mouseY < _ctrlY1[ctrl] Then
+				canvas.Color = _overColor * 0.7
+				canvas.DrawRect( x-scale8, _ctrlY0[ctrl], width+scale14, _ctrlHeight[ctrl])
+				If mouseDown Then
+					_ctrlItemSelected[ctrl] = item
+				End If
+			End If
+
+			If item = _ctrlItemSelected[ctrl] = 1 Then
+				canvas.Color = _overColor
+				canvas.DrawRect( x-scale8, _ctrlY0[ctrl], width+scale14, _ctrlHeight[ctrl])
+				canvas.Color = Color.Silver
+				canvas.DrawText( str, x, _ctrlMidY[ctrl], 0, 0.5 )
+				canvas.DrawText( str, x+1, _ctrlMidY[ctrl], 0, 0.5 )
+			Else
+				canvas.Color = _textColor * 0.35
+				canvas.DrawRect( x-scale8, _ctrlY0[ctrl], width+scale14, _ctrlHeight[ctrl])
+				canvas.Color = Color.LightGrey
+				canvas.DrawText( str, x, _ctrlMidY[ctrl], 0, 0.5 )
+			End If
+			
+			x += width + scale16
+			item += 1
+		End
+	End method
+
+
+	method DrawListBase( canvas:Canvas, ctrl:int, mouseX:int, mouseY:int, mouseDown:bool )
+		local mx:int = mouseX
+		local my:int = mouseY
+		local down:int = mouseDown
+		
+		canvas.Color = _ctrlColor[ctrl]
+		Select _ctrlKind[ctrl]
+			Case CTRL_LISTROUND, CTRL_CUSTOMLISTROUND
+				canvas.DrawRoundedRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl], 5 )
+			Default
+				canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl] )
+		End Select
+		
+		OnDraw( canvas, ctrl, _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl], _ctrlColor[ctrl], _ctrlBorder[ctrl] )
+
+		local ypos:int = _ctrlValue[ctrl] * _scale
+		local border:int = _ctrlBorder[ctrl] * _scale
+		If _ctrlItemSelected[ctrl] > -1 Then
+			canvas.Color = _overColor * 0.8
+			canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl]+border + (ypos * _ctrlItemSelected[ctrl]), _ctrlWidth[ctrl], ypos )
+		End If
+		If ctrl = _ctrlOver And _ctrlEnabled[ctrl] Then
+			local over:int = Clamp( (mouseY-(_ctrlY0[ctrl]+border)) / ypos, 0, _ctrlItemCount[ctrl]-1 )
+			canvas.Color = _overColor * 0.6
+			canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl]+border + (ypos * over), _ctrlWidth[ctrl], ypos )
+			If mouseDown Then
+				_ctrlItemSelected[ctrl] = over
+			End If
+		End If
+	End Method
+	
+	
+	method DrawList( canvas:Canvas, ctrl:int, mouseX:int, mouseY:int, mouseDown:bool )
+		DrawListBase( canvas, ctrl, mouseX, mouseY, mouseDown )
+
+		local ypos:int = _ctrlValue[ctrl] * _scale
+		local border:int = _ctrlBorder[ctrl] * _scale
+		local y:int = _ctrlY0[ctrl] + border
+		local x:int = _ctrlX0[ctrl] + border
+
+		local items:List<String> = _ctrlStrings[ctrl]
+		local str:String
+'		canvas.Color = Color.LightGrey
+		canvas.Color = _textColor * 0.8
+		For str = Eachin items
+			canvas.DrawText( str, x,y )
+			y += ypos
+		End
+	End method
+
+
+	method DrawCustomList( canvas:Canvas, ctrl:int, mouseX:int, mouseY:int, mouseDown:bool )
+		DrawListBase( canvas, ctrl, mouseX, mouseY, mouseDown )
+
+		local ypos:int = _ctrlValue[ctrl] * _scale
+		local border:int = _ctrlBorder[ctrl] * _scale
+		local y:int = _ctrlY0[ctrl] + border
+
+		local k:int
+		For k = 0 To _ctrlItemCount[ctrl] - 1
+			OnDrawItem( canvas, ctrl, k, k = _ctrlItemSelected[ctrl], _ctrlX0[ctrl], y, _ctrlWidth[ctrl], ypos, border )
+			y += ypos
+		Next
+	End method
+
+
+	method DrawVFader( canvas:Canvas, ctrl:int, mouseX:int, mouseY:int, mouseDown:bool )
+		local mx:int = mouseX
+		local my:int = mouseY
+		local down:int = mouseDown
+		
+		canvas.Color = _ctrlColor[ctrl]
+		If _ctrlKind[ctrl] = CTRL_VFADERROUND Then
+			canvas.DrawRoundedRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl], 5 )
+		Else
+			canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl] )
+		End If
+		
+		local mdx:int = _ctrlMidX[ctrl]
+		local w1:int = _ctrlWidth[ctrl]*0.1
+		local w2:int = w1*2
+		local w4:int = w1*4
+		local w8:int = w1*8
+		
+		local vl:int = _ctrlHeight[ctrl]-w8
+		
+		canvas.Color = Color.Black * 0.7
+		canvas.DrawRect( mdx-w1, _ctrlY0[ctrl]+w4, w2,_ctrlHeight[ctrl]-w8 )
+		
+		canvas.LineWidth = 3 * _scale
+		canvas.Color = _overColor * 0.9
+		If _ctrlKind[ctrl] = CTRL_VFADERROUND Then
+			canvas.DrawFrameRoundedRect( _ctrlX0[ctrl], _ctrlY1[ctrl]-w8-(vl*_ctrlValue[ctrl]), _ctrlWidth[ctrl], w8, 6 )
+		Else
+			canvas.DrawFrame( _ctrlX0[ctrl], _ctrlY1[ctrl]-w8-(vl*_ctrlValue[ctrl]), _ctrlWidth[ctrl], w8 )
+		End If
+		canvas.Color = _overColor
+		canvas.DrawRect( mdx-w1, _ctrlY1[ctrl]-w4, w2,-(_ctrlHeight[ctrl]-w8)*_ctrlValue[ctrl] )
+		canvas.LineWidth = 1
+
+		If ctrl = _ctrlOver And _ctrlEnabled[ctrl] Then
+			canvas.Color = _overColor * 0.7
+			canvas.DrawRect( _ctrlX0[ctrl], _ctrlY1[ctrl]-w8-(vl*_ctrlValue[ctrl]), _ctrlWidth[ctrl], w8 )
+
+			local val:float = 0
+			If my > _ctrlY1[ctrl]-w4 Then
+				val = 0
+			Else If my < _ctrlY0[ctrl]+w4 Then
+				val = 1
+			Else
+				val = 1 - (float(my - (_ctrlY0[ctrl]+w4)) / (_ctrlHeight[ctrl]-w8))
+			End If
+			
+			If down And val <> _ctrlValue[ctrl] Then
+				_ctrlValue[ctrl] = val
+				Clicked( ctrl )
+			End If
+		End If
+	End method
+
+
+	method DrawButton( canvas:Canvas, ctrl:int, mouseX:int, mouseY:int, mouseDown:bool )
+		local mx:int = mouseX
+		local my:int = mouseY
+		local down:int = mouseDown
+		
+'		Print _ctrlX0[ctrl] +" "+ _ctrlY0[ctrl]
+		
+		canvas.Color = _ctrlColor[ctrl]
+		Select _ctrlKind[ctrl]
+			Case CTRL_BUTTONROUND, CTRL_IMAGEBUTTONROUND
+				canvas.DrawRoundedRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl], 5 )
+			Default
+				canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl] )
+		End Select
+
+		If ctrl = _ctrlOver And _ctrlEnabled[ctrl] Then
+			If down Then 'pressed button
+				canvas.Color = Color.Black
+			Else ' highlighted button
+				If _overColor Then
+					canvas.Color = _overColor
+				Else
+					canvas.Color = Color.White
+				End If
+			End If
+		 
+			canvas.Alpha = 0.5
+			Select _ctrlKind[ctrl]
+				Case CTRL_BUTTONROUND, CTRL_IMAGEBUTTONROUND
+					canvas.DrawRoundedRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl], 5 )
+				Default
+					canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl] )
+			End Select
+			canvas.Alpha = 1
+		End If
+
+		canvas.Color = Color.White
+		If _ctrlImage[ctrl] Then
+			canvas.DrawRect( _ctrlMidX[ctrl]-_ctrlHeight[ctrl]*0.5+_ctrlBorder[ctrl], _ctrlY0[ctrl]+_ctrlBorder[ctrl],  _ctrlHeight[ctrl]-_ctrlBorder[ctrl]*2, _ctrlHeight[ctrl]-_ctrlBorder[ctrl]*2, _ctrlImage[ctrl] )
+		End If
+
+		canvas.Color = _textColor
+		If _ctrlText[ctrl] <> "" Then
+			canvas.DrawText( _ctrlText[ctrl],  _ctrlMidX[ctrl], _ctrlMidY[ctrl],  0.5,0.5 )
+		End If
+	End method
+
+
+	method DrawCheckButton( canvas:Canvas, ctrl:int, mouseX:int, mouseY:int, mouseDown:bool )
+		local mx:int = mouseX
+		local my:int = mouseY
+		local down:int = mouseDown
+		
+		canvas.Color = _ctrlColor[ctrl]
+		
+		Select _ctrlKind[ctrl]
+			Case CTRL_CHECKBUTTONROUND
+				canvas.DrawRoundedRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl], 5 )
+			Default
+				canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl] )
+		End Select
+
+		If _ctrlItemSelected[ctrl] = 1 Then
+			canvas.Color = _overColor * 0.8
+			Select _ctrlKind[ctrl]
+				Case CTRL_CHECKBUTTONROUND
+					canvas.DrawRoundedRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl], 5 )
+				Default
+					canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl] )
+			End Select
+		End If
+
+		If ctrl = _ctrlOver And _ctrlEnabled[ctrl] Then
+			If down Then 'pressed button
+				canvas.Color = Color.Black
+			Else ' highlighted button
+				If _overColor Then
+					canvas.Color = _overColor
+				Else
+					canvas.Color = Color.White
+				End If
+			End If
+		 
+			canvas.Alpha = 0.5
+			Select _ctrlKind[ctrl]
+				Case CTRL_CHECKBUTTONROUND
+					canvas.DrawRoundedRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl], 5 )
+				Default
+					canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl] )
+			End Select
+			canvas.Alpha = 1
+		End If
+
+		canvas.Color = Color.White
+		If _ctrlImage[ctrl] Then
+			canvas.DrawRect( _ctrlMidX[ctrl]-_ctrlHeight[ctrl]*0.5+_ctrlBorder[ctrl], _ctrlY0[ctrl]+_ctrlBorder[ctrl],  _ctrlHeight[ctrl]-_ctrlBorder[ctrl]*2, _ctrlHeight[ctrl]-_ctrlBorder[ctrl]*2, _ctrlImage[ctrl] )
+		End If
+
+		canvas.Color = _textColor
+		If _ctrlText[ctrl] <> "" Then
+			canvas.DrawText( _ctrlText[ctrl],  _ctrlMidX[ctrl], _ctrlMidY[ctrl],  0.5,0.5 )
+		End If
+	End method
+
+
+	method DrawGrid( canvas:Canvas, ctrl:int, mouseX:int, mouseY:int, mouseDown:bool )
+		local mx:int = mouseX
+		local my:int = mouseY
+		local down:int = mouseDown
+		
+		local gx:float = _ctrlX0[ctrl]
+		local gy:float = _ctrlY0[ctrl]
+		local cellX:float = _ctrlCellX[ctrl]
+		local cellY:float = _ctrlCellY[ctrl]
+
+		canvas.Color = _ctrlColor[ctrl]
+		canvas.DrawRect( gx,gy, _ctrlWidth[ctrl], _ctrlHeight[ctrl] )
+
+		local overX:int = -1
+		local overY:int
+		If ctrl = _ctrlOver And _ctrlEnabled[ctrl] Then
+			overX = (mx-_ctrlX0[ctrl]) / _ctrlCellX[ctrl]
+			overY = (my-_ctrlY0[ctrl]) / _ctrlCellY[ctrl]
+		End If
+
+		local item:int = 0
+		local x:Int
+		local y:Int
+		For y = 0 To _ctrlGridY[ctrl]-1
+			gx = _ctrlX0[ctrl]
+			For x = 0 To _ctrlGridX[ctrl]-1
+				canvas.Color = Color.LightGrey * 0.3
+				canvas.DrawFrame( gx, gy, cellX, cellY )
+				
+				If item = _ctrlItemSelected[ctrl] Then
+					canvas.Color = _overColor
+					canvas.LineWidth = 4 * _scale
+					canvas.DrawFrame( gx, gy, cellX, cellY )
+					canvas.LineWidth = 1
+				End If
+				
+				If overX > -1 Then
+					If overX = x And overY = y Then
+						canvas.Color = _overColor * 0.6
+						canvas.DrawRect( gx, gy, cellX, cellY )
+						
+						If mouseDown Then
+							_ctrlItemSelected[ctrl] = Clamp( item, 0, _ctrlItemCount[ctrl] )
+						End If
+					End If
+				End If
+				gx += cellX
+				item += 1
+			Next
+			gy += cellY
+		Next
+	End method
+
+
+	method DrawCustomGrid( canvas:Canvas, ctrl:int, mouseX:int, mouseY:int, mouseDown:bool )
+		local mx:int = mouseX
+		local my:int = mouseY
+		local down:int = mouseDown
+		
+		local gx:float = _ctrlX0[ctrl]
+		local gy:float = _ctrlY0[ctrl]
+		local cellX:float = _ctrlCellX[ctrl]
+		local cellY:float = _ctrlCellY[ctrl]
+
+		OnDraw( canvas, ctrl, gx,gy, _ctrlWidth[ctrl], _ctrlHeight[ctrl], _ctrlColor[ctrl], _ctrlBorder[ctrl] )
+
+		local overX:int = -1
+		local overY:int
+		If ctrl = _ctrlOver And _ctrlEnabled[ctrl] Then
+			overX = (mx-_ctrlX0[ctrl]) / _ctrlCellX[ctrl]
+			overY = (my-_ctrlY0[ctrl]) / _ctrlCellY[ctrl]
+		End If
+
+		local item:int = 0
+		local x:Int
+		local y:Int
+		For y = 0 To _ctrlGridY[ctrl]-1
+			gx = _ctrlX0[ctrl]
+			For x = 0 To _ctrlGridX[ctrl]-1
+				If item <= _ctrlItemCount[ctrl] Then
+					OnDrawItem( canvas, ctrl, item, item = _ctrlItemSelected[ctrl], gx, gy, cellX, cellY, _ctrlBorder[ctrl] )
+				End If
+				
+				If item = _ctrlItemSelected[ctrl] Then
+					canvas.Color = _overColor
+					canvas.LineWidth = 4 * _scale
+					canvas.DrawFrame( gx-1, gy-1, cellX, cellY )
+					canvas.LineWidth = 1
+				End If
+
+				If overX > -1 Then
+					If overX = x And overY = y Then
+						canvas.Color = _overColor * 0.6
+						canvas.DrawRect( gx, gy, cellX, cellY )
+
+						If mouseDown Then
+							_ctrlItemSelected[ctrl] = Clamp( item, 0, _ctrlItemCount[ctrl] )
+						End If
+					End If
+				End If
+				gx += cellX
+				item += 1
+			Next
+			gy += cellY
+		Next
+	End method
+
+
+	method DrawTextSwitch( canvas:Canvas, ctrl:int, mouseX:int, mouseY:int, mouseDown:bool )
+		If _ctrlText[ctrl] = "" Then Return
+
+		local mx:int = mouseX
+		local my:int = mouseY
+		local down:int = mouseDown
+
+		local x0:int = _ctrlX0[ctrl]
+		local x1:int = _ctrlX1[ctrl]
+		local y0:int = _ctrlY0[ctrl]
+		local height:int = _ctrlHeight[ctrl]
+
+		canvas.Color = _textColor
+		Select _ctrlTextAlign[ctrl]
+			Case ALIGN_LEFT
+				canvas.DrawText( _ctrlText[ctrl],  _ctrlX0[ctrl]+_ctrlBorder[ctrl], _ctrlMidY[ctrl],  0,0.5 )
+				x0 = x1 - height-height
+
+			Case ALIGN_RIGHT
+				canvas.DrawText( _ctrlText[ctrl],  _ctrlX1[ctrl]-_ctrlBorder[ctrl], _ctrlMidY[ctrl],  1,0.5 )
+		End Select
+
+		DrawCoreSwitch( canvas, ctrl, x0, y0, height )
+	End Method
+	
+	
+	method DrawSwitch( canvas:Canvas, ctrl:int, mouseX:int, mouseY:int, mouseDown:bool )
+		local x0:int = _ctrlX0[ctrl]
+		local y0:int = _ctrlY0[ctrl]
+		local height:int = _ctrlHeight[ctrl]
+		
+		DrawCoreSwitch( canvas, ctrl, x0, y0, height )
+	End method
+	
+	
+	
+	method DrawCoreSwitch( canvas:Canvas, ctrl:int, x0:int, y0:int, height:int )
+		If GetCheck( ctrl ) Then
+'			canvas.Color = _overColor * 0.7
+			canvas.Color = _ctrlColor[ctrl] * 0.8
+			canvas.DrawRoundedRect( x0,y0,height * 1.75,height, height*0.45 )
+
+			If ctrl = _ctrlOver And _ctrlEnabled[ctrl] Then
+				canvas.Color = _overColor
+			Else
+'				canvas.Color = _ctrlColor[ctrl]
+				canvas.Color = _textColor
+			End If
+			canvas.DrawCircle( x0+height*1.25, _ctrlMidY[ctrl], height*0.375 )
+		Else
+	 		canvas.Color = Color.Black * 0.3
+			canvas.DrawRoundedRect( x0,y0,height * 1.75,height, height*0.45 )
+
+			If ctrl = _ctrlOver And _ctrlEnabled[ctrl] Then
+				canvas.Color = _overColor
+			Else
+'				canvas.Color = _ctrlColor[ctrl]
+				canvas.Color = _textColor
+			End If
+			canvas.DrawCircle( x0+height*0.5, _ctrlMidY[ctrl], height*0.375 )
+		End If
+	End method
+	
+
+	method DrawCheckbox( canvas:Canvas, ctrl:int, mouseX:int, mouseY:int, mouseDown:bool )
+		local mx:int = mouseX
+		local my:int = mouseY
+		local down:int = mouseDown
+		
+		canvas.Color = _ctrlColor[ctrl]
+
+		If GetCheck( ctrl ) Then
+			canvas.Color = _overColor * 0.8
+		End if
+
+		local x0:int
+		local y0:int
+		local width:int
+		local height:int
+		
+		y0 = _ctrlY0[ctrl] + _ctrlBorder[ctrl]
+		width = _ctrlHeight[ctrl] - _ctrlBorder[ctrl] - _ctrlBorder[ctrl]
+		height = _ctrlHeight[ctrl] - _ctrlBorder[ctrl] - _ctrlBorder[ctrl]
+		If _ctrlTextAlign[ctrl] = ALIGN_LEFT Then
+			x0 = _ctrlX0[ctrl] + _ctrlBorder[ctrl]
+		Else
+			x0 = _ctrlX1[ctrl] - _ctrlBorder[ctrl]-width
+		End If
+
+		Select _ctrlKind[ctrl]
+			Case CTRL_CHECKBOXROUND
+				canvas.DrawRoundedRect( x0,y0,width,height, 5 )
+			Default
+				canvas.DrawRect( x0,y0,width,height )
+		End Select
+
+		If ctrl = _ctrlOver And _ctrlEnabled[ctrl] Then
+			If down Then 'pressed button
+				canvas.Color = Color.Black
+			Else ' highlighted button
+				If _overColor Then
+					canvas.Color = _overColor
+				Else
+					canvas.Color = Color.White
+				End If
+			End If
+			
+			canvas.Alpha = 0.5
+			Select _ctrlKind[ctrl]
+				Case CTRL_CHECKBOXROUND
+					canvas.DrawRoundedRect( x0,y0,width,height, 5 )
+				Default
+					canvas.DrawRect( x0,y0,width,height )
+			End Select
+			canvas.Alpha = 1
+		End If
+
+		canvas.Color = _textColor
+		If _ctrlText[ctrl] <> "" Then
+			If _ctrlTextAlign[ctrl] = ALIGN_LEFT Then
+				canvas.DrawText( _ctrlText[ctrl],  _ctrlX0[ctrl]+_ctrlHeight[ctrl]*1.5, _ctrlMidY[ctrl],  0,0.5 )
+			Else
+				canvas.DrawText( _ctrlText[ctrl],  x0-_ctrlHeight[ctrl]*0.5, _ctrlMidY[ctrl],  1,0.5 )
+			End If
+		End If
+
+		If GetCheck( ctrl ) Then
+			local quarter:float = _ctrlHeight[ctrl]*0.25
+			local third:float = _ctrlHeight[ctrl]*0.4
+			local half:float = _ctrlHeight[ctrl]*0.5
+			x0 -= quarter * 0.4
+			canvas.LineWidth = 2 * _scale
+			canvas.DrawLine( x0+quarter, _ctrlMidY[ctrl], x0+third, _ctrlY1[ctrl]-quarter )
+			canvas.DrawLine( x0+third, _ctrlY1[ctrl]-quarter, x0+half+quarter, _ctrlY0[ctrl]+quarter )
+			canvas.LineWidth = 1
+		End if
+	End method
+
+
+	method DrawFont( canvas:Canvas, ctrl:int )
+		canvas.Color = _ctrlColor[ctrl]
+
+		If _ctrlImage[ctrl] Then
+			canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl],  _ctrlWidth[ctrl], _ctrlHeight[ctrl], _ctrlImage[ctrl] )
+		End If
+	End method
+
+
+	method DrawImage( canvas:Canvas, ctrl:int )
+		canvas.Color = _ctrlColor[ctrl]
+
+		If _ctrlImage[ctrl] Then
+'			canvas.DrawRect( _ctrlMidX[ctrl]-_ctrlHeight[ctrl]*0.5, _ctrlY0[ctrl],  _ctrlHeight[ctrl], _ctrlHeight[ctrl], _ctrlImage[ctrl] )
+			canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl],  _ctrlWidth[ctrl], _ctrlHeight[ctrl], _ctrlImage[ctrl] )
+		End If
+	End method
+
+
+	method DrawPanel( canvas:Canvas, ctrl:int )
+		canvas.Color = _ctrlColor[ctrl]
+		Select _ctrlKind[ctrl]
+			Case CTRL_PANELROUND
+				canvas.DrawRoundedRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl], 5 )
+			Default
+				canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl] )
+		End Select
+
+
+		canvas.Color = Color.White
+		If _ctrlImage[ctrl] Then
+			canvas.DrawRect( _ctrlMidX[ctrl]-_ctrlHeight[ctrl]*0.5, _ctrlY0[ctrl],  _ctrlHeight[ctrl], _ctrlHeight[ctrl], _ctrlImage[ctrl] )
+		End If
+	End method
+
+
+	method DrawPanelText( canvas:Canvas, ctrl:int )
+		canvas.Color = _ctrlColor[ctrl]
+		Select _ctrlKind[ctrl]
+			Case CTRL_PANELTEXTROUND
+				canvas.DrawRoundedRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl], 5 )
+			Default
+				canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl] )
+		End Select
+
+
+		canvas.Color = Color.White
+		If _ctrlImage[ctrl] Then
+			canvas.DrawRect( _ctrlMidX[ctrl]-_ctrlHeight[ctrl]*0.5, _ctrlY0[ctrl],  _ctrlHeight[ctrl], _ctrlHeight[ctrl], _ctrlImage[ctrl] )
+		End If
+
+		canvas.Color = _textColor
+		If _ctrlText[ctrl] <> "" Then
+			Select _ctrlTextAlign[ctrl]
+				Case ALIGN_LEFT
+					canvas.DrawText( _ctrlText[ctrl],  _ctrlX0[ctrl]+_ctrlBorder[ctrl], _ctrlMidY[ctrl],  0,0.5 )
+					canvas.DrawText( _ctrlText[ctrl],  _ctrlX0[ctrl]+_ctrlBorder[ctrl]+1, _ctrlMidY[ctrl],  0,0.5 )
+
+				Case ALIGN_RIGHT
+					canvas.DrawText( _ctrlText[ctrl],  _ctrlX1[ctrl]-_ctrlBorder[ctrl], _ctrlMidY[ctrl],  1,0.5 )
+					canvas.DrawText( _ctrlText[ctrl],  _ctrlX1[ctrl]-_ctrlBorder[ctrl]+1, _ctrlMidY[ctrl],  1,0.5 )
+
+				Case ALIGN_CENTER
+					canvas.DrawText( _ctrlText[ctrl],  _ctrlMidX[ctrl], _ctrlMidY[ctrl],  0.5,0.5 )
+					canvas.DrawText( _ctrlText[ctrl],  _ctrlMidX[ctrl]+1, _ctrlMidY[ctrl],  0.5,0.5 )
+			End Select
+		End If
+	End method
+
+
+	method DrawText( canvas:Canvas, ctrl:int )
+		If _ctrlText[ctrl] = "" Then Return
+
+		canvas.Color = _ctrlColor[ctrl]
+'		canvas.DrawText( _ctrlText[ctrl],  _ctrlMidX[ctrl], _ctrlMidY[ctrl] )',  0.5,0.5 )
+		Select _ctrlTextAlign[ctrl]
+			Case ALIGN_LEFT
+				canvas.DrawText( _ctrlText[ctrl],  _ctrlX0[ctrl]+_ctrlBorder[ctrl], _ctrlMidY[ctrl],  0,0.5 )
+			Case ALIGN_RIGHT
+				canvas.DrawText( _ctrlText[ctrl],  _ctrlX1[ctrl]-_ctrlBorder[ctrl], _ctrlMidY[ctrl],  1,0.5 )
+			Case ALIGN_CENTER
+				canvas.DrawText( _ctrlText[ctrl],  _ctrlMidX[ctrl], _ctrlMidY[ctrl],  0.5,0.5 )
+		End Select
+	End method
+
+
+	method DrawTextBold( canvas:Canvas, ctrl:int )
+		If _ctrlText[ctrl] = "" Then Return
+
+		canvas.Color = _ctrlColor[ctrl]
+		If _ctrlText[ctrl] <> "" Then
+			Select _ctrlTextAlign[ctrl]
+				Case ALIGN_LEFT
+					canvas.DrawText( _ctrlText[ctrl],  _ctrlX0[ctrl]+_ctrlBorder[ctrl], _ctrlMidY[ctrl],  0,0.5 )
+					canvas.DrawText( _ctrlText[ctrl],  _ctrlX0[ctrl]+_ctrlBorder[ctrl]+1, _ctrlMidY[ctrl],  0,0.5 )
+
+				Case ALIGN_RIGHT
+					canvas.DrawText( _ctrlText[ctrl],  _ctrlX1[ctrl]-_ctrlBorder[ctrl], _ctrlMidY[ctrl],  1,0.5 )
+					canvas.DrawText( _ctrlText[ctrl],  _ctrlX1[ctrl]-_ctrlBorder[ctrl]+1, _ctrlMidY[ctrl],  1,0.5 )
+
+				Case ALIGN_CENTER
+					canvas.DrawText( _ctrlText[ctrl],  _ctrlMidX[ctrl], _ctrlMidY[ctrl],  0.5,0.5 )
+					canvas.DrawText( _ctrlText[ctrl],  _ctrlMidX[ctrl], _ctrlMidY[ctrl]+1,  0.5,0.5 )
+			End Select
+		End If
+	End method
+
+End Class
+

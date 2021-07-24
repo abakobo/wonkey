@@ -1,0 +1,200 @@
+Namespace myapp
+
+
+#Import "<std>"
+#Import "<mojo>"
+Using std..
+Using mojo..
+
+
+Function Main()
+	New AppInstance
+	New ControlWindow
+	App.Run()
+End
+
+
+' this is a simple class with some field (variables) and methods to set up the variables and also draw the button
+class ControlWindow Extends Window
+	const CONTROL_MAX:int = 256
+	
+	field _ctrlCount:int = -1
+	
+	field _ctrlX0:int[] = New int[CONTROL_MAX]
+	field _ctrlY0:int[] = New int[CONTROL_MAX]
+	field _ctrlX1:int[] = New int[CONTROL_MAX]
+	field _ctrlY1:int[] = New int[CONTROL_MAX]
+	
+	field _ctrlMidX:int[] = New int[CONTROL_MAX]
+	field _ctrlMidY:int[] = New int[CONTROL_MAX]
+	
+	field _ctrlWidth:int[] = New int[CONTROL_MAX]
+	field _ctrlHeight:int[] = New int[CONTROL_MAX]
+	
+	field _ctrlColor:Color[] = New Color[CONTROL_MAX]
+	
+	field _ctrlText:string[] = New string[CONTROL_MAX]
+	
+	field _ctrlActive:Bool[] = New bool[CONTROL_MAX]
+
+	field _ctrlKind:int[] = New int[CONTROL_MAX]
+	
+	
+	field _ctrlOver:int = -1
+	
+	
+	field _prevMouseDown:bool = False
+	
+	
+	Method New( title:String = "Simple mojo app", width:Int = 640, height:Int = 480, flags:WindowFlags = Null )
+		Super.New( title, width, height, flags )
+		
+		AddButton( 10,10, 150, 50, Color.Pine, "Hi" )
+		AddButton( 200,10, 150, 50, Color.Red, "Hello" )
+
+		AddButton( 10,100, 100, 40, Color.Sky, "Hola", True )
+		AddButton( 200,100, 200, 50, Color.Gold*0.5, "Hello", True )
+
+		AddButton( 10,200, 150, 50, Color.Violet, "PANG" )
+		AddButton( 200,200, 150, 90, Color.UIPurple, "Ciao", True )
+	End method
+	
+	
+	method GetFree:int()
+		If _ctrlCount = -1 Then
+			_ctrlCount = 0
+			Return 0
+		End If
+		
+		local k:int
+		For k = 0 To _ctrlCount
+			If Not _ctrlActive[k] Then Return k
+		Next
+		
+		If _ctrlCount < CONTROL_MAX-1 Then
+			_ctrlCount += 1
+			Return _ctrlCount
+		End If
+		
+		Return -1
+	End Method
+	
+	
+	method AddButton( x:int, y:int, width:int, height:int, color:Color, text:string, round:bool = False )
+		local ctrl:int = GetFree()
+		If ctrl = -1 Then Return
+		
+		_ctrlX0[ctrl] = x
+		_ctrlY0[ctrl] = y
+		_ctrlX1[ctrl] = x + width
+		_ctrlY1[ctrl] = y + height
+		
+		'mid points are used to align the text
+		_ctrlMidX[ctrl] = x + width * 0.5
+		_ctrlMidY[ctrl] = y + height * 0.5
+		
+		_ctrlWidth[ctrl] = width
+		_ctrlHeight[ctrl] = height
+		
+		_ctrlColor[ctrl] = color
+		
+		_ctrlText[ctrl] = text
+
+		_ctrlActive[ctrl] = True
+		
+		If round Then
+			_ctrlKind[ctrl] = 2
+		Else
+			_ctrlKind[ctrl] = 1
+		End If
+	End Method
+	
+	
+	method DrawControls( canvas:Canvas )
+		local k:int
+		For k = 0 To _ctrlCount
+			Select _ctrlKind[k]
+				Case 1
+					DrawButton( canvas, k )
+					
+				Case 2
+					DrawRoundButton( canvas, k )
+			End
+			
+		Next
+
+		If _mouseDown And Not _prevMouseDown And _ctrlOver > -1 Then
+			OnClicked( _ctrlOver )
+		End If
+			
+		_prevMouseDown = _mouseDown
+	End method
+
+
+	method DrawButton( canvas:Canvas, ctrl:int )
+		local mx:int = _mouseX '<- this is an internal variable to directly access the mouse
+		local my:int = _mouseY '<- this is an internal variable to directly access the mouse
+		local down:int = _mouseDown '<- this is an internal variable to directly access the mouse
+		
+		canvas.Color = _ctrlColor[ctrl]
+		canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl] )
+		
+		If mx > _ctrlX0[ctrl] And mx < _ctrlX1[ctrl] And my > _ctrlY0[ctrl] And my < _ctrlY1[ctrl] Then ' we are over the button
+			_ctrlOver = ctrl
+			If down Then 'pressed button
+				canvas.Color = Color.Black
+			Else ' highlighted button
+				canvas.Color = Color.White
+			End If
+		 
+			canvas.Alpha = 0.3
+			canvas.DrawRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl] )
+			canvas.Alpha = 1
+		End If
+
+		canvas.Color = Color.White
+		canvas.DrawText( _ctrlText[ctrl],  _ctrlMidX[ctrl], _ctrlMidY[ctrl],  0.5,0.5 ) ' <- then final 2 0.5 numbers rlate to how to display the text 0.5 is text centered ;)
+	End method
+
+
+	'this is exactly the same as the draw button but uses rounded rctangles
+	method DrawRoundButton( canvas:Canvas, ctrl:int )
+		local mx:int = _mouseX '<- this is an internal variable to directly access the mouse
+		local my:int = _mouseY '<- this is an internal variable to directly access the mouse
+		local down:int = _mouseDown '<- this is an internal variable to directly access the mouse
+		
+		canvas.Color = _ctrlColor[ctrl]
+		canvas.DrawRoundedRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl], 5 )
+		
+		If mx > _ctrlX0[ctrl] And mx < _ctrlX1[ctrl] And my > _ctrlY0[ctrl] And my < _ctrlY1[ctrl] Then ' we are over the button
+			_ctrlOver = ctrl
+			
+			If down Then 'pressed button
+				canvas.Color = Color.Black
+			Else ' highlighted button
+				canvas.Color = Color.White
+			End If
+		 
+			canvas.Alpha = 0.3
+			canvas.DrawRoundedRect( _ctrlX0[ctrl], _ctrlY0[ctrl], _ctrlWidth[ctrl], _ctrlHeight[ctrl], 5 )
+			canvas.Alpha = 1
+		End If
+
+		canvas.Color = Color.White
+		canvas.DrawText( _ctrlText[ctrl],  _ctrlMidX[ctrl], _ctrlMidY[ctrl],  0.5,0.5 ) ' <- then final 2 0.5 numbers rlate to how to display the text 0.5 is text centered ;)
+	End method
+
+
+	Method OnRender( canvas:Canvas ) Override
+		App.RequestRender()
+		
+		DrawControls( canvas )
+	End method
+	
+	
+	method OnClicked( ctrl:int )
+		Print "ctrl clicked: "+ctrl
+	End Method
+	
+End Class
+

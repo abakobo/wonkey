@@ -1,58 +1,59 @@
 
 Namespace wide
 
+#Import "../assets/fonts/LUCON.TTF"
+#Import "../assets/fonts/Monoid-Regular.ttf"
+#Import "../assets/fonts/SourceSerif4-Regular.ttf"
+#Import "../assets/fonts/Courier New.ttf"
+#Import "../assets/fonts/UbuntuMono-R.ttf"
+#Import "../assets/fonts/Inconsolata-Regular.ttf"
+
 
 #Rem wonkeydoc Add file extensions to open with CodeDocument.
 All plugins with keywords should use this func inside of them OnCreate() callback.
 #End
 Function RegisterCodeExtensions( exts:String[] )
-	
-	Local plugs:=Plugin.PluginsOfType<CodeDocumentType>()
+	Local plugs := Plugin.PluginsOfType < CodeDocumentType>()
 	If plugs = Null Return
-	Local p:=plugs[0]
-	CodeDocumentTypeBridge.AddExtensions( p,exts )
-	
+	Local p := plugs[0]
+	CodeDocumentTypeBridge.AddExtensions( p, exts )
 End
 
 
-Function DrawCurvedLine( canvas:Canvas,x1:Float,x2:Float,y:Float )
-	
+Function DrawCurvedLine( canvas:Canvas, x1:Float, x2:Float, y:Float )
 	Local i:=0
-	Local dx:=3,dy:=1
+	Local dx:=3
+	Local dy:=1
 	For Local xx:=x1 Until x2 Step dx*2
 		'Local dy := (i Mod 2 = 0) ? -1 Else 1
 		canvas.DrawLine( xx,y+dy,xx+dx,y-dy )
 		canvas.DrawLine( xx+dx,y-dy,xx+dx*2,y+dy )
 	Next
-	
 End
 
 
 Class CodeDocumentView Extends WideCodeTextView
-	
+
 	
 	Method New( doc:CodeDocument )
-		
 		Super.New( doc )
-		
+
+		If _audioTimer Then _audioTimer.Suspended = True
+
 		_doc=doc
-		
 		ContentView.Style.Border=New Recti( -4,-4,4,4 )
 		
 		'AutoComplete
 		If Not AutoComplete Then AutoComplete=New AutocompleteDialog
 		AutoComplete.OnChoosen+=Lambda( result:AutocompleteResult )
 			If App.KeyView = Self
-				
 				Local ident:=result.ident
 				Local text:=result.text
 				
 				If result.isTemplate
-					
 					InsertLiveTemplate( AutoComplete.LastIdentPart,text )
 					
 				Else
-					
 					Local item:=result.item
 					Local bySpace:=result.bySpace
 					
@@ -80,18 +81,19 @@ Class CodeDocumentView Extends WideCodeTextView
 		UpdateThemeColors()
 		UpdatePrefs()
 	End
+
 	
 	Property Gutter:CodeGutterView()
 		Return _gutter
 	End
+
 	
 	Property CharsToShowAutoComplete:Int()
-		
 		Return Prefs.AcShowAfter
 	End
+
 	
 	Method UpdatePrefs()
-		
 		ShowWhiteSpaces=Prefs.EditorShowWhiteSpaces
 		
 		Local visible:Bool
@@ -125,63 +127,59 @@ Class CodeDocumentView Extends WideCodeTextView
 	End
 	
 	
-	Protected
+Protected
+
+	Field _arrAddonIndents:=New String[]("else","for ","method ","function ","class ","interface ","select ","try ","catch ","case ","default","while","repeat","property ","getter","setter","enum ","struct ")
+	Field _arrIf:=New String[]("then "," return"," exit"," continue")
+
 	
 	Method OnThemeChanged() Override
-		
 		_doc.HideAllPopups()
 		
 		Super.OnThemeChanged()
 	End
+
 	
 	Method OnRenderContent( canvas:Canvas ) Override
-	
-		Local color:=canvas.Color
+'		Print "OnRender CodeDocumentView"
+		Local color:Color = canvas.Color
 		Local xx:=Scroll.x
 		' whole current line
-		Local r:=CursorRect
-		r.Left=xx
-		r.Right=Width
-		canvas.Color=_lineColor
+		Local r := CursorRect
+		r.Left = xx
+		r.Right = Width
+		canvas.Color = _lineColor
 		canvas.DrawRect( r )
 		
 		If _doc._debugLine<>-1
-			
-			Local line:=_doc._debugLine
+			Local line := _doc._debugLine
 			'If line<0 Or line>=Document.NumLines Return
 			
-			canvas.Color=New Color( 0,.5,0 )
-			canvas.DrawRect( xx,line*LineHeight,Width,LineHeight )
-			
+			canvas.Color = New Color( 0,.5,0 )
+			canvas.DrawRect( xx, line*LineHeight, Width, LineHeight )
 		Endif
 		
-		canvas.Color=color
+		canvas.Color = color
 		
 		Super.OnRenderContent( canvas )
 		
 		If _doc._errors.Length
-		
-			canvas.Color=Color.Red
-			For Local err:=Eachin _doc._errors
-				Local s:=Document.GetLine( err.line )
-				Local indent:=Utils.GetIndent( s )
-				Local indentStr:=(indent > 0) ? s.Slice( 0, indent ) Else ""
-				If indent > 0 Then s=s.Slice(indent)
-				indentStr=indentStr.Replace( "~t"," ".Dup(Prefs.EditorTabSize) )
-				Local x:=RenderStyle.Font.TextWidth( indentStr )
-				Local w:=RenderStyle.Font.TextWidth( s )
-				DrawCurvedLine( canvas,x,x+w,(err.line+1)*LineHeight )
+			canvas.Color = Color.Red
+			For Local err := Eachin _doc._errors
+				Local s := Document.GetLine( err.line )
+				Local indent := Utils.GetIndent( s )
+				Local indentStr := (indent > 0) ? s.Slice( 0, indent ) Else ""
+				If indent > 0 Then s = s.Slice(indent)
+				indentStr = indentStr.Replace( "~t"," ".Dup(Prefs.EditorTabSize) )
+				Local x := RenderStyle.Font.TextWidth( indentStr )
+				Local w := RenderStyle.Font.TextWidth( s )
+				DrawCurvedLine( canvas, x, x+w, (err.line+1)*LineHeight )
 			Next
-			
 		Endif
-		
 	End
-	
-	Field _arrAddonIndents:=New String[]("else","for ","method ","function ","class ","interface ","select ","try ","catch ","case ","default","while","repeat","property ","getter","setter","enum ","struct ")
-	Field _arrIf:=New String[]("then "," return"," exit"," continue")
-	
+
+
 	Method OnKeyEvent( event:KeyEvent ) Override
-		
 		#If __TARGET__="macos"
 		Local isMacos:=True
 		#Else
@@ -198,11 +196,9 @@ Class CodeDocumentView Extends WideCodeTextView
 		'ctrl+space - show autocomplete list
 		Select event.Type
 		Case EventType.KeyDown,EventType.KeyRepeat
-			
 			Local key:=FixNumpadKeys( event )
 			
 			Select key
-				
 				Case Key.Space
 					If ctrl
 						Return
@@ -211,9 +207,7 @@ Class CodeDocumentView Extends WideCodeTextView
 					Endif
 				
 				Case Key.Backspace
-					
 					If AutoComplete.IsOpened
-						
 						Local ident:=IdentBeforeCursor()
 						ident=ident.Slice( 0,ident.Length-1 )
 						If ident.Length > 0
@@ -221,9 +215,7 @@ Class CodeDocumentView Extends WideCodeTextView
 						Else
 							_doc.HideAutocomplete()
 						Endif
-						
 					Else
-					
 						' remove all indent spaces by single press of Backspace
 						If Cursor=Anchor And Prefs.EditorUseSpacesAsTabs
 							
@@ -260,7 +252,6 @@ Class CodeDocumentView Extends WideCodeTextView
 						
 						Local line:=CursorLine
 						If Cursor=Anchor And Cursor=Document.StartOfLine( line )
-							
 							_delKey=Key.Backspace
 							
 							Local f:=_folding[line]
@@ -279,23 +270,18 @@ Class CodeDocumentView Extends WideCodeTextView
 					Endif
 				
 				Case Key.X
-					
 					If (isMacos And menu) Or (Not isMacos And ctrl) 'nothing selected - cut whole line
 						OnCut( Not CanCopy )
 						Return
 					Endif
 			
-			
 				Case Key.C
-					
 					If (isMacos And menu) Or (Not isMacos And ctrl) 'nothing selected - copy whole line
 						OnCopy( Not CanCopy )
 						Return
 					Endif
 			
-			
 				Case Key.Insert 'ctrl+insert - copy, shift+insert - paste
-					
 					If shift
 						SmartPaste()
 					Elseif ctrl
@@ -306,9 +292,7 @@ Class CodeDocumentView Extends WideCodeTextView
 					Endif
 					Return
 			
-			
 				Case Key.KeyDelete
-					
 					_delKey=Key.KeyDelete
 					
 					If shift 'shift+del - cut selected
@@ -340,23 +324,30 @@ Class CodeDocumentView Extends WideCodeTextView
 					Endif
 					Return
 			
-			
-				Case Key.Enter,Key.KeypadEnter 'auto indent
-					
+				Case Key.Enter, Key.KeypadEnter 'auto indent
 					Local line:=CursorLine
 					Local text:=Document.GetLine( line )
 					Local indent:=GetIndent( text )
 					Local posInLine:=PosInLineAtCursor
-					
+
+					'If enter is pressed And there is a space Then delete it
+					If text.Length > 2 And text.Right(1) = " " Then
+						SelectText( Cursor-1, Cursor )
+						ReplaceText( "" )
+						
+						text = Document.GetLine( line )
+						indent = GetIndent( text )
+						posInLine = PosInLineAtCursor
+					End If
+
 					'fix 'bug' when we delete ~n at the end of line.
 					'in this case GetLine return 2 lines, and if they empty
 					'then we get double indent
 					'need to fix inside mojox
-					
 					Local beforeIndent:=(posInLine<=indent)
 					
 					Local f:=_folding[line]
-					If f And beforeIndent
+					If f And beforeIndent Then
 						f.folded+=20
 					Elseif Not f And Not beforeIndent
 						f=FindNearestFolding( line )
@@ -368,7 +359,7 @@ Class CodeDocumentView Extends WideCodeTextView
 					If indent > posInLine Then indent=posInLine
 					
 					Local s:=(indent ? text.Slice( 0,indent ) Else "")
-					
+
 					If Prefs.EditorUseSpacesAsTabs
 						s=s.Replace( "~t",TabStr )
 					Endif
@@ -380,8 +371,8 @@ Class CodeDocumentView Extends WideCodeTextView
 							If Not Utils.BatchContains( text,_arrIf,True )
 								s=TabStr+s
 							Endif
+
 						Elseif Utils.BatchStartsWith( text,_arrAddonIndents,True )
-							
 							If text.ToLower().EndsWith( "abstract" )
 								' nothing
 							Else
@@ -396,26 +387,22 @@ Class CodeDocumentView Extends WideCodeTextView
 					Endif
 					
 					ReplaceText( "~n"+s )
-					
 					Return
 			
 				#If __TARGET__="macos"
 				Case Key.A 'smart Home behaviour
-			
 					If ctrl
 						SmartHome( shift )
 						Return
 					Endif
 			
 				Case Key.E
-			
 					If ctrl
 						SmartEnd( shift )
 						Return
 					Endif
 			
 				Case Key.Up '
-			
 					If menu
 						If shift 'selection
 							SelectText( 0,Anchor )
@@ -426,7 +413,6 @@ Class CodeDocumentView Extends WideCodeTextView
 					Endif
 			
 				Case Key.Down '
-			
 					If menu
 						If shift 'selection
 							SelectText( Anchor,Text.Length )
@@ -439,19 +425,15 @@ Class CodeDocumentView Extends WideCodeTextView
 				#Endif
 				
 				Case Key.Home 'smart Home behaviour
-				
 					ProcessHomeKey( ctrl,shift )
 					Return
 				
 				Case Key.KeyEnd ' special case here to force macos behaviour
-					
 					ProcessEndKey( ctrl,shift )
 					Return
 					
 				Case Key.Tab
-					
 					If Cursor = Anchor 'has no selection
-						
 						' live templates by tab!
 						Local ident:=IdentBeforeCursor()
 						If InsertLiveTemplate( ident ) Return ' exit method
@@ -459,12 +441,10 @@ Class CodeDocumentView Extends WideCodeTextView
 					Endif
 					
 					If Cursor = Anchor And Not shift
-						
 						' usual tab behaviour - insert tab or spaced-equivalent-of-tab
 						InsertTabulation()
 						
 					Else ' tab/untab selection
-						
 						Local minPos:=Min( Cursor,Anchor )
 						Local maxPos:=Max( Cursor,Anchor )
 						Local min:=Document.FindLine( minPos )
@@ -487,45 +467,35 @@ Class CodeDocumentView Extends WideCodeTextView
 						Local tabStr:=TabStr
 						
 						If shift
-							
 							Local changes:=0
 							For Local i:=0 Until lines.Length
-								
 								If lines[i].StartsWith( tabStr ) ' try to remove tab or spaces
-									
 									lines[i]=lines[i].Slice( tabStr.Length )+"~n"
 									changes+=1
 									If i=0 Then shiftFirst=-tabStr.Length
 									If i=lines.Length-1 Then shiftLast=-tabStr.Length
 									
 								Elseif tabStr<>"~t" And lines[i].StartsWith( "~t" ) ' for spaces-mode also try to remove tabs (mixed indentation)
-									
 									lines[i]=lines[i].Slice( 1 )+"~n"
 									changes+=1
 									If i=0 Then shiftFirst=-1
 									If i=lines.Length-1 Then shiftLast=-1
 									
 								Else
-									
 									lines[i]+="~n"
-								
 								Endif
 							Next
 							
 							go=(changes > 0)
-							
 						Else
-							
 							shiftFirst=tabStr.Length
 							shiftLast=tabStr.Length
 							For Local i:=0 Until lines.Length
 								lines[i]=tabStr+lines[i]+"~n"
 							Next
-							
 						Endif
 						
 						If go
-							
 							Local minStart:=Document.StartOfLine( min )
 							Local maxStart:=Document.StartOfLine( max )
 							Local maxEnd:=Document.EndOfLine( max )
@@ -546,9 +516,7 @@ Class CodeDocumentView Extends WideCodeTextView
 					
 					Return
 				
-				
 				Case Key.V
-					
 					If CanPaste And ((isMacos And menu) Or (Not isMacos And ctrl))
 						SmartPaste()
 						Return
@@ -558,9 +526,7 @@ Class CodeDocumentView Extends WideCodeTextView
 				#If __TARGET__="macos"
 				
 				Case Key.Z
-					
 					If menu
-						
 						If shift
 							Redo()
 						Else
@@ -570,26 +536,21 @@ Class CodeDocumentView Extends WideCodeTextView
 					Endif
 				
 				Case Key.Left ' home = cmd + left
-					
 					If menu
 						ProcessHomeKey( ctrl,shift )
 						Return
 					Endif
 					
 				Case Key.Right ' end = cmd + right
-					
 					If menu
 						ProcessEndKey( ctrl,shift )
 						Return
 					Endif
-					
 				#Endif
 			
 			End
 			
-			
 		Case EventType.KeyChar
-			
 			If event.Key = Key.Space And ctrl
 				If _doc.CanShowAutocomplete()
 					Local ident:=IdentBeforeCursor()
@@ -618,7 +579,6 @@ Class CodeDocumentView Extends WideCodeTextView
 			
 			' try to auto-pair chars
 			If Prefs.EditorAutoPairs
-				
 				Local txt:=event.Text
 				
 				Local k1:=(txt="~q")
@@ -628,7 +588,6 @@ Class CodeDocumentView Extends WideCodeTextView
 				Local k31:=(txt="]")
 				
 				If k1 Or k2 Or k3 Or k21 Or k31
-					
 					Local s:=LineTextAtCursor
 					Local p:=PosInLineAtAnchor
 					
@@ -689,7 +648,6 @@ Class CodeDocumentView Extends WideCodeTextView
 		
 		'show autocomplete list after some typed chars
 		If event.Type = EventType.KeyChar
-			
 			If _doc.CanShowAutocomplete()
 				'preprocessor
 				If event.Text = "#"
@@ -707,9 +665,7 @@ Class CodeDocumentView Extends WideCodeTextView
 		
 		' after super processed
 		If event.Type = EventType.KeyDown
-		
 			Select event.Key
-			
 				Case Key.Left
 					If AutoComplete.IsOpened And Not alt
 						Local ident:=IdentBeforeCursor()
@@ -726,14 +682,13 @@ Class CodeDocumentView Extends WideCodeTextView
 		Endif
 		
 	End
+
 	
 	Method ShowJsonDialog()
-		
 		Local cmd:=WonkeyParser.GetFullParseCommand( _doc.Path )
 		If Not cmd Return
 		
 		New Fiber( Lambda()
-			
 			Local str:=LoadString( "process::"+cmd )
 			Local i:=str.Find( "{" )
 			If i=-1 Return
@@ -760,17 +715,15 @@ Class CodeDocumentView Extends WideCodeTextView
 		
 		End )
 	End
+
 	
 	Method OnContentMouseEvent( event:MouseEvent ) Override
-		
 		Select event.Type
-			
 			Case EventType.MouseClick
 				
 				_doc.HideAutocomplete()
 			
 			Case EventType.MouseMove
-				
 				'Print "mouse: "+event.Location
 				
 				If _doc.HasErrors
@@ -793,47 +746,70 @@ Class CodeDocumentView Extends WideCodeTextView
 						_doc.HideHint_()
 					Endif
 				Endif
-				
 		End
 		
 		Super.OnContentMouseEvent( event )
-		
 	End
 	
-	Private
+Private
+
 	
 	Field _doc:CodeDocument
 	Field _prevErrorLine:Int
 	Field _lineColor:Color
 	Field _gutter:CodeGutterView
 	Field _codeMap:CodeMapView
+
 	
 	Method UpdateThemeColors() Override
-		
 		Super.UpdateThemeColors()
 		
-		_lineColor=App.Theme.GetColor( "textview-cursor-line" )
+'		_lineColor=App.Theme.GetColor( "textview-cursor-line" )
+		_lineColor = MainWindow._theme.Syntax[15] * 0.8
 		
 	End
+
 	
 	Method OnValidateStyle() Override
-		
 		Local newFont:Font
-		Local fontPath:=Prefs.GetCustomFontPath()
-		If fontPath
-			Local size:=Prefs.GetCustomFontSize()
-			newFont=App.Theme.OpenFont( fontPath,size )
-		Endif
-		If Not newFont Then newFont=App.Theme.GetStyle( Style.Name ).Font
+'		Local fontPath:string = Prefs.GetCustomFontPath()
+'		
+'		If fontPath And fontPath <> "" Then 
+'			Local size:int = Prefs.GetCustomFontSize()
+'			newFont = App.Theme.OpenFont( fontPath, size )
+'			If Not newFont Then
+'				Print "cant load font : "+fontPath
+'			End If
+'		Endif
+
+		Select MainWindow._theme.SyntaxFont
+			Case 0
+				newFont = App.Theme.OpenFont( "asset::LUCON.TTF", 17 )
+			Case 1
+				newFont = App.Theme.OpenFont( "asset::Monoid-Regular.ttf", 17 )
+			Case 2
+				newFont = App.Theme.OpenFont( "asset::SourceSerif4-Regular.ttf", 18 )
+			Case 3
+				newFont = App.Theme.OpenFont( "asset::Courier New.ttf", 17 )
+			Case 4
+				newFont = App.Theme.OpenFont( "asset::UbuntuMono-R.ttf", 17 )
+			Case 5
+				newFont = App.Theme.OpenFont( "asset::Inconsolata-Regular.ttf", 17 )
+		End Select
 		
-		RenderStyle.Font=newFont
+		If Not newFont Then
+			newFont = App.Theme.GetStyle( Style.Name ).Font
+			Print "fontdefault : "+newFont.Path
+		End If
+		
+		RenderStyle.Font = newFont
 		
 		Super.OnValidateStyle()
 		
 	End
+
 	
 	Method InsertLiveTemplate:Bool( ident:String,templ:String=Null )
-		
 		If Not templ Then templ=LiveTemplates[FileType,ident]
 		If templ
 			templ=PrepareSmartPaste( templ )
@@ -852,29 +828,27 @@ Class CodeDocumentView Extends WideCodeTextView
 End
 
 
+
 Class CodeDocument Extends WideDocument
 	
 	Method New( path:String )
-		
 		Super.New( path )
 		
 		' if file type was changed
-		Renamed+=Lambda( newPath:String,oldPath:String )
-			
+		Renamed += Lambda( newPath:String, oldPath:String )
 			InitParser()
 			ResetErrors()
 		End
 		
-		_view=New DockingView
+		_view = New DockingView
 		
 		' Editor
-		_codeView=New CodeDocumentView( Self )
+		_codeView = New CodeDocumentView( Self )
 		_codeView.LineNumChanged += OnLineChanged
 		
 		_doc=_codeView.Document
 		
 		_doc.LinesModified+=Lambda( first:Int,removed:Int,inserted:Int )
-		
 			Local put:=0
 			For Local get:=0 Until _errors.Length
 				Local err:=_errors[get]
@@ -894,39 +868,35 @@ Class CodeDocument Extends WideDocument
 			If _debugLine>=first
 				_debugLine+=(inserted-removed)
 			Endif
-			
 		End
 		
-		_doc.TextChanged+=Lambda()
-		
+		_doc.TextChanged += Lambda()
 			Dirty=True
-			_changesCounter+=1
+			_changesCounter += 1
 			OnTextChanged()
 			_codeView.TextChanged()
 		End
 		
-		_codeView.CursorMoved+=OnCursorChanged
+		_codeView.CursorMoved += OnCursorChanged
 		
 		' bar + editor
-		_content=New DockingView
-		_content.ContentView=_codeView
+		_content = New DockingView
+		_content.ContentView = _codeView
 		
-		_view.ContentView=_content
+		_view.ContentView = _content
 		
 		OnCreateBrowser()
 		
 		' process navigation back / forward
 		Navigator.OnNavigate += Lambda( nav:NavCode )
-		
 			MainWindow.GotoCodePosition( nav.filePath,nav.pos )
 		End
 		
 		' fix indentation panel
-		'
-		_fixIndentView=New DockingView
-		_fixIndentHint=New Label
-		_fixIndentButton=New Button( "Yes" )
-		_fixIndentButton.Clicked=Lambda()
+		_fixIndentView = New DockingView
+		_fixIndentHint = New Label
+		_fixIndentButton = New Button( "Yes" )
+		_fixIndentButton.Clicked = Lambda()
 			' store cursor position
 			Local line:=_codeView.LineNumAtCursor
 			Local posInLine:=_codeView.PosInLineAtCursor
@@ -943,9 +913,9 @@ Class CodeDocument Extends WideDocument
 			' 
 			_fixIndentView.Visible=False
 		End
+
 		Local fixIndentCancel:=New Button( "No" )
 		fixIndentCancel.Clicked=Lambda()
-			
 			_fixIndentView.Visible=False
 		End
 		_fixIndentView.AddView( New Label( " " ),"right" )
@@ -956,25 +926,30 @@ Class CodeDocument Extends WideDocument
 		_fixIndentView.AddView( _fixIndentHint,"right" )
 		_fixIndentView.Visible=False
 		_content.AddView( _fixIndentView,"bottom" )
+
+		Prefs.SourceShowMethod = True
+		_treeView.ShowMethod = True
+		Prefs.SourceShowFunction = True
+		_treeView.ShowFunction = True
+		Prefs.SourceShowProperty = True
+		_treeView.ShowProperty = True
 		
 		ArrangeElements()
 	End
+
 	
 	Method ArrangeElements()
-		
 		If Not _content Return
 		
 		_content.RemoveView( _toolBar )
-		
 		If Prefs.EditorToolBarVisible
-			_toolBar=GetToolBar()
+			_toolBar = GetToolBar()
 			_content.AddView( _toolBar,"top" )
 		Endif
-		
 	End
+
 	
 	Method OnCreateBrowser:View() Override
-		
 		If _browserView Return _browserView
 		
 		' sorting toolbar
@@ -982,7 +957,7 @@ Class CodeDocument Extends WideDocument
 		
 		Local bar:=New ToolBarExt
 		bar.Style=App.Theme.GetStyle( "SourceToolBar" )
-		bar.MaxSize=New Vec2i( 10000,30 )
+		bar.MaxSize=New Vec2i( 10000, 30 )
 		Local btn:ToolButtonExt
 		
 		btn = bar.AddIconicButton( ThemeImages.Get( "sourcebar/sort_alpha.png" ),
@@ -997,6 +972,7 @@ Class CodeDocument Extends WideDocument
 			_treeView.SortByType=state
 			UpdateCodeTree()
 		End
+
 		btn = bar.AddIconicButton( ThemeImages.Get( "sourcebar/filter_inherited.png" ),
 			Lambda()
 			End,
@@ -1008,10 +984,76 @@ Class CodeDocument Extends WideDocument
 			_treeView.ShowInherited=state
 			UpdateCodeTree()
 		End
+
+		bar.AddSeparator()
+
+		btn = bar.AddIconicButton( ThemeImages.Get( "sourcebar/method.png" ),
+			Lambda()
+			End,
+			"Show Methods")
+		btn.ToggleMode = True
+		btn.IsToggled = Prefs.SourceShowMethod
+		btn.Toggled += Lambda( state:Bool )
+			Prefs.SourceShowMethod = state
+			_treeView.ShowMethod = state
+			UpdateCodeTree()
+		End
+
+		btn = bar.AddIconicButton( ThemeImages.Get( "sourcebar/function.png" ),
+			Lambda()
+			End,
+			"Show Functions")
+		btn.ToggleMode = True
+		btn.IsToggled = Prefs.SourceShowFunction
+		btn.Toggled += Lambda( state:Bool )
+			Prefs.SourceShowFunction = state
+			_treeView.ShowFunction = state
+			UpdateCodeTree()
+		End
+
+		btn = bar.AddIconicButton( ThemeImages.Get( "sourcebar/field.png" ),
+			Lambda()
+			End,
+			"Show Fields/Const")
+		btn.ToggleMode = True
+		btn.IsToggled = Prefs.SourceShowField
+		btn.Toggled += Lambda( state:Bool )
+			Prefs.SourceShowField = state
+			_treeView.ShowField = state
+			UpdateCodeTree()
+		End
+
+		btn = bar.AddIconicButton( ThemeImages.Get( "sourcebar/local.png" ),
+			Lambda()
+			End,
+			"Show Locals")
+		btn.ToggleMode = True
+		btn.IsToggled = Prefs.SourceShowLocal
+		btn.Toggled += Lambda( state:Bool )
+			Prefs.SourceShowLocal = state
+			_treeView.ShowLocal = state
+			UpdateCodeTree()
+		End
+
+		btn = bar.AddIconicButton( ThemeImages.Get( "sourcebar/property.png" ),
+			Lambda()
+			End,
+			"Show Properties")
+		btn.ToggleMode = True
+		btn.IsToggled = Prefs.SourceShowProperty
+		btn.Toggled += Lambda( state:Bool )
+			Prefs.SourceShowProperty = state
+			_treeView.ShowProperty = state
+			UpdateCodeTree()
+		End
+		
 		_browserView.AddView( bar,"top" )
 		
-		
 		_treeView=New CodeTreeView
+		_treeView.FeedMe = Lambda()
+			Print "FEED ME"
+'			UpdateCodeTree()
+		End
 		_browserView.ContentView=_treeView
 		
 		_treeView.SortByType=Prefs.SourceSortByType
@@ -1020,7 +1062,6 @@ Class CodeDocument Extends WideDocument
 		
 		' goto item from tree view
 		Local clickFunc:=Lambda( node:TreeView.Node )
-		
 			Local codeNode:=Cast<CodeTreeNode>( node )
 			If Not codeNode Return
 			
@@ -1037,14 +1078,14 @@ Class CodeDocument Extends WideDocument
 		
 		Return _browserView
 	End
+
 	
 	Method OnCreateBrowserProperties:View() Override
-		
 		Return _treeViewInnerList
 	End
+
 	
 	Method AnalyzeIndentation()
-		
 		Local text:=_codeView.Text
 		If Not text Return
 		
@@ -1061,10 +1102,9 @@ Class CodeDocument Extends WideDocument
 				
 			Case IndentationHelper.Type.Mixed
 				hint="There is a mixed indentation found."
-				
 		End
 		
-		If hint
+		If hint Then
 			Local quest:=Prefs.EditorUseSpacesAsTabs ? "Replace with spaces?" Else "Replace with tabs?"
 			_fixIndentHint.Text=hint+" "+quest
 			_fixIndentView.Visible=True
@@ -1073,14 +1113,13 @@ Class CodeDocument Extends WideDocument
 		Endif
 		
 	End
+
 	
 	' not multipurpose method, need to move into plugin
 	Method PrepareForInsert:String( ident:String,text:String,addSpace:Bool,textLine:String,cursorPosInLine:Int,item:CodeItem )
-		
 		If FileExtension <> ".wx" And FileExtension <> ".monkey2" Then Return ident
 		
 		If ident<>text And item And item.IsLikeFunc 'not a keyword
-			
 			Local i:=textLine.Find( "Method " ) 'to simplify overriding - insert full text
 			If i <> -1 And i < cursorPosInLine
 				Local i2:=textLine.Find( "(" ) 'is inside of params?
@@ -1106,14 +1145,12 @@ Class CodeDocument Extends WideDocument
 		' try to auto-add properly lambda definition
 		' ---------------------------------------------------------
 		If ident="Lambda"
-			
 			Local indent:=Utils.GetIndent( textLine )
 			Local result:=text+"()"
 			
 			textLine=textLine.Trim()
 			
 			If Not textLine.StartsWith( "'" )
-				
 				Local i0:=textLine.Find( "(" )
 				
 				If i0 = -1 'don't process func params yet
@@ -1147,8 +1184,7 @@ Class CodeDocument Extends WideDocument
 			Return result
 		Endif
 		
-		If ident="wonkeydoc"
-			
+		If ident="wonkeydoc" Then
 			Local indent:=Utils.GetIndent( textLine )
 			Local indentStr:=TextUtils.GetIndentStr()
 			indentStr=Utils.RepeatStr( indentStr,indent )
@@ -1161,10 +1197,8 @@ Class CodeDocument Extends WideDocument
 		If Not addSpace Return ident
 		
 		Select ident
-			
 			' try to add space
 			Case "Namespace","Using","Import","New","Eachin","Where","Alias","Const","Local","Global","Field","Method","Function","Property","Operator ","Enum","Class","Interface","Struct","Extends","Implements","If","Then","Elseif","While","Until","For","To","Step","Select","Case","Catch","Throw","Print"
-			
 				Local len:=textLine.Length
 				
 				' end or line
@@ -1178,14 +1212,13 @@ Class CodeDocument Extends WideDocument
 		
 		Return ident 'as is
 	End
-	
+
 	Property TextDocument:TextDocument()
-	
 		Return _doc
 	End
+
 	
 	Method JumpToDebugLine( path:String,line:Int )
-		
 		Local doc:=Cast<CodeDocument>( MainWindow.DocsManager.OpenDocument( path,True ) )
 		If doc
 			MainWindow.UpdateWindow( False )
@@ -1199,52 +1232,49 @@ Class CodeDocument Extends WideDocument
 			doc?.DebugLine=line
 		Endif
 	End
+
 	
 	Property DebugLine:Int()
-	
 		Return _debugLine
-	
 	Setter( debugLine:Int )
-		
 		_debugLine=debugLine
-		
 	End
+
 	
 	Property Errors:Stack<BuildError>()
-	
 		Return _errors
 	End
+
 	
 	Property HasErrors:Bool()
-		
 		Return Not _errors.Empty
 	End
+
 	
 	Property Parser:ICodeParser()
-	
 		Return _parser
 	End
+
 	
 	Method HasErrorAt:Bool( line:Int )
-	
 		Return _errMap.Contains( line )
 	End
+
 	
 	Method AddError( error:BuildError )
-	
 		_errors.Push(error)
 		Local s:=_errMap[error.line]
 		s = (s <> Null) ? s+error.msg Else error.msg
 		_errMap[error.line]=s
 	End
+
 	
 	Method GetErrorMessageAt:String( line:Int )
-		
 		Return _errMap[line]
 	End
+
 	
-	Method OnDocumentParsed( codeItems:Stack<CodeItem>,errors:Stack<BuildError> )
-		
+	Method OnDocumentParsed( codeItems:Stack<CodeItem>, errors:Stack<BuildError> )
 		ResetErrors()
 		
 		'Print "OnDocumentParsed: "+Path
@@ -1260,26 +1290,27 @@ Class CodeDocument Extends WideDocument
 		UpdateCodeTree( codeItems )
 		UpdateFolding()
 	End
+
 	
 	Method ResetErrors()
 		_errors.Clear()
 		_errMap.Clear()
 	End
+
 	
 	Method ShowHint_( text:String, position:Vec2i )
-	
 		position+=New Vec2i(10,10)-TextView.Scroll
 		
 		ShowHint( text,position,TextView )
 	End
+
 	
 	Method HideHint_()
-		
 		HideHint()
 	End
+
 	
 	Method GotoDeclaration()
-		
 		If Not _parsingEnabled Return
 		
 		Local ident:=_codeView.IdentBeforeCursor( True,True )
@@ -1290,9 +1321,9 @@ Class CodeDocument Extends WideDocument
 			JumpToPosition( item.FilePath,pos )
 		Endif
 	End
+
 	
-	Method JumpToPosition( filePath:String,pos:Vec2i )
-		
+	Method JumpToPosition( filePath:String, pos:Vec2i )
 		Local cur:=_codeView.CursorPos
 		If pos=cur
 			_codeView.MakeKeyView()
@@ -1310,9 +1341,9 @@ Class CodeDocument Extends WideDocument
 		nav.filePath=filePath
 		Navigator.Navigate( nav ) 'and navigate to new pos
 	End
+
 	
 	Method CanShowAutocomplete:Bool()
-		
 		If Not Prefs.AcEnabled Return False
 		
 		Local line:=TextDocument.FindLine( _codeView.Cursor )
@@ -1326,11 +1357,10 @@ Class CodeDocument Extends WideDocument
 		
 		Local can:=AutoComplete.CanShow( text,posInLine,FileExtension )
 		Return can
-		
 	End
+
 	
 	Method ShowAutocomplete( ident:String="",byCtrlSpace:Bool=False )
-		
 		If Not ident Then ident=_codeView.IdentBeforeCursor()
 		
 		'Print "ident: "+ident
@@ -1370,24 +1400,23 @@ Class CodeDocument Extends WideDocument
 			frame.MoveBy( ScaledVal( 50 ),dy )
 		Endif
 		AutoComplete.Frame=frame
-		
 	End
+
 	
 	Function HideAutocomplete()
-	
 		AutoComplete?.Hide()
 	End
+
 	
 	Function HideAllPopups()
-	
 		AutoComplete?.Hide()
 		ParamsHint?.Hide()
 	End
+
 	
 	#Rem wonkeydocs Return true if ParamsHint was actually closed.
 	#End
 	Function HideParamsHint:Bool()
-		
 		If ParamsHint And ParamsHint.Visible
 			ParamsHint.Hide()
 			Return True
@@ -1395,39 +1424,44 @@ Class CodeDocument Extends WideDocument
 		
 		Return False
 	End
+
 	
 	Method GoBack()
-		
 		Navigator.TryBack()
 	End
+
 	
 	Method GoForward()
-		
 		Navigator.TryForward()
 	End
+
 	
 	Method Comment()
-	
 		_codeView.CommentBlock()
 	End
+
 	
 	Method Uncomment()
-	
 		_codeView.UncommentBlock()
 	End
+
 	
+	Method CopyCode()
+		_codeView.CopyCodeBlock()
+	End
+
+
 	Method StoreChangesCounter()
-		
 		_storedChangesCounter=_changesCounter
 	End
+
 	
 	Method CheckChangesCounter:Bool()
-		
 		Return _changesCounter<>_storedChangesCounter
 	End
+
 	
-	Method GrabCodeItems( parent:CodeItem,items:Stack<CodeItem> )
-		
+	Method GrabCodeItems( parent:CodeItem, items:Stack<CodeItem> )
 		If parent.IsLikeFunc Or parent.IsOperator Or parent.IsProperty Or parent.IsLikeClass
 			items.Add( parent )
 		Endif
@@ -1438,9 +1472,9 @@ Class CodeDocument Extends WideDocument
 			GrabCodeItems( child,items )
 		Next
 	End
+
 	
 	Method JumpToPreviousScope()
-		
 		Local topItems:=_parser.ItemsMap[Path]
 		If Not topItems Return
 		
@@ -1464,9 +1498,9 @@ Class CodeDocument Extends WideDocument
 			_codeView.MakeCentered()
 		Endif
 	End
+
 	
 	Method JumpToNextScope()
-		
 		Local topItems:=_parser.ItemsMap[Path]
 		If Not topItems Return
 		
@@ -1490,20 +1524,22 @@ Class CodeDocument Extends WideDocument
 			_codeView.MakeCentered()
 		Endif
 	End
+
 	
 	Property CodeView:CodeDocumentView()
 		Return _codeView
 	End
+
 	
-	Protected
+Protected
+
 	
 	Method OnGetTextView:TextView( view:View ) Override
-	
 		Return _codeView
 	End
-	
-	Private
 
+	
+Private
 	Field _doc:TextDocument
 
 	Field _view:DockingView
@@ -1528,15 +1564,15 @@ Class CodeDocument Extends WideDocument
 	Field _toolBar:ToolBarExt
 	Field _content:DockingView
 	Field _changesCounter:Int,_storedChangesCounter:Int
+
 	
 	Method InitParser()
-		
-		_parser=ParsersManager.Get( FileExtension )
-		_parsingEnabled=Not ParsersManager.IsFake( _parser )
+		_parser = ParsersManager.Get( FileExtension )
+		_parsingEnabled = Not ParsersManager.IsFake( _parser )
 	End
+
 	  
 	Method GetToolBar:ToolBarExt()
-		
 		If _toolBar Return _toolBar
 		
 		Local commentTitle:=GetActionTextWithShortcut( MainWindow.GetActionComment() )
@@ -1544,7 +1580,6 @@ Class CodeDocument Extends WideDocument
 		Local findTitle:=GetActionTextWithShortcut( MainWindow.GetActionFind() )
 		
 		' Toolbar
-		
 		Local bar:=New ToolBarExt
 		_toolBar=bar
 		bar.Style=App.Theme.GetStyle( "EditorToolBar" )
@@ -1622,9 +1657,9 @@ Class CodeDocument Extends WideDocument
 		
 		Return _toolBar
 	End
+
 	
 	Method OnLoad:Bool() Override
-	
 		Local text:=stringio.LoadString( Path )
 		
 		_doc.Text=text
@@ -1635,17 +1670,15 @@ Class CodeDocument Extends WideDocument
 		
 		' grab lines after load
 		_doc.LinesModified+=Lambda( first:Int,removed:Int,inserted:Int )
-			
 			MainWindow.OnDocumentLinesModified( Self,first,removed,inserted )
 		End
 		
 		Return True
 	End
+
 	
 	Method OnSave:Bool() Override
-	
 		'ResetErrors()
-		
 		Local text:=""
 		
 		If Prefs.EditorRemoveLinesTrailing
@@ -1660,19 +1693,19 @@ Class CodeDocument Extends WideDocument
 	
 		Return ok
 	End
+
 	
 	Method OnCreateView:View() Override
-	
 		Return _view
 	End
+
 	
 	Method OnClose() Override
-		
 		If _timer Then _timer.Cancel()
 	End
+
 	
 	Method OnLineChanged:Void( prevLine:Int,newLine:Int )
-		
 		If AutoComplete.IsOpened Then AutoComplete.Hide()
 		
 		' show error in status bar
@@ -1683,14 +1716,14 @@ Class CodeDocument Extends WideDocument
 			Endif
 		Endif
 	End
+
 	
 	Property CursorPos:Vec2i()
-		
 		Return GetCursorPos( _codeView )
 	End
+
 	
 	Method OnUpdateCurrentScope()
-		
 		_treeViewInnerList.RootNode.RemoveAllChildren()
 		_treeViewInnerList.RootNodeVisible=False
 		
@@ -1729,16 +1762,21 @@ Class CodeDocument Extends WideDocument
 			_treeViewInnerList.RootNode.Expanded=True
 		Endif
 	End
+
 	
 	Method UpdateCodeTree( codeItems:Stack<CodeItem> = Null )
-		
-		_treeView.Fill( codeItems,_parser )
+'		If codeItems Then
+'			Print "UpdateCodetree OK "+Path
+'		Else
+'			Print "UpdateCodetree NULL "+Path
+'		End If
+		_treeView.Fill( codeItems, _parser )
 		OnUpdateCurrentScope()
 	End
+
 	
 	Field _tmpFileItems:=New Stack<CodeItem>
 	Method UpdateFolding()
-		
 		' extract all items in file
 		Local list:=_parser.ItemsMap[Path]
 		If list Then _tmpFileItems.AddAll( list )
@@ -1760,11 +1798,10 @@ Class CodeDocument Extends WideDocument
 		UpdateFolding( _tmpFileItems,Null )
 		
 		_tmpFileItems.Clear()
-		
 	End
+
 	
 	Method UpdateFolding( items:Stack<CodeItem>,parent:CodeTextView.Folding )
-	
 		For Local i:=Eachin items
 			Local cls:=i.IsLikeClass
 			If cls Or i.IsLikeFunc Or i.IsOperator Or i.IsProperty
@@ -1775,13 +1812,13 @@ Class CodeDocument Extends WideDocument
 			Endif
 		Next
 	End
+
 	
 	Method OnTextChanged()
-		
 	End
+
 	
 	Method OnCursorChanged()
-		
 		If _parsingEnabled
 			OnUpdateCurrentScope()
 		Endif
@@ -1801,11 +1838,11 @@ Class CodeDocument Extends WideDocument
 		Local lower:=line.Trim().ToLower()
 		Local skip:=lower.StartsWith( "function " ) Or lower.StartsWith( "method " ) Or
 						lower.StartsWith( "operator " ) Or lower.StartsWith( "property " )
-		If Not skip
+		If Not skip Then
 			Local i1:=line.Find( "(" )
 			skip=(i1<0 Or i1>=pos)
 		Endif
-		If skip
+		If skip Then
 			ParamsHint?.Hide()
 			_storedPos=-1
 			Return
@@ -1819,7 +1856,6 @@ Class CodeDocument Extends WideDocument
 			Local c:=line[i]
 			Select c
 				Case Chars.OPENED_ROUND_BRACKET
-					
 					If quotes Mod 2 <> 0 Continue
 					
 					brackets+=1
@@ -1854,7 +1890,6 @@ Class CodeDocument Extends WideDocument
 					Endif
 					
 				Case Chars.CLOSED_ROUND_BRACKET
-					
 					If quotes Mod 2 <> 0 Continue
 					
 					brackets-=1
@@ -1866,17 +1901,14 @@ Class CodeDocument Extends WideDocument
 					Endif
 					
 				Case Chars.DOUBLE_QUOTE
-					
 					quotes+=1
 					
 				Case Chars.SINGLE_QUOTE 'comment char
-					
 					If quotes Mod 2 = 0
 						Exit
 					Endif
 					
 				Case Chars.COMMA
-					
 					If quotes Mod 2 = 0 And part<>Null
 						Local r:=part.current
 						r.y=i
@@ -1885,7 +1917,6 @@ Class CodeDocument Extends WideDocument
 						part.ranges.Add( r )
 						part.index+=1
 					Endif
-					
 			End
 		Next
 		
@@ -1925,13 +1956,10 @@ Class CodeDocument Extends WideDocument
 			
 			results.Clear()
 			
-			If isNew
-				
+			If isNew Then
 				Local item:=_parser.GetItem( ident )
 				If item Then _parser.GetConstructors( item,results )
-				
 			Else
-				
 				_parser.GetItemsForAutocomplete( opts )
 				
 				Local parts:=ident.Split( "." )
@@ -1947,7 +1975,7 @@ Class CodeDocument Extends WideDocument
 				Wend
 			Endif
 			
-			If results.Empty
+			If results.Empty Then
 				ParamsHint?.Hide()
 				_storedPos=-1
 				Return
@@ -1968,9 +1996,9 @@ Class CodeDocument Extends WideDocument
 		
 		ParamsHint?.SetIndex( paramIndex )
 	End
+
 	
 	Class ParamsPart
-		
 		Field ident:String
 		Field ranges:=New Stack<Vec2i>
 		Field index:Int
@@ -1987,18 +2015,22 @@ Class CodeDocument Extends WideDocument
 	Method OnFindSelection()
 		MainWindow.OnFind()
 	End
+
 	
 	Method OnFindPrev()
 		MainWindow.OnFindPrev()
 	End
+
 	
 	Method OnFindNext()
 		MainWindow.OnFindNext()
 	End
+
 	
 	Method OnPrevBookmark()
 		Alert( "Not implemented yet." )
 	End
+
 	
 	Method OnNextBookmark()
 		Alert( "Not implemented yet." )
@@ -2007,15 +2039,15 @@ Class CodeDocument Extends WideDocument
 	Method OnToggleBookmark()
 		Alert( "Not implemented yet." )
 	End
+
 	
 	Method OnShiftLeft()
-		
 		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Tab,Key.Tab,Modifier.Shift,"~t" )
 		_codeView.OnKeyEvent( event )
 	End
+
 	
 	Method OnShiftRight()
-		
 		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Tab,Key.Tab,Modifier.None,"~t" )
 		_codeView.OnKeyEvent( event )
 	End
@@ -2029,32 +2061,32 @@ Class CodeDocumentType Extends WideDocumentType
 	Property Name:String() Override
 		Return "CodeDocumentType"
 	End
+
 	
-	Protected
+Protected
+
 	
 	Method New()
 		AddPlugin( Self )
-		
 		'Extensions=New String[]( ".wx",".cpp",".h",".hpp",".hxx",".c",".cxx",".m",".mm",".s",".asm",".html",".js",".css",".php",".md",".xml",".ini",".sh",".bat",".glsl" )
 	End
+
 	
 	Method OnCreateDocument:WideDocument( path:String ) Override
-		
 		Return New CodeDocument( path )
 	End
 	
 	
-	Private
+Private
 	
 	Global _instance:=New CodeDocumentType
-	
 End
+
 
 
 Class CodeItemIcons
 	
 	Function GetIcon:Image( item:CodeItem )
-	
 		If Not _icons Then InitIcons()
 		
 		Local key:String
@@ -2080,84 +2112,88 @@ Class CodeItemIcons
 		Return ic
 	End
 
+
 	Function GetKeywordsIcon:Image()
-	
 		If Not _icons Then InitIcons()
 		Return _icons["keyword"]
 	End
+
 	
-	Function GetIcon:Image(key:String)
-	
+	Function GetIcon:Image( key:String )
 		If Not _icons Then InitIcons()
 		Return _icons[key]
 	End
 
-	Private
+Private
 
 	Global _icons:Map<String,Image>
 	Global _iconDefault:Image
+
 	
 	Function Load:Image( name:String )
-		
 		Return ThemeImages.Get( "codeicons/"+name )
 	End
+
 	
 	Function InitIcons()
-	
 		_icons = New Map<String,Image>
+
+		_icons["blank"] = Load( "blank.png" )
 		
-		_icons["constructor_public"]=Load( "constructor.png" )
-		_icons["constructor_private"]=Load( "constructor_private.png" )
-		_icons["constructor_protected"]=Load( "constructor_protected.png" )
+		_icons["constructor_public"] = Load( "constructor.png" )
+		_icons["constructor_private"] = Load( "constructor_private.png" )
+		_icons["constructor_protected"] = Load( "constructor_protected.png" )
 		
-		_icons["function_public"]=Load( "method_static.png" )
-		_icons["function_private"]=Load( "method_static_private.png" )
-		_icons["function_protected"]=Load( "method_static_protected.png" )
+		_icons["function_public"] = Load( "method_static.png" )
+		_icons["function_private"] = Load( "method_static_private.png" )
+		_icons["function_protected"] = Load( "method_static_protected.png" )
 		
-		_icons["property_public"]=Load( "property.png" )
-		_icons["property_private"]=Load( "property_private.png" )
-		_icons["property_protected"]=Load( "property_protected.png" )
+		_icons["property_public"] = Load( "property.png" )
+		_icons["property_private"] = Load( "property_private.png" )
+		_icons["property_protected"] = Load( "property_protected.png" )
 		
-		_icons["method_public"]=Load( "method.png" )
-		_icons["method_private"]=Load( "method_private.png" )
-		_icons["method_protected"]=Load( "method_protected.png" )
+		_icons["method_public"] = Load( "method.png" )
+		_icons["method_private"] = Load( "method_private.png" )
+		_icons["method_protected"] = Load( "method_protected.png" )
 		
-		_icons["lambda"]=Load( "annotation.png" )
+		_icons["lambda"] = Load( "annotation.png" )
 		
-		_icons["class_public"]=Load( "class.png" )
-		_icons["class_private"]=Load( "class_private.png" )
-		_icons["class_protected"]=Load( "class_protected.png" )
+		_icons["class_public"] = Load( "class.png" )
+		_icons["class_private"] = Load( "class_private.png" )
+		_icons["class_protected"] = Load( "class_protected.png" )
 		
-		_icons["enum_public"]=Load( "enum.png" )
-		_icons["enum_private"]=Load( "enum_private.png" )
-		_icons["enum_protected"]=Load( "enum_protected.png" )
+		_icons["enum_public"] = Load( "enum.png" )
+		_icons["enum_private"] = Load( "enum_private.png" )
+		_icons["enum_protected"] = Load( "enum_protected.png" )
 		
-		_icons["struct_public"]=Load( "struct.png" )
-		_icons["struct_private"]=Load( "struct_private.png" )
-		_icons["struct_protected"]=Load( "struct_protected.png" )
+		_icons["struct_public"] = Load( "struct.png" )
+		_icons["struct_private"] = Load( "struct_private.png" )
+		_icons["struct_protected"] = Load( "struct_protected.png" )
 		
-		_icons["interface"]=Load( "interface.png" )
+		_icons["interface"] = Load( "interface.png" )
 		
-		_icons["field_public"]=Load( "field.png" )
-		_icons["field_private"]=Load( "field_private.png" )
-		_icons["field_protected"]=Load( "field_protected.png" )
+		_icons["field_public"] = Load( "field.png" )
+		_icons["field_private"] = Load( "field_private.png" )
+		_icons["field_protected"] = Load( "field_protected.png" )
 		
-		_icons["global_public"]=Load( "field_static.png" )
-		_icons["global_private"]=Load( "field_static_private.png" )
-		_icons["global_protected"]=Load( "field_static_protected.png" )
+		_icons["global_public"] = Load( "field_static.png" )
+		_icons["global_private"] = Load( "field_static_private.png" )
+		_icons["global_protected"] = Load( "field_static_protected.png" )
 		
-		_icons["field_func"]=Load( "field_func.png" )
+		_icons["field_func"] = Load( "field_func.png" )
 		
-		_icons["const"]=Load( "const.png" )
-		_icons["local"]=Load( "local.png" )
-		_icons["keyword"]=Load( "keyword.png" )
-		_icons["alias"]=Load( "alias.png" )
-		_icons["operator"]=Load( "operator.png" )
-		_icons["error"]=Load( "error.png" )
-		_icons["warning"]=Load( "warning.png" )
-		_icons["inherited"]=Load( "class.png" )
+		_icons["lambda"] = Load( "lambda.png" )
+
+		_icons["const"] = Load( "const.png" )
+		_icons["local"] = Load( "local.png" )
+		_icons["keyword"] = Load( "keyword.png" )
+		_icons["alias"] = Load( "alias.png" )
+		_icons["operator"] = Load( "operator.png" )
+		_icons["error"] = Load( "error.png" )
+		_icons["warning"] = Load( "warning.png" )
+		_icons["inherited"] = Load( "class.png" )
 				
-		_iconDefault=Load( "other.png" )
+		_iconDefault = Load( "other.png" )
 		
 	End
 	
@@ -2167,16 +2203,16 @@ End
 Class NavOps<T>
 	
 	Field OnNavigate:Void( target:T )
+
 	
 	Method Navigate( value:T )
-		
 		Push( value )
 		
 		OnNavigate( value )
 	End
+
 	
 	Method Push( value:T )
-		
 		' remove all forwarded
 		While _index<_count-1
 			_items.Pop()
@@ -2190,9 +2226,9 @@ Class NavOps<T>
 		_index+=1
 		_count+=1
 	End
+
 	
 	Method TryBack()
-		
 		_index-=1
 		If _index<0
 			_index=0
@@ -2202,9 +2238,9 @@ Class NavOps<T>
 		
 		OnNavigate( value )
 	End
+
 	
 	Method TryForward()
-		
 		_index+=1
 		If _index>=_count
 			_index=_count-1
@@ -2214,25 +2250,25 @@ Class NavOps<T>
 		
 		OnNavigate( value )
 	End
+
 	
 	Property Current:T()
-	
 		Return _index>=0 ? _items[_index] Else Null
 	End
+
 	
 	Property Empty:Bool()
-	
 		Return _index=-1
 	End
+
 	
 	Method Clear()
-	
 		_items.Clear()
 		_index=-1
 		_count=0
 	End
 	
-	Private
+Private
 	
 	Field _index:=-1,_count:Int
 	Field _items:=New Stack<T>
@@ -2244,23 +2280,19 @@ End
 Global Navigator:=New NavOps<NavCode>
 
 
-
 Private
 
 Global AutoComplete:AutocompleteDialog
 
 
 Class CodeDocumentTypeBridge Extends CodeDocumentType
-	
 	Function AddExtensions( inst:CodeDocumentType,exts:String[] )
 		inst.AddExtensions( exts )
 	End
-	
 End
 
 
 Class NavCode
-
 	Field pos:Vec2i
 	Field filePath:String
 	
@@ -2270,18 +2302,18 @@ Class NavCode
 	
 End
 
+
+
 Function ScaledVal:Int( val:Int )
-	
 	Return val*App.Theme.Scale.x
 End
 
 
 Global ParamsHint:ParamsHintView
 
-Class ParamsHintView Extends TextView
 
+Class ParamsHintView Extends TextView
 	Method New()
-		
 		Style=GetStyle( "ParamsHint" )
 		ReadOnly=True
 		Visible=False
@@ -2292,9 +2324,9 @@ Class ParamsHintView Extends TextView
 		
 		OnThemeChanged()
 	End
+
 	
 	Method Show( items:Stack<CodeItem>,location:Vec2i,sender:CodeTextView )
-		
 		Hide()
 		
 		_items=items
@@ -2333,36 +2365,37 @@ Class ParamsHintView Extends TextView
 '			'dy=-dy
 '		Endif
 		Offset=location'+dy
-		
 	End
+
 	
 	Method Hide()
-		
 		Visible=False
 	End
+
 	
 	Method SetIndex( index:Int )
-		
 		_paramIndex=index
 	End
+
 	
-	Private
+Private
+
 	
 	Field _items:Stack<CodeItem>
 	Field _paramIndex:Int
 	Field _color1:Color,_color2:Color
 	Field _sender:CodeTextView
 	Field _offsetX:=0,_offsetAtIndex:=-1
+
 	
 	Method OnRenderContent( canvas:Canvas ) Override
-		
+'		Print "CodeDocument:ParamsHintView"
 		Local stored:=canvas.Color
 		
 		Local x0:=_offsetX
 		Local x:Float=x0,y:Float,s:=""
 		Local font:=RenderStyle.Font
 		For Local item:=Eachin _items
-			
 			Local params:=item.Params
 			If Not params
 				s="<no params>"
@@ -2414,15 +2447,15 @@ Class ParamsHintView Extends TextView
 		
 		canvas.Color=stored
 	End
+
 	
 	Method OnThemeChanged() Override
-		
 		_color1=App.Theme.GetColor( "params-hint-common" )
 		_color2=App.Theme.GetColor( "params-hint-selected" )
 	End
+
 	
 	Method OnContentMouseEvent( event:MouseEvent ) Override
-		
 		If event.Type=EventType.MouseDown
 			
 '			Print App.MouseLocation

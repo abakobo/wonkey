@@ -1,44 +1,201 @@
-
 Namespace wide
 
+#Import "../assets/open.png"
+#Import "../assets/file.png"
+#Import "../assets/fileview.png"
 
+
+Function OnRecentDlg:bool()
+	local recentView:RecentView = New RecentView()
+
+	Local dialog:RecentDlg = New RecentDlg( recentView )
+
+	dialog.ShowModal()
+	Return dialog.OK
+End function
+
+
+class RecentDlg Extends DialogExt
+	field OK:bool = False
+	
+	Method New( contentView:RecentView = Null )
+		Super.New( "", contentView )
+
+		MinSize = New Vec2i( 360, 600 )
+		FadeEnabled = True 'faded
+		
+'		Print "recentFiles count:"+MainWindow._recentFiles.Length
+
+		contentView.CloseCancel = lambda( )
+			OK = False
+			Hide()
+			contentView.tmr.Suspended = True
+		End
+			
+		contentView.CloseOK = lambda( path:string )
+			OK = True
+			Hide()
+			contentView.tmr.Suspended = True
+
+			If path <> "" Then MainWindow.OpenDocument( path )
+		End
+	End
+End
+
+
+class RecentView Extends View
+	field CloseCancel:Void()
+	field CloseOK:Void( path:string )
+
+	field ctrls:MiniUI = New MiniUI()
+
+	field _openImage:Image
+	field _fileImage:Image
+	field _lookImage:Image
+	
+	field ctrlList:int
+	field ButtonCancel:int
+	field ButtonOK:int
+	
+	field _lastKey:Key
+
+	field tmr:Timer
+
+
+	method New()
+		tmr = New Timer( 40, App.RequestRender )
+
+		_openImage = Image.Load( "asset::open.png" )
+		_fileImage = Image.Load( "asset::file.png" )
+		_lookImage = Image.Load( "asset::fileview.png" )
+
+		ctrls.OverColor = Color.UIBlue
+		ctrls.SetGrid( 6, 15 )
+
+'		ctrls.ShowGrid = true
+'		ctrls.ShowGuides = True
+		ctrls.GridInset = 6
+
+		Local scale:int = App.Theme.Scale.x
+
+		ctrls.AddImage( 0,-0.25, 1, 1.5, Color.White, _openImage )
+		ctrls.AddTextBold( 1,0, 1,1, Color.LightGrey, "Recent Files..." )
+		ctrls.AddText( 3,0, 1,1, Color.LightGrey * 0.8, "(click to view)" )
+
+		local length:int = MainWindow._recentFiles.Length
+		ctrlList = ctrls.AddCustomList( 0,1, 6, 13, Color.Black* 0.2, length, Clamp( length, 0, 20), True )
+		ctrls.SetBorder( ctrlList, 6 )
+		ctrls.SetSelected( ctrlList, -1 )
+
+		ButtonCancel = ctrls.AddButton( 2,14, 2, 1, Color.Grey * 0.5, "Cancel", True )
+		ButtonOK = ctrls.AddButton( 4,14, 2, 1, Color.UIBlue* 0.8, "OK", True )
+
+		ctrls.Clicked = lambda( ctrl:int )
+			Select ctrl
+				Case ButtonCancel
+					CloseCancel()
+
+				Case ButtonOK
+					Local path:string = ""
+					If ctrls.GetSelected( ctrlList ) > -1 Then
+						MainWindow._recentFiles.Data[ ctrls.GetSelected( ctrlList ) ]
+					End If
+					CloseOK( path )
+
+				Case ctrlList
+
+				Default
+					Print "ctrl clicked: "+ctrl
+			End Select
+		end
+
+		ctrls.OnDrawItem = lambda( canvas:Canvas, ctrl:int, item:int, selected:bool, x:int, y:int, width:int, height:int, border:int )
+			Select ctrl
+				Case ctrlList
+					If selected Then
+						canvas.Color = Color.LightGrey
+					Else
+						canvas.Color = Color.Grey
+					End If
+					
+					local path:string = MainWindow._recentFiles.Data[item]
+					local pathName:string = StripDir( path )
+					canvas.DrawText( pathName, x+border+height+height, y+height*0.5, 0,0.5 )
+					If selected Then
+						canvas.DrawRect( x+border+height*0.5, y, height, height, _lookImage )
+					Else
+						canvas.DrawRect( x+border+height*0.5, y, height, height, _fileImage )
+					End If
+
+			End Select
+		End
+	End method
+
+
+	Method OnRender( canvas:Canvas ) Override
+		If tmr.Suspended Then tmr.Suspended = False
+
+		ctrls.DrawControls( canvas, _mouseX, _mouseY, _mouseDown )
+
+		If Keyboard.KeyDown( Key.Escape ) Then
+			CloseCancel()
+
+		Else If Keyboard.KeyDown( Key.Up ) Then
+			If _lastKey <> Key.Up Then ctrls.SetSelected( ctrlList, ctrls.GetSelected( ctrlList ) - 1 )
+			_lastKey = Key.Up
+
+		Else If Keyboard.KeyDown( Key.Down ) Then
+			If _lastKey <> Key.Down Then ctrls.SetSelected( ctrlList, ctrls.GetSelected( ctrlList ) + 1 )
+			_lastKey = Key.Down
+
+		Else If Keyboard.KeyDown( Key.Enter ) Then
+			Local path:string = ""
+			If ctrls.GetSelected( ctrlList ) > -1 Then MainWindow._recentFiles.Data[ ctrls.GetSelected( ctrlList ) ]
+			CloseOK( path )
+
+		Else
+			_lastKey = Key.Left
+		End If
+	End method
+
+
+	method OnMouseMove() Override
+		If ctrls.Over( _mouseX, _mouseY ) Then
+			App.RequestRender()
+		End If
+	End method
+	
+End class
+
+
+'#rem
 Class RecentFiles
 	
 	Method New( docs:DocumentManager )
-		
 		docs.CurrentDocumentChanged+=Lambda()
-			
 			Local path:=docs.CurrentDocument?.Path
 			If path Then Add( path )
 		End
 	End
-	
-	Method ShowDialog:String()
-		
-		Local dialog:=New RecentFilesDialog( Files )
-		Local ok:=dialog.ShowModal()
-		
-		Return ok ? dialog.SelPath Else ""
-	End
-	
-	Private
-	
+
+Private
 	Field _files:=New StringStack
 	
+
 	Method Add( path:String )
-	
 		_files.Remove( path )
 		_files.Insert( 0,path )
 	End
+
 	
 	Property Files:String[]()
-	
 		Return _files.ToArray()
 	End
 	
 End
 
 
+#rem
 Class RecentFilesDialog Extends DialogExt
 
 	Method New( files:String[] )
@@ -213,6 +370,7 @@ Class RecentFilesDialog Extends DialogExt
 	End
 End
 
+
 Class FileListViewItem Extends ListViewItem
 	
 	Method New( text:String,path:String )
@@ -230,3 +388,5 @@ Class FileListViewItem Extends ListViewItem
 	Field _path:String
 	
 End
+
+#end rem

@@ -1,0 +1,75 @@
+Namespace wide
+
+
+Class FindTreeView Extends TreeViewExt
+	Method RenderNode( canvas:Canvas, node:Node ) Override
+		Local clip:=VisibleRect
+		If Not node._bounds.Intersects( clip ) Return
+		
+		If _rootNodeVisible Or node<>_rootNode
+			Local rect:=node._rect
+		
+			If node._children.Length
+				Local icon:=node._expanded ? _expandedIcon Else _collapsedIcon
+				
+				Local x:=(_nodeSize-icon.Width)/2
+				Local y:=(rect.Height-icon.Height)/2
+				
+				If icon Then RenderStyle.DrawIcon( canvas,icon,rect.min.x+x,rect.min.y+y )
+			Endif
+			
+			rect.min.x+=_nodeSize
+			
+			Local style:=NodeStyle( node )
+			
+			style.Render( canvas, rect )
+			rect -= style.Bounds
+
+			If node.Icon Then
+				Local y:int = (rect.Height - node.Icon.Height)/2
+				style.DrawIcon( canvas, node.Icon, rect.min.x, rect.min.y+y )
+				rect.min.x += node.Icon.Width+style.Font.TextWidth( " " )
+			Endif
+
+			If node.NumChildren > 0 Then
+				canvas.Color = App.Theme.GetColor( "white" )
+				style.DrawText( canvas, node.Text, rect, New Vec2f( 0,.5 ) )
+				rect.X += 1
+				style.DrawText( canvas, node.Text, rect, New Vec2f( 0,.5 ) )
+			Else
+				canvas.Color = App.Theme.GetColor( "text" )
+				
+				Local rem:string = node.Text.Left( 1 )
+				Local count:string = node.Text.Mid( 1, 1 )
+				Local fnd:string = "123456789"
+				Local len:int = fnd.Find( count )+1
+'				Print "rem:"+rem+" len:"+len+" count:"+count
+				Local num:string = node.Text.Mid( 2, len )
+				Local txt:string = node.Text.Right( node.Text.Length - 2 - len )
+'				Print "num:"+num+" txt:"+txt
+
+				canvas.Alpha = 1
+				style.DrawText( canvas, num, rect, New Vec2f( 0,.5 ) )
+
+				If node.Text.Left( 1 ) ="~" Then
+					canvas.Alpha = 0.3
+				Else
+					canvas.Alpha = 0.7
+				End If
+
+				rect.X += rect.X * 0.7
+				style.DrawText( canvas, txt, rect, New Vec2f( 0,.5 ) )
+			End If
+		Endif
+			
+		If node._expanded
+			For Local child:=Eachin node._children
+				RenderNode( canvas,child )
+			Next
+
+		Endif
+
+		canvas.Alpha = 1
+		
+	End
+End Class

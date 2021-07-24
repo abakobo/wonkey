@@ -7,6 +7,8 @@ Class XmlDocument Extends WideDocument
 	Method New( path:String )
 		Super.New( path )
 		
+		If _audioTimer Then _audioTimer.Suspended = True
+
 		_doc=New TextDocument
 		
 		_view=New TextView( _doc )

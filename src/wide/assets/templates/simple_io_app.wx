@@ -1,0 +1,84 @@
+Namespace myapp
+
+
+#Import "<std>"
+#Import "<mojo>"
+Using std..
+Using mojo..
+
+
+Function Main()
+	New AppInstance
+	New MyWindow
+	App.Run()
+End
+
+
+
+Class MyWindow Extends Window
+	
+	field _showColor:bool = False
+	field _showAlpha:bool = False
+	field _clickX:int
+	field _clickY:int
+
+	'this has no window sizing - or fullscreen on MacOS
+	Method New( title:String = "Simple mojo app", width:Int = 640, height:Int = 480, flags:WindowFlags = Null )
+		Super.New( title, width, height, flags )
+	End
+
+
+	method OnMouseMove() Override
+		'when the mouse moves check _mouseX and _mouseY for the current window mouse position
+	End method
+
+
+	method OnMouseDown() Override
+		_clickX = _mouseX
+		_clickY = _mouseY
+	End method
+	
+	
+	method OnKeyDown( KeyDown:Key ) override
+		Select KeyDown
+			Case Key.O
+				_showAlpha = Not _showAlpha
+
+			Case Key.P
+				_showColor = Not _showColor
+		End select
+	End method
+
+
+
+	Method OnRender( canvas:Canvas ) Override
+		App.RequestRender()
+		
+		If _showColor Then
+			canvas.Color = Color.Pine
+		Else
+			canvas.Color = Color.UIPurple
+		End If
+		canvas.DrawRect( 0,0, 400,200)
+
+		canvas.Color = Color.Sky
+		If _showAlpha Then
+			canvas.Alpha = 1
+		Else
+			canvas.Alpha = 0.5
+		End If
+		canvas.DrawRect( 200,100, 400,200)
+		
+		canvas.Alpha = 1
+		canvas.Color = Color.White
+		canvas.DrawText( "Press Key P for color   PDown:"+Keyboard.KeyDown( Key.P ), 5,5, )
+		canvas.DrawText( "Press Key O for alpha   PDown:"+Keyboard.KeyDown( Key.O ), 5,20, )
+
+		canvas.DrawText( "MouseX:"+_mouseX+"   MouseY:"+_mouseY, 5,50, )
+		canvas.DrawText( "MouseDown:"+_mouseDown, 5,65, )
+
+		canvas.DrawText( "MouseClick x/y:"+_clickX+" "+_clickY, 5,90, )
+	End
+	
+End
+

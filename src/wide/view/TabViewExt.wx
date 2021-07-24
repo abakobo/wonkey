@@ -4,12 +4,13 @@ Namespace wide
 
 Class ScrollViewTabs Extends ScrollView
 
+
 	Method New( contentView:View )
 		Super.New( contentView )
 	End
+
 	
 	Method OnMouseEvent( event:MouseEvent ) Override
-	
 		' catch horizontal scrolling
 		Select event.Type
 		Case EventType.MouseWheel
@@ -31,7 +32,6 @@ Class ScrollViewTabs Extends ScrollView
 		End
 		
 		Super.OnMouseEvent( event )
-		
 	End
 	
 End
@@ -39,38 +39,43 @@ End
 
 ' full copy of mojox.TabView
 ' can't extend it, all I need is private there
-'
 Class TabViewExt Extends DockingView Implements IDraggableHolder
+
 
 	#rem wonkeydoc Invoked when the current tab changes.
 	#end
 	Field CurrentChanged:Void()
+
 	
 	#rem wonkeydoc @hidden
 	#end
 	Field Clicked:Void()
+
 	
 	#rem wonkeydoc Invoked when a tab is right clicked.
 	#end
 	Field RightClicked:Void()
+
 	
 	#rem wonkeydoc Invoked when a tab is double clicked.
 	#end
 	Field DoubleClicked:Void()
+
 	
 	#rem wonkeydoc Invoked when a tab is double clicked.
 	#end
 	Field CloseClicked:Void( index:Int )
 
+
 	#rem wonkeydoc Invoked when a tab is dragged.
 	#end
 	Field Dragged:Void()
 
+
 	#rem wonkeydoc Creates a new tab view.
 	#end
-	Method New( flags:TabViewFlags=TabViewFlags.DraggableTabs )
-	
-		_flags=flags
+	Method New( flags:TabViewFlags = TabViewFlags.DraggableTabs )
+		_flags = flags
 		
 		Style=GetStyle( "TabView" )
 		Layout="fill"
@@ -109,16 +114,16 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		
 		If Not _listener Then _listener=New DraggableTabsListener
 	End
+
 	
 	Function CreateDraggableTab:TabButtonExt( text:String,view:View,possibleParents:TabViewExt[],icon:Image=Null,closable:Bool=False )
-		
 		Local tab:=New TabButtonExt( text,icon,view,closable,Null )
 		tab.PossibleHolders=possibleParents
 		Return tab
 	End
+
 	
 	Method Attach( item:Object,eventLocation:Vec2i )
-		
 		Local tab:=Cast<TabButtonExt>( item )
 		AddTab( tab )
 		MakeCurrent( tab,True )
@@ -126,9 +131,9 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		_vis=True
 		_curIndex=CurrentIndex-1 '-1 for [+] tab
 	End
+
 	
 	Method Detach:View( item:Object )
-		
 		Local tab:=Cast<TabButtonExt>( item )
 		RemoveTab( tab )
 		tab.Selected=True
@@ -138,68 +143,77 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		
 		Return tab
 	End
+
 	
 	Method OnDragStarted()
+		_dragDropMode = True
+		_curIndex = CurrentIndex
+		_vis = Visible
+		Visible = True
 		
-		_dragDropMode=True
-		_curIndex=CurrentIndex
-		_vis=Visible
-		Visible=True
-		If Not _placeHolderTab
-			Local v:=New Label ("[Drop tab here]")
-			v.Style=GetStyle( "TabsDropArea","Label" )
-			v.Layout="fill"
-			v.Gravity=New Vec2f( .5,.5 )
-			_placeHolderTab=AddTab( "[+]",v,True )
-			_placeHolderContent=v
+		If Not _placeHolderTab Then
+			Local v:Label = New Label ("[Drop tab here]")
+			v.Style = GetStyle( "TabsDropArea", "Label" )
+			v.Layout = "fill"
+			v.Gravity = New Vec2f( .5, .5 )
+			_placeHolderTab = AddTab( "[+]", v, True )
+			_placeHolderContent = v
 		Else
-			AddTab( _placeHolderTab,True )
+			AddTab( _placeHolderTab, True )
 		Endif
 	End
-	
+
+
 	Method OnDragEnded()
+'		Print "OnDragEnded"
+		If Not _dragDropMode Then
+'			Print "no drag drop"
+			Return
+		End If
 		
-		If Not _dragDropMode Return
+'		Print "drop ok"
 		
-		_dragDropMode=False
+		_dragDropMode = False
 		
 		RemoveTab( _placeHolderTab )
-		_placeHolderTab=Null
-'		
-		Visible=(_vis And NumTabs>0)
+		_placeHolderTab = Null
 		
-		If _curIndex>=0 Then CurrentIndex=_curIndex
+'		Print NumTabs
+		
+		Visible = (_vis And NumTabs > 1)
+		
+		If _curIndex >= 0 Then CurrentIndex=_curIndex
 	End
+
 	
 	#rem wonkeydoc Tab view flags.
 	#end
 	Property Flags:TabViewFlags()
-	
 		Return _flags
 	End
+
 	
 	#rem wonkeydoc Number of tabs
 	#end
 	Property NumTabs:Int()
-	
 		Return _tabs.Length
 	End
+
 	
 	#rem wonkeydoc Number of visible tabs
 	#end
 	Property VisibleTabs:Int()
-		
 		Local num:Int
 		For Local t:=Eachin _tabs
 			If t.Visible num+=1
 		Next
 		Return num
 	End
+
 	
 	#rem wonkeydoc Give string array of Visible tab names
 	#end
 	Property TabsVisible:String[]()
-		
 		Local arr:=New String[NumTabs]
 		For Local i:=0 Until _tabs.Length
 			If _tabs[i].Visible
@@ -208,32 +222,29 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		Next
 		Return arr
 	End
+
 	
 	#rem wonkeydoc The current index.
 	#end
 	Property CurrentIndex:Int()
-
 		If _current Return TabIndex( _current.View )
 
 		Return -1
-		
 	Setter( currentIndex:Int )
-		
 		MakeCurrent( _tabs[currentIndex],False )
 	End
+
 	
 	#rem wonkeydoc The current view.
 	#end
 	Property CurrentView:View()
-	
 		If _current Return _current.View
 
 		Return Null
-	
 	Setter( currentView:View )
-	
 		MakeCurrent( _tabs[ TabIndex( currentView ) ],False )
 	End
+
 
 	#rem wonkeydoc Gets a tab's view.
 	#end
@@ -243,82 +254,77 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		Return _tabs[index].View
 	End
 
+
 	#rem wonkeydoc Gets a tab's index.
 	#end
 	Method TabIndex:Int( view:View )
-	
 		For Local i:=0 Until _tabs.Length
 			If _tabs[i].View=view Return i
 		Next
 
 		Return -1
 	End
+
 	
 	Property Tabs:TabButtonExt[]()
 		Return _tabs.ToArray()
 	End
+
 	
 	Property TabsNames:String[]()
-		
 		Local arr:=New String[NumTabs]
 		For Local i:=0 Until _tabs.Length
 			arr[i]=_tabs[i].Text
 		Next
 		Return arr
 	End
+
 	
 	Property ActiveName:String()
 		Return _current ? _current.Text Else ""
 	End
+
 	
 	#rem wonkeydoc Adds a tab.
 	#end	
 	Method AddTab:TabButtonExt( text:String,view:View,makeCurrent:Bool=False,addAtBegin:Bool=False )
-	
 		Return AddTab( text,Null,view,makeCurrent,addAtBegin )
 	End
 
+
 	Method AddTab:TabButtonExt( text:String,icon:Image,view:View,makeCurrent:Bool=False,addAtBegin:Bool=False )
-		
 		Local tab:=New TabButtonExt( text,icon,view,_flags & TabViewFlags.ClosableTabs,Self )
 		
 		AddTab( tab,makeCurrent,addAtBegin )
 		
 		Return tab
 	End
+
 	
 	Method AddTab( tab:TabButtonExt,makeCurrent:Bool=False,addAtBegin:Bool=False )
-		
 		Assert( TabIndex( tab.View )=-1,"View has already been added to TabView" )
 		
 		TabButtonExt_Bridge.SetTabParent( tab,Self )
 		
 		tab.Clicked=Lambda()
-			
 			MakeCurrent( tab,True )
 			
 			Clicked()
 		End
 		
 		tab.RightClicked=Lambda()
-			
 			MakeCurrent( tab,True )
-			If tab.Undockable
-				UndockWindow.NewUndock( tab )
-			Else
-				RightClicked()
-			Endif
+			'If tab.Undockable Then UndockWindow.NewUndock( tab )
+			RightClicked()
 		End
 		
 		tab.DoubleClicked=Lambda()
-			
 			MakeCurrent( tab,True )
 			
 			DoubleClicked()
 		End
 		
 		tab.Dragged=Lambda( v:Vec2i )
-			
 			If Not (_flags & TabViewFlags.DraggableTabs) Return
 			
 			Local mx:=_tabBar.MouseLocation.x
@@ -328,7 +334,6 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 			
 			Local x:=0,i:=_tabs.Length
 			For Local j:=0 Until i
-				
 				If mx<x+w
 					i=j
 					Exit
@@ -359,7 +364,6 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		End
 		
 		tab.CloseClicked=Lambda()
-		
 			CloseClicked( TabIndex( tab.View ) )
 		End
 		
@@ -377,13 +381,12 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		Endif
 		
 		If makeCurrent MakeCurrent( tab,True ) 'CurrentIndex=index
-		
 	End
+
 	
 	#rem wonkeydoc Removes a tab.
 	#end
 	Method RemoveTab( index:Int )
-		
 		Local tab:=_tabs[index]
 		If _current=tab
 			_current.Selected=False
@@ -403,61 +406,61 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		If index>=NumTabs Then index-=1
 		If index>=0 Then CurrentIndex=index
 	End
+
 	
 	Method RemoveTab( view:View )
-	
 		RemoveTab( TabIndex( view ) )
 	End
+
 	
 	Method RemoveTab( tab:TabButton )
-	
 		RemoveTab( TabIndex( tab.View ) )
 	End
+
 	
 	Method SetTabView( index:Int,view:View )
-	
 		_tabs[index].View=view
 		
 		If _tabs[index]=_current ContentView=view
 	End
+
 	
 	Method SetTabView( view:View,newView:View )
-
 		SetTabView( TabIndex( view ),newView )
 	End
+
 	
 	#rem wonkeydoc Sets a tab's text.
 	#end
 	Method SetTabText( index:Int,text:String )
-	
 		_tabs[index].Text=text
 	End
-	
+
+
 	Method SetTabText( view:View,text:String )
-		
 		Local index:=TabIndex( view )
 		If index>=0 Then SetTabText( index,text )
 	End
+
 	
 	#rem wonkeydoc Sets a tab's icon.
 	#end
 	Method SetTabIcon( index:Int,icon:Image )
-	
 		_tabs[index].Icon=icon
 	End
+
 	
 	Method SetTabIcon( view:View,icon:Image )
-	
 		SetTabIcon( TabIndex( view ),icon )
 	End
+
 	
 	Method EnsureVisibleCurrentTab()
-	
 		EnsureVisibleTab( _current )
 	End
+
 	
 	Method MakeCurrent( tabCaption:String )
-		
 		For Local t:=Eachin _tabs
 			If t.Text=tabCaption
 				MakeCurrent( t,True )
@@ -467,10 +470,21 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 	End
 	
 	
-	Protected
+Protected
 	
-	Method OnMeasure:Vec2i() Override
+	'draw end of tabs - background
+	Method OnRender( canvas:Canvas ) Override
+		local y:int = 33 * App.Theme.Scale.y
+
+		canvas.Color = GetNewColor( MainWindow._theme.IDE[0], 0.01 )
+		canvas.DrawRect( Rect.X, 0, Rect.Width, 50 )
 		
+		canvas.Color = MainWindow._theme.IDE[3]
+		canvas.DrawRect( Rect.X, Rect.Y + y, Rect.Width, 4 * App.Theme.Scale.x )
+	End Method
+	
+
+	Method OnMeasure:Vec2i() Override
 		Local size:=Super.OnMeasure()
 		' show / hide navigation buttons
 		Local ww:=GetTabsWidth()
@@ -479,15 +493,14 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		
 		Return size
 	End
+
 	
 	Method OnThemeChanged() Override
-		
 		If _placeHolderContent Then _placeHolderContent.Style=GetStyle( "TabsDropArea","Label" )
 	End
 	
 	
-	Private
-	
+Private
 	Field _flags:TabViewFlags
 	Field _tabBar:TabBar
 	Field _tabs:=New Stack<TabButtonExt>
@@ -501,9 +514,9 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 	Field _dragDropMode:Bool
 	Field _vis:Bool
 	Global _listener:DraggableTabsListener
+
 	
 	Method MakeCurrent( tab:TabButtonExt,notify:Bool )
-	
 		If tab=_current Return
 		
 		Local prev:=_current
@@ -512,7 +525,7 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		
 		_current=tab
 		
-		If prev
+		If prev Then
 			prev.Selected=False
 			prev.ActiveChanged()
 		Endif
@@ -524,11 +537,10 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		If notify CurrentChanged()
 		
 		EnsureVisibleTab( tab )
-		
 	End
+
 	
 	Method EnsureVisibleTab( tab:TabButton )
-	
 		If Not tab Return
 		
 		MainWindow.UpdateWindow( False )
@@ -538,7 +550,7 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		Local L:=xx-scroll.x
 		Local R:=L+tab.Frame.Width
 	
-		If L < 0
+		If L < 0 Then
 			scroll.x+=L-8
 			_scrollView.Scroll=scroll
 		Else
@@ -549,9 +561,9 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 			Endif
 		Endif
 	End
-	
+
+
 	Method GetTabPosX:Int( tab:TabButton )
-		
 		Local xx:=0
 		For Local view:=Eachin _tabs
 			If view=tab Exit
@@ -559,9 +571,9 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		Next
 		Return xx
 	End
-	
+
+
 	Method GetTabsWidth:Int()
-	
 		Local xx:=0
 		For Local view:=Eachin _tabs
 			xx+=view.Frame.Width
@@ -573,38 +585,42 @@ End
 
 
 Class TabButtonExt Extends TabButton Implements IDraggableItem<TabViewExt>
-	
 	Field ActiveChanged:Void()
+
 	
 	Method New( text:String,icon:Image,view:View,closable:Bool,parentDock:TabViewExt )
-		
 		Super.New( text,icon,view,closable )
 		_parentDock=parentDock
 		_closable=closable
 	End
+
 	
 	Property Detachable:Bool()
 		Return PossibleHolders<>Null
 	End
+
 	
 	Property CurrentHolder:TabViewExt()
 		Return _parentDock
 	End
+
 	
 	Property PossibleHolders:TabViewExt[]()
 		Return _possibleParentDocks
 	Setter( value:TabViewExt[] )
 		_possibleParentDocks=value
 	End
+
 	
 	Method Activate()
-		
 		CurrentHolder?.MakeCurrent( Text )
 	End
+
 	
 	Property IsActive:Bool()
 		Return _parentDock.ActiveName=Text
 	End
+
 	
 	'undockable?
 	Property Undockable:Bool()
@@ -612,28 +628,92 @@ Class TabButtonExt Extends TabButton Implements IDraggableItem<TabViewExt>
 	Setter( value:Bool )
 		_undockable=value
 	End
+
 	
 	Method SetLockedState( locked:Bool )
-		
 		_locked=locked
 		OnThemeChanged()
 	End
 	
+
+	'draw buttons
+	Method OnRender( canvas:Canvas ) Override
+		local textColor:Color = MainWindow._theme.IDE[1]
+
+		Local bnd:Recti = Bounds
+		bnd.Right += 8
+		bnd.Bottom += 10 * App.Theme.Scale.x
+		canvas.Viewport = bnd
+'		canvas.Color = Color.Red
+'		canvas.DrawRect( bnd )
+		Select Super.StyleState
+			Case "hover"
+				canvas.Color = GetNewColor( MainWindow._theme.IDE[3], -0.12 )
+				textColor = GetNewColor( MainWindow._theme.IDE[1], 0.2 )
+				canvas.DrawRect( bnd )
+			Case "selected"
+				canvas.Color = MainWindow._theme.IDE[3]
+				textColor = GetNewColor( MainWindow._theme.IDE[1], 0.2 )
+				canvas.DrawRect( bnd )
+			Default
+				canvas.Color = GetNewColor( MainWindow._theme.IDE[0], 0.1 )
+				canvas.DrawRect( bnd )
+				If Text And Text.Left(1) = "+" Then
+					canvas.Color = MainWindow._theme.IDE[3] * 1.5
+					canvas.Alpha = 0.125
+					canvas.DrawRect( bnd )
+					canvas.Alpha = 1
+				End if
+		End Select
+		
+		If Text Then
+			Local font:Font = canvas.Font
+			canvas.Font = Style.Font
+			
+			canvas.Color = textColor
+			canvas.DrawText( Text, bnd.Height * 0.18,bnd.Height * 0.4, 0,0.5 )
+
+			canvas.Font = font
+		Endif
+
+		bnd.Top = bnd.Bottom - 3 * App.Theme.Scale.x
+		If Text And Text.Left(1) = "+" Then
+			canvas.Color = MainWindow._theme.IDE[3] * 1.5
+		Else
+			canvas.Color = MainWindow._theme.IDE[3]
+		End If
+		canvas.DrawRect( bnd )
+
+'		canvas.Color = Color.Red'MainWindow._theme.IDE[3]
+'		bnd.Top = bnd.Bottom-6
+'		bnd.Bottom += 6
+'		canvas.Viewport = bnd
+'		canvas.DrawRect( bnd )
+		
+		'draw the tab divider
+		bnd = Bounds
+		bnd.Bottom += 6 * App.Theme.Scale.x
+		bnd.Right = bnd.Left + 10
+		canvas.Viewport = bnd
+		canvas.Color = GetNewColor( MainWindow._theme.IDE[0], 0.03 )
+		canvas.DrawRect( bnd )
+
+	End
+
 	
-	Protected
-	
+Protected
 	Field _parentDock:TabViewExt
+
 	
 	Method OnThemeChanged() Override
-		
 		Super.OnThemeChanged()
 		Style=GetStyle( _locked ? "TabButtonLocked" Else "TabButton" )
 	End
+
 	
 	Method OnMouseEvent( event:MouseEvent ) Override
-		
-		If _closable And 
-			event.Type=EventType.MouseUp And 
+		If _closable And
+			event.Type=EventType.MouseUp And
 			event.Button=MouseButton.Middle
 			
 			CloseClicked()
@@ -645,8 +725,7 @@ Class TabButtonExt Extends TabButton Implements IDraggableItem<TabViewExt>
 	End
 	
 	
-	Private
-	
+Private
 	Field _possibleParentDocks:TabViewExt[]
 	Field _locked:Bool
 	Field _closable:Bool
@@ -654,32 +733,28 @@ Class TabButtonExt Extends TabButton Implements IDraggableItem<TabViewExt>
 End
 
 
-Private 
+Private
+
 
 Class TabButtonExt_Bridge Extends TabButtonExt Abstract
-
 	Function SetTabParent( tab:TabButtonExt,parent:TabViewExt )
-		
 		tab._parentDock=parent
 	End
 	
-	Private
+Private
 	
 	Method New( text:String,icon:Image,view:View,closable:Bool,parentDock:TabViewExt )
-		
 		Super.New( text,icon,view,closable,parentDock )
 	End
-	
-	
 End
 
 
+
 Class DraggableTabsListener Extends DraggableViewListener<TabButtonExt,TabViewExt>
-	
 	Method GetItem:TabButtonExt( eventView:View,eventLocation:Vec2i ) Override
-		
 		Return Cast<TabButtonExt>( eventView )
 	End
+
 	
 	Method GetHolder:TabViewExt( view:View ) Override
 		

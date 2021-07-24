@@ -10,6 +10,7 @@ Class CodeTextView Extends TextView
 	
 	Field LineNumChanged:Void( prevLine:Int,newLine:Int )
 	Field TextChanged:Void()
+
 	
 	Class Folding
 		Field folded:Int
@@ -17,9 +18,9 @@ Class CodeTextView Extends TextView
 		Field endLine:Int
 		Field parent:Folding
 	End
+
 	
 	Method New()
-		
 		Super.New()
 		
 		CursorBlinkRate=2.5
@@ -32,7 +33,6 @@ Class CodeTextView Extends TextView
 		LineSpacing=Prefs.EditorLineSpacing
 		
 		Document.LinesModified+=Lambda( first:Int,removed:Int,inserted:Int )
-			
 			Local delta:=inserted-removed
 			If delta=0 Return
 			
@@ -65,15 +65,13 @@ Class CodeTextView Extends TextView
 			Local less:=(PosInLineAtCursor<=indent)
 			
 			For Local line:=Eachin _folding.Keys
-				
 				Local f:=_folding[line]
 				
 				' move foldings which are under changed line
 				Local shiftBlock:=False
 				Local expandBlock:=False
 				
-				If line>=first
-				
+				If line>=first Then
 					If line>first Or less ' shift down whole block
 						shiftBlock=True
 					Else
@@ -81,7 +79,6 @@ Class CodeTextView Extends TextView
 					Endif
 					
 				Elseif first>f.startLine And first<=f.endLine ' changed line is inside of folding
-					
 					expandBlock=(first<f.endLine Or less) ' expand block ending
 					
 					If f.folded>=30
@@ -94,9 +91,8 @@ Class CodeTextView Extends TextView
 					Endif
 				Endif
 				
-				If shiftBlock ' shift down whole block
-					
-					If f.folded
+				If shiftBlock Then ' shift down whole block
+					If f.folded Then
 						flag=True
 					Endif
 					f.startLine+=delta
@@ -109,13 +105,11 @@ Class CodeTextView Extends TextView
 					Endif
 					
 				Elseif expandBlock
-					
 					f.endLine+=delta
 					
 				Endif
-				
 			Next
-			
+
 			For Local line:=Eachin _foldingTmpMap.Keys
 				Local f:=_foldingTmpMap[line]
 				_folding.Remove( line )
@@ -127,15 +121,13 @@ Class CodeTextView Extends TextView
 				OnValidateStyle()
 				RequestRender()
 			Endif
-			
 		End
-		
 		
 		UpdateThemeColors()
 	End
+
 	
 	Method DeleteLineAtCursor()
-	
 		Local line:=Document.FindLine( Cursor )
 		Local pos:=Cursor
 		SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
@@ -143,9 +135,9 @@ Class CodeTextView Extends TextView
 		pos=Min( pos,Document.EndOfLine( line ) )
 		SelectText( pos,pos )
 	End
+
 	
 	Method DeleteWordBackward()
-	
 		If CanCopy ' try to delete selected area
 			ReplaceText( "" )
 			Return
@@ -164,9 +156,9 @@ Class CodeTextView Extends TextView
 			ReplaceText( "" )
 		Endif
 	End
+
 	
 	Method DeleteWordForward()
-	
 		If CanCopy ' try to delete selected area
 			ReplaceText( "" )
 			Return
@@ -185,27 +177,27 @@ Class CodeTextView Extends TextView
 			ReplaceText( "" )
 		Endif
 	End
+
 	
 	Method DeleteToEnd()
-	
 		Local i1:=Min( Anchor,Cursor )
 		Local i2:=Max( Anchor,Cursor )
 	
 		SelectText( i1,Document.EndOfLine( Document.FindLine( i2 ) ) )
 		ReplaceText( "" )
 	End
+
 	
 	Method DeleteToBegin()
-	
 		Local i1:=Min( Anchor,Cursor )
 		Local i2:=Max( Anchor,Cursor )
 	
 		SelectText( Document.StartOfLine( Document.FindLine( i1 ) ),i2 )
 		ReplaceText( "" )
 	End
+
 	
 	Method LowercaseSelection()
-	
 		Local txt:=SelectedText
 		If txt
 			Local a:=Anchor,c:=Cursor
@@ -213,9 +205,9 @@ Class CodeTextView Extends TextView
 			SelectText( a,c )
 		Endif
 	End
+
 	
 	Method UppercaseSelection()
-	
 		Local txt:=SelectedText
 		If txt
 			Local a:=Anchor,c:=Cursor
@@ -223,9 +215,9 @@ Class CodeTextView Extends TextView
 			SelectText( a,c )
 		Endif
 	End
+
 	
 	Method SwapCaseSelection()
-	
 		Local txt:=SelectedText
 		If txt
 			Local a:=Anchor,c:=Cursor
@@ -233,9 +225,9 @@ Class CodeTextView Extends TextView
 			SelectText( a,c )
 		Endif
 	End
+
 	
 	Method ExpandSelection()
-		
 		' this method tries to intelligent expand
 		' selection under cursor
 		'
@@ -364,16 +356,15 @@ Class CodeTextView Extends TextView
 		Endif
 		
 		SelectText( min,max )
-		
 	End
+
 	
 	Method ShrinkSelection()
-		
 		SelectText( Cursor,Cursor )
 	End
+
 	
 	Property SelectedText:String()
-		
 		If Not CanCopy Return ""
 		
 		Local i1:=Min( Anchor,Cursor )
@@ -381,22 +372,29 @@ Class CodeTextView Extends TextView
 		
 		Return Text.Slice( i1,i2 )
 	End
+
+	
+	method CopyCodeBlock()
+'		local i:int
+'		For i = Chars.A To Chars.Z
+'			Print String( i ) + "~t- " + CharToString(i)
+'		Next
+	End Method
+	
 	
 	Method CommentBlock( commentMark:String="'" )
-		
-		CommentUncommentBlock( True,commentMark )
+		CommentUncommentBlock( True, commentMark )
 	End
+
 	
 	Method UncommentBlock( commentMark:String="'" )
-		
-		CommentUncommentBlock( False,commentMark )
+		CommentUncommentBlock( False, commentMark )
 	End
+
 	
 	Method DuplicateBlock()
-		
 		Local cur:=Cursor,anc:=Anchor
 		If cur=anc ' duplicate whole line
-			
 			Local pos:=PosInLineAtCursor
 			Local line:=Document.FindLine( cur )
 			Local s:=LineTextAtCursor
@@ -407,7 +405,6 @@ Class CodeTextView Extends TextView
 			SelectText( pos,pos )
 			
 		Else ' duplicate selection
-			
 			Local min:=Min( Cursor,Anchor )
 			Local max:=Max( Cursor,Anchor )
 			Local selLen:=max-min
@@ -429,16 +426,16 @@ Class CodeTextView Extends TextView
 			
 		Endif
 	End
+
 	
 	Property IsCursorAtTheEndOfLine:Bool()
-		
 		Local line:=Document.FindLine( Cursor )
 		Local pos:=Document.EndOfLine( line )
 		Return pos=Cursor
 	End
+
 	
 	Method IdentAtCursor:String()
-		
 		Local text:=Text
 		Local start:=Cursor
 		
@@ -460,15 +457,15 @@ Class CodeTextView Extends TextView
 		
 		Return text.Slice( start,ends )
 	End
+
 	
 	Method IdentBeforeCursor:String( withDots:Bool=True,wholeWord:Bool=False )
-		
 		Local info:=GetIndentBeforePos_Wx( LineTextAtCursor,PosInLineAtCursor,withDots,wholeWord )
 		Return info.ident
 	End
+
 	
 	Property WordAtCursor:String()
-		
 		Local text:=Text
 		Local cur:=Cursor
 		Local n:=Cursor-1
@@ -490,9 +487,9 @@ Class CodeTextView Extends TextView
 		
 		Return ident
 	End
+
 		
 	Property FullIdentAtCursor:String()
-		
 		Local text:=Text
 		Local cur:=Cursor
 		Local n:=Cursor-1
@@ -501,7 +498,6 @@ Class CodeTextView Extends TextView
 		Local ends:=Document.EndOfLine( line )
 		
 		While n >= start
-			
 			If text[n] = Chars.DOT 'dot
 				
 			ElseIf Not (IsIdent( text[n] ) Or text[n] = Chars.GRID) '#
@@ -520,21 +516,21 @@ Class CodeTextView Extends TextView
 		
 		Return ident
 	End
+
 	
 	Method FirstSelectedLine:Int()
-		
 		Local min:=Min( Anchor,Cursor )
 		Return Document.FindLine( min )
 	End
+
 	
 	Method LastSelectedLine:Int()
-	
 		Local max:=Max( Anchor,Cursor )
 		Return Document.FindLine( max )
 	End
+
 	
 	Method FirstIdentInLine:String( cursor:Int )
-	
 		Local line:=Document.FindLine( cursor )
 		Local text:=Document.GetLine( line )
 		Local n:=0
@@ -548,9 +544,9 @@ Class CodeTextView Extends TextView
 		Wend
 		Return (n > indent ? text.Slice( indent,n ) Else "")
 	End
+
 	
 	Method GetIndent:Int( text:String )
-	
 		Local n:=0
 		While n < text.Length And text[n] <= 32
 			n+=1
@@ -558,8 +554,8 @@ Class CodeTextView Extends TextView
 		Return n
 	End
 
+
 	Method GotoPosition( pos:Vec2i,lenToSelect:Int=0 )
-	
 		'If pos.y = 0
 		'	GotoLine( pos.x )
 		'Else
@@ -569,75 +565,82 @@ Class CodeTextView Extends TextView
 		
 		MakeCentered()
 	End
+
 	
 	Property LineTextAtCursor:String()
 		Return Document.GetLine( Document.FindLine( Cursor ) )
 	End
+
+
 	Property LineTextAtAnchor:String()
 		Return Document.GetLine( Document.FindLine( Anchor ) )
 	End
+
 	
 	Property LineNumAtCursor:Int()
 		Return Document.FindLine( Cursor )
 	End
+
 	
 	Property LineNumAtAnchor:Int()
 		Return Document.FindLine( Anchor )
 	End
+
 	
 	Property PosInLineAtCursor:Int()
 		Return Cursor-Document.StartOfLine( LineNumAtCursor )
 	End
+
 	
 	Property PosInLineAtAnchor:Int()
 		Return Anchor-Document.StartOfLine( LineNumAtAnchor )
 	End
+
 	
 	Property StartOfLineAtCursor:Int()
 		Return Document.StartOfLine( LineNumAtCursor )
 	End
+
 	
 	Property CursorPos:Vec2i()
 		Return New Vec2i( LineNumAtCursor,PosInLineAtCursor )
 	End
+
 	
 	Property AnchorPos:Vec2i()
 		Return New Vec2i( LineNumAtAnchor,PosInLineAtAnchor )
 	End
+
 	
 	Property ShowWhiteSpaces:Bool()
-	
 		Return _showWhiteSpaces
-	
 	Setter( value:Bool )
-	
 		_showWhiteSpaces=value
 	End
+
 	
 	Property OverwriteMode:Bool()
-	
 		Return _overwriteMode
-	
 	Setter( value:Bool )
-	
 		_overwriteMode=value
 		
 		BlockCursor=_overwriteMode
 	End
+
 	
 	Method MarkSelectionAsExtraSelection()
-		
 		_extraSelStart=Anchor
 		_extraSelEnd=Cursor
 		RequestRender()
 	End
+
 	
 	Method ResetExtraSelection()
-		
 		_extraSelStart=-1
 		_extraSelEnd=-1
 		RequestRender()
 	End
+
 	
 	Property ExtraSelectionStart:Int()
 		Return _extraSelStart
@@ -645,6 +648,7 @@ Class CodeTextView Extends TextView
 		_extraSelStart=value
 		RequestRender()
 	End
+
 	
 	Property ExtraSelectionEnd:Int()
 		Return _extraSelEnd
@@ -652,13 +656,14 @@ Class CodeTextView Extends TextView
 		_extraSelEnd=value
 		RequestRender()
 	End
+
 	
 	Property HasExtraSelection:Bool()
 		Return _extraSelStart>=0
 	End
+
 	
 	Method SetTextSilent( text:String )
-		
 		Local curLine:=LineNumAtCursor
 		Local ancLine:=LineNumAtAnchor
 		Local curPos:=PosInLineAtCursor
@@ -669,16 +674,52 @@ Class CodeTextView Extends TextView
 		
 		SelectText( Document.StartOfLine( ancLine )+ancPos,Document.StartOfLine( curLine )+curPos )
 		Scroll=scroll
-		
 	End
+
+	
+	Method SelectBlock( startLine:int )
+'	Method FoldBlock( startLine:Int,updateLines:Bool=True,findBlock:Bool=False )
+'		Local f:=FindNearestFolding( startLine )
+'		If Not f Return
+'
+'		startLine = f.startLine
+		
+		If Not _folding.Contains( startLine ) Return
+		Local f := _folding[startLine]
+		If f.folded Return
+		
+		Local endLine := f.endLine
+		Local curLine := LineNumAtCursor
+		
+'		Print startLine+" "+endLine
+		SelectText( Document.StartOfLine(startLine), Document.StartOfLine(endLine+1) )
+		
+		
+'		Local moveCursor:=False
+'
+'		For Local line:=startLine+1 To endLine
+'			SetLineVisible( line,False )
+'			If line=curLine Then moveCursor=True
+'		Next
+'
+'		If moveCursor
+'			Local pos:=Document.StartOfLine( startLine )
+'			SelectText( pos,pos )
+'		Endif
+'
+'		If updateLines
+'			OnValidateStyle()
+'			RequestRender()
+'		Endif
+	End Method
+	
 	
 	Method ResetFolding()
-		
 		_folding.Clear()
 	End
+
 	
 	Method MarkAsFoldable( line:Int,endLine:Int,parent:Folding )
-		
 		' try to fix folding bounds - we get incorrect endLine from wake
 		While endLine>line
 			' searching for End keyword with the same indentation as [line]
@@ -715,9 +756,9 @@ Class CodeTextView Extends TextView
 			folding.parent=parent
 		Endif
 	End
+
 	
 	Method SwitchFolding( line:Int,gotoLine:Bool=False )
-		
 		If Not _folding.Contains( line ) Return
 		
 		If gotoLine
@@ -730,9 +771,9 @@ Class CodeTextView Extends TextView
 			FoldBlock( line )
 		Endif
 	End
+
 	
 	Method FoldBlock( startLine:Int,updateLines:Bool=True,findBlock:Bool=False )
-		
 		If findBlock
 			Local f:=FindNearestFolding( startLine )
 			If Not f Return
@@ -763,9 +804,9 @@ Class CodeTextView Extends TextView
 			RequestRender()
 		Endif
 	End
+
 	
 	Method UnfoldBlock( startLine:Int,updateLines:Bool=True,findBlock:Bool=False,unfoldChildren:Bool=False )
-		
 		If findBlock
 			Local f:=FindNearestFolding( startLine )
 			If Not f Return
@@ -792,9 +833,9 @@ Class CodeTextView Extends TextView
 			RequestRender()
 		Endif
 	End
+
 	
 	Method FindNearestFolding:Folding( line:Int )
-		
 		Local maxLine:=-1
 		Local found:Folding
 		For Local i:=Eachin _folding.Keys
@@ -809,9 +850,9 @@ Class CodeTextView Extends TextView
 	
 		Return found
 	End
+
 	
 	Method UnfoldAtLine( line:Int )
-		
 		' find folding block at line
 		Local found:=FindNearestFolding( line )
 		
@@ -828,16 +869,15 @@ Class CodeTextView Extends TextView
 		
 		OnValidateStyle()
 		RequestRender()
-		
 	End
+
 	
 	Method GetFolding:Folding( line:Int )
-	
 		Return _folding.Contains( line ) ? _folding[line] Else Null
 	End
+
 	
 	Method FoldAll()
-	
 		For Local line:=Eachin _folding.Keys
 			FoldBlock( line,False )
 		Next
@@ -845,9 +885,9 @@ Class CodeTextView Extends TextView
 		OnValidateStyle()
 		RequestRender()
 	End
+
 	
 	Method UnfoldAll()
-	
 		For Local line:=Eachin _folding.Keys
 			UnfoldBlock( line,False )
 		Next
@@ -857,15 +897,13 @@ Class CodeTextView Extends TextView
 	End
 	
 	
-	Protected
-	
+Protected
 	Field _folding:=New IntMap<Folding>
 	Field _delKey:Key
+
 	
 	Method CheckFormat( event:KeyEvent )
-		
 		Select event.Type
-		
 			Case EventType.KeyChar
 				
 				If IsIdent( event.Text[0] )
@@ -875,10 +913,8 @@ Class CodeTextView Extends TextView
 				Endif
 				
 			Case EventType.KeyDown
-				
 				local key:=FixNumpadKeys( event )
 				Select key
-					
 					Case Key.Tab
 						If _typing Then FormatWord() ' like for Key.Space
 					
@@ -889,19 +925,16 @@ Class CodeTextView Extends TextView
 				
 		End
 	End
+
 	
 	Method OnContentMouseEvent( event:MouseEvent ) Override
-		
 		Select event.Type
-			
 			Case EventType.MouseWheel 'little faster scroll
-				
 				Local delta:=New Vec2i( RenderStyle.Font.Height,-RenderStyle.Font.Height*2 )
 				Scroll+=delta*event.Wheel
 				Return
 			
 			Case EventType.MouseDown 'prevent selection by dragging with right-button
-				
 				If event.Button = MouseButton.Right
 					If Not CanCopy
 						Local cur:=CharAtPoint( event.Location )
@@ -928,19 +961,15 @@ Class CodeTextView Extends TextView
 				Endif
 				
 			Case EventType.MouseUp
-				
 				If event.Button = MouseButton.Right
-					
 					MainWindow.ShowEditorMenu( Self )
 					Return
 				Endif
 			
 			Case EventType.MouseEnter
-				
 				Mouse.Cursor=MouseCursor.IBeam
 				
 			Case EventType.MouseLeave
-				
 				Mouse.Cursor=MouseCursor.Arrow
 				
 		End
@@ -951,35 +980,31 @@ Class CodeTextView Extends TextView
 		Super.OnContentMouseEvent( event )
 		
 	End
+
 	
 	Method OnKeyEvent(event:KeyEvent) Override
-	
 		Select event.Type
-			
 			Case EventType.KeyChar
-				
 				' select next char in overwrite mode
 				If Cursor=Anchor And _overwriteMode
-				
 					' don't select new-line-char ~n
 					If Cursor < Text.Length And Text[Cursor]<>10
 						SelectText( Cursor,Cursor+1 )
 					Endif
 				Endif
-			
 		End
 		
 		Super.OnKeyEvent( event )
-		
 	End
+
 	
 	Property Line:Int()
 		Return _line
 	End
+
 	
 	Method OnCut( wholeLine:Bool=False )
-	
-		If wholeLine
+		If wholeLine Then
 			Local line:=Document.FindLine( Cursor )
 			SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
 		Else
@@ -988,10 +1013,10 @@ Class CodeTextView Extends TextView
 		SmartCopySelected()
 		ReplaceText( "" )
 	End
+
 	
 	Method OnCopy( wholeLine:Bool=False )
-	
-		If wholeLine
+		If wholeLine Then
 			Local line:=Document.FindLine( Cursor )
 			SelectText( Document.StartOfLine( line ),Document.EndOfLine( line ) )
 		Else
@@ -1001,33 +1026,30 @@ Class CodeTextView Extends TextView
 	
 		SelectText( Cursor,Anchor )
 	End
+
 	
 	Method GetPosInLineAtCursorCheckingTabSize:Int()
-	
 		Return TextUtils.GetPosInLineCheckingTabSize( LineTextAtCursor,PosInLineAtCursor,TabStop )
 	End
+
 	
 	Method InsertTabulation()
-		
 		Local useSpaces:=Prefs.EditorUseSpacesAsTabs
 		Local tabSize:=Prefs.EditorTabSize
 		
 		If useSpaces ' use spaces
-			
 			Local pos:=GetPosInLineAtCursorCheckingTabSize()
 			Local chars:=(pos Mod tabSize)
 			ReplaceText( " ".Dup( tabSize-chars ) )
 			
 		Else ' use tabs
-			
 			ReplaceText( "~t" )
 			
 		Endif
-		
 	End
 	
-	Method SmartCopySelected()
 	
+	Method SmartCopySelected()
 		' here we strip indents from all lines - the same as in first-line indent
 		Local min:=Min( Cursor,Anchor )
 		Local max:=Max( Cursor,Anchor )
@@ -1076,9 +1098,9 @@ Class CodeTextView Extends TextView
 	
 		App.ClipboardText=result
 	End
+
 	
 	Method ProcessHomeKey( ctrl:Bool,shift:Bool )
-		
 		If ctrl
 			If shift 'selection
 				SelectText( 0,Anchor )
@@ -1089,9 +1111,9 @@ Class CodeTextView Extends TextView
 			SmartHome( shift )
 		Endif
 	End
+
 	
 	Method SmartHome( shift:Bool )
-	
 		Local line:=Document.FindLine( Cursor )
 		Local txt:=Document.GetLine( line )
 		Local n:=0
@@ -1115,9 +1137,9 @@ Class CodeTextView Extends TextView
 			SelectText( newPos,newPos )
 		Endif
 	End
+
 	
 	Method ProcessEndKey( ctrl:Bool,shift:Bool )
-		
 		Local pos:=Document.EndOfLine( Document.FindLine( Cursor ) )
 		If ctrl
 			If shift 'selection
@@ -1129,9 +1151,9 @@ Class CodeTextView Extends TextView
 			SmartEnd( shift )
 		Endif
 	End
+
 	
 	Method SmartEnd( shift:Bool )
-	
 		Local line:=Document.FindLine( Cursor )
 		Local newPos:=Document.EndOfLine( line )
 	
@@ -1141,17 +1163,17 @@ Class CodeTextView Extends TextView
 			SelectText( newPos,newPos )
 		Endif
 	End
+
 	
 	Method SmartPaste( customText:String=Null )
-	
 		Local txt:= customText ? customText Else App.ClipboardText
 	
 		ReplaceText( PrepareSmartPaste( txt ) )
 		
 	End
+
 	
 	Method PrepareSmartPaste:String( txt:String )
-	
 		' get indent of cursor's line
 		Local cur:=Min( Cursor,Anchor )
 		Local line:=Document.FindLine( cur )
@@ -1180,39 +1202,86 @@ Class CodeTextView Extends TextView
 		
 		Return result
 	End
+
 	
 	Method OnThemeChanged() Override
-		
 		Super.OnThemeChanged()
 		
 		UpdateThemeColors()
 	End
+
 	
 	Method UpdateThemeColors() Virtual
+		_whitespacesColor = App.Theme.GetColor( "textview-whitespaces" )
+		_extraSelColor = App.Theme.GetColor( "textview-extra-selection" )
+		_commentsColor = App.Theme.GetColor( "textview-color"+Highlighter.COLOR_COMMENT )
 		
-		_whitespacesColor=App.Theme.GetColor( "textview-whitespaces" )
-		_extraSelColor=App.Theme.GetColor( "textview-extra-selection" )
-		_commentsColor=App.Theme.GetColor( "textview-color"+Highlighter.COLOR_COMMENT )
+		Local colors := New Color[15]
 		
-		Local colors:=New Color[9]
+'		For Local i := 0 To 8'colors.Length
+'			colors[i] = App.Theme.GetColor( "textview-color"+i )
+'		Next
 		
-		For Local i:=0 Until colors.Length
-			colors[i]=App.Theme.GetColor( "textview-color"+i )
+'		colors[9] = ColorI( 156, 92, 184 )
+'		colors[10] = ColorI( 84, 205, 81 )
+'		colors[11] = ColorI( 66, 154, 210 )
+'		colors[12] = ColorI( 156, 92, 184 )
+'		colors[13] = ColorI( 214, 207, 41 )
+'		colors[14] = ColorI( 220, 157, 53 )
+
+		local i:int
+		colors[0] = App.Theme.GetColor( "textview-color"+0 )
+		For i = 1 To 14
+			colors[i] = MainWindow._theme.Syntax[i-1]
 		Next
+
+		colors[5] = MainWindow._theme.Syntax[4] * 0.8
 		
-		TextColors=colors
-	End
+		'test
+'		colors[8] = Color.Magenta
+'	Const COLOR_IDENT:int = 0 'silver - most keywords
+'	Const COLOR_KEYWORD:int = 1 'blueish - namspace, new, end
+'	Const COLOR_STRING:int = 2
+'	Const COLOR_NUMBER:int = 3
+'	Const COLOR_COMMENT:int = 4
+'	Const COLOR_PREPROC:int = 5
+'	Const COLOR_OTHER:int = 6 ' not used??
+'	Const COLOR_CORETYPE:int = 7 ' green - string, int, bool
 	
-	Method OnRenderContent( canvas:Canvas,clip:Recti ) Override
+'	Const COLOR_CLASS:int = 8
+'	Const COLOR_VARIABLE:int = 9
+'	Const COLOR_METHOD:int = 10
+'	Const COLOR_FUNCTION:int = 11
+'	Const COLOR_PROPERTY:int = 12
+'	Const COLOR_LAMBDA:int = 13
+	
+'	Const COLOR_BACKGROUND:int = 14
+'	Const COLOR_LINE:int = 15 - sorted
+''''''''	Const COLOR_LINENUMBERS:int = 16
+'	Const COLOR_CURSOR:int = 16 - sorted
+
+'	Const COLOR_ERROR:int = 17
 		
+		TextColors = colors
+	End
+
+
+'	Method OnRender( canvas:Canvas ) Override
+'		canvas.Color = MainWindow._theme.Syntax[14]
+'		canvas.DrawRect( 0,0, Width, Height )
+'	End Method
+	
+
+	'this calls the line render
+	Method OnRenderContent( canvas:Canvas,clip:Recti ) Override
 		' extra selection
 		If _extraSelStart<>-1
 			Local min:=CharRect( Min( _extraSelStart,_extraSelEnd ) )
 			Local max:=CharRect( Max( _extraSelStart,_extraSelEnd ) )
 			
-			canvas.Color=_extraSelColor
+			canvas.Color = _extraSelColor
 			
-			If min.Y=max.Y
+			If min.Y = max.Y Then
 				canvas.DrawRect( min.Left,min.Top,max.Left-min.Left,min.Height )
 			Else
 				canvas.DrawRect( min.Left,min.Top,(clip.Right-min.Left),min.Height )
@@ -1223,18 +1292,19 @@ Class CodeTextView Extends TextView
 		
 		Super.OnRenderContent( canvas,clip )
 	End
+
 	
 	Property TabStr:String()
-		
 		Return Prefs.EditorUseSpacesAsTabs ? TextUtils.GetSpacesForTabEquivalent() Else "~t"
 	End
+
 	
 	Method OnRenderLine( canvas:Canvas,line:Int ) Override
-		
-		Super.OnRenderLine( canvas,line )
-		
+		Super.OnRenderLine( canvas, line )
+
+'		Print "CodeTextView Line"
+
 		' show folded lines number
-		'
 		Local folding:=_folding[line]
 		If folding And folding.folded
 			Local r:=LineRect( line )
@@ -1247,8 +1317,8 @@ Class CodeTextView Extends TextView
 			canvas.Alpha=a
 		Endif
 		
+'		Print "whitespace"
 		' draw whitespaces
-		'
 		If Not _showWhiteSpaces Return
 	
 		Local text:=Document.Text
@@ -1257,13 +1327,17 @@ Class CodeTextView Extends TextView
 		Local right:=0
 		Local lineStr:=Document.GetLine( line )
 		
-		canvas.Color=_whitespacesColor
+'		canvas.Color=_whitespacesColor
+		canvas.Alpha = 0.2
 		
+'		Print "invisible"
+		'draw invisibles
 		For Local word:=Eachin WordIterator.ForLine( Self,line )
-			
 			Local atEnd:=(word.Index+word.Length=ending)
 			
-			If text[word.Index]=Chars.TAB Or (text[word.Index]=Chars.SPACE And (word.Length>=TabStop Or atEnd)) ' indent chars
+			If text[word.Index]=Chars.TAB Or (text[word.Index]=Chars.SPACE Or atEnd And (word.Length>=TabStop Or atEnd)) Then ' indent chars
+				Local r:=word.Rect
+				Local x0:=right,y0:=r.Top+1,y1:=y0+r.Height
 				
 				Local wordStr:=text.Slice( word.Index,word.Index+word.Length )
 				wordStr=wordStr.Replace( "~t",TextUtils.GetSpacesForTabEquivalent() )
@@ -1272,27 +1346,62 @@ Class CodeTextView Extends TextView
 				Local i2:=i1+word.Length
 				i1=TextUtils.GetPosInLineCheckingTabSize( lineStr,i1,TabStop )
 				i2=TextUtils.GetPosInLineCheckingTabSize( lineStr,i2,TabStop )
-				If atEnd Then i2+=1
 				
-				Local r:=word.Rect
-				Local x0:=right,y0:=r.Top+1,y1:=y0+r.Height
+				If atEnd Then
+					i2 += 1
+				End If
+
+				Local col:int = 0
 				For Local i:=i1+1 Until i2
 					If i Mod TabStop = 0
 						Local dx:=Float(i-i1)*_charw
+						Select col Mod 7
+							Case 0
+								canvas.Color = Color.Grey
+							Case 1
+								canvas.Color = Color.Red
+							Case 2
+								canvas.Color = Color.Orange
+							Case 3
+								canvas.Color = Color.Yellow
+							Case 4
+								canvas.Color = Color.Green
+							Case 5
+								canvas.Color = Color.Sky
+							Case 6
+								canvas.Color = Color.UIPurple
+						End
 						canvas.DrawLine( x0+dx,y0,x0+dx,y1 )
+						col +=1
 					Endif
 				Next
-				
+
 			Endif
 			
-			right=word.Rect.Right
-			
+			right = word.Rect.Right
+
+			If atEnd Then
+				canvas.Color = Color.Grey
+				canvas.Alpha = 0.3
+				Local r := word.Rect
+				Local rr:int = r.Height * 0.25
+				Local rr2:int = rr + rr
+				Local x1:int = right + rr
+				Local x2:int = right + rr2
+				Local y0:int = r.Top + rr2
+				Local y1:int = y0 + rr2
+				
+				canvas.DrawLine( right,y0, right + rr2, y0 )
+				canvas.DrawLine( right + rr2,y0, right + rr2, y1 )
+				canvas.DrawLine( right + rr2-rr,y1-rr, right + rr2, y1 )
+				canvas.DrawLine( right + rr2+rr,y1-rr, right + rr2, y1 )
+			End If
 		Next
-		
+		canvas.Alpha = 1
 	End
 	
+
 	Method OnValidateStyle() Override
-		
 		Super.OnValidateStyle()
 		
 		Local style:=RenderStyle
@@ -1301,8 +1410,7 @@ Class CodeTextView Extends TextView
 	End
 	
 	
-	Private
-	
+Private
 	Field _line:Int
 	Field _whitespacesColor:Color,_commentsColor:Color
 	Field _showWhiteSpaces:Bool
@@ -1313,9 +1421,9 @@ Class CodeTextView Extends TextView
 	Field _storedCursor:Int
 	Field _typing:Bool
 	Field _foldingTmpMap:=New IntMap<Folding>
+
 	
 	Method OnCursorMoved()
-		
 		Local line:=Document.FindLine( Cursor )
 		
 		' if cursor is inside of invisible line - unfold area with cursor
@@ -1336,26 +1444,26 @@ Class CodeTextView Extends TextView
 		
 		_storedCursor=Cursor
 	End
+
 	
 	Method FormatWord( customCursor:Int=-1 )
-	
 		_typing=False
 		If Formatter
 			Local cur:=(customCursor<>-1) ? customCursor Else _storedCursor
 			Formatter.FormatWord( Self,cur )
 		Endif
 	End
+
 	
 	Method FormatLine( line:Int )
-	
 		_typing=False
 		If Formatter
 			Formatter.FormatLine( Self,line )
 		Endif
 	End
+
 	
 	Method CommentUncommentBlock( comment:Bool,commentMark:String="'" )
-		
 		Local doc:=Document
 		Local i1:=Min( Cursor,Anchor )
 		Local i2:=Max( Cursor,Anchor )
@@ -1386,23 +1494,21 @@ Class CodeTextView Extends TextView
 			SelectText( i1,i1+result.Length )
 		Endif
 	End
-	
 End
 
 
+
 Class MouseEvent Extension
-	
 	Method Copy:MouseEvent( location:Vec2i )
-		
 		Return New MouseEvent( Self.Type,Self.View,location,Self.Button,Self.Wheel,Self.Modifiers,Self.Clicks )
 	End
 End
 
 
+
 Function FixNumpadKeys:Key( event:KeyEvent )
-	
 	#If __TARGET__="macos"
-    	Return event.Key
+		Return event.Key
 	#Else
 		Local key:=event.Key
 		If Not (event.Modifiers & Modifier.NumLock)
@@ -1423,15 +1529,14 @@ Function FixNumpadKeys:Key( event:KeyEvent )
 End
 
 
+
 Function RemoveWhitespacedTrailings:String( doc:TextDocument,linesChanged:Int Ptr )
-	
 	Local text:=doc.Text
 	Local numLines:=doc.NumLines
 	Local result:=""
 	Local index:=0,changes:=0
 	
 	For Local line:=0 Until numLines
-		
 		Local start:=doc.StartOfLine( line )
 		Local ends:=doc.EndOfLine( line )
 		Local i:=ends-1
@@ -1453,7 +1558,6 @@ Function RemoveWhitespacedTrailings:String( doc:TextDocument,linesChanged:Int Pt
 			changes+=1
 		Endif
 		index=ends ' skip trailing part of text
-		
 	Next
 	
 	If changes=0
@@ -1467,37 +1571,33 @@ Function RemoveWhitespacedTrailings:String( doc:TextDocument,linesChanged:Int Pt
 End
 
 
+
 Class IndentationHelper Final
-	
 	Enum Type
 		Spaces,
 		Tabs,
 		Mixed,
 		None
 	End
+
 		
 	Function AnalyzeIndentation:Type( text:String )
-		
 		Local len:=text.Length
 		Local start:=-1,k:=0,spacesCount:=0,tabsCount:=0
 		
 		Local tabAsSpacesStr:=TextUtils.GetSpacesForTabEquivalent()
-		
 		Local lines:=New StringStack( text.Split( "~n" ) )
 		
 		For Local line:=Eachin lines
-			
 			Local lineLen:=line.Length
 			
 			For Local k:=0 Until lineLen
-				
 				Local char:=line[k]
 				Local atEnd:=(k=lineLen-1)
 				
 				If atEnd Then k+=1
 				
 				If char>Chars.SPACE Or atEnd ' end of indentation
-					
 					If k>0
 						Local indentStr:=line.Slice( 0,k )
 						
@@ -1525,9 +1625,9 @@ Class IndentationHelper Final
 		
 		Return Type.None
 	End
+
 	
 	Function FixIndentation:String( document:TextDocument )
-		
 		Local text:=document.Text
 		Local useSpaces:=Prefs.EditorUseSpacesAsTabs
 		Local tabSize:=Prefs.EditorTabSize
@@ -1538,7 +1638,6 @@ Class IndentationHelper Final
 		Local lines:=New StringStack( text.Split( "~n" ) )
 		
 		For Local lineIndex:=0 Until lines.Length
-			
 			Local line:=lines[lineIndex]
 			
 			' trim endings of lines
@@ -1653,22 +1752,24 @@ Class IndentationHelper Final
 			Next
 			
 			lines[lineIndex]=lineStr ' apply resulting string
-			
 		Next
 		
 		Return lines.Join( "~n" )
 	End
 	
+
 	
-	Private
+Private
 	
 	Method New()
 	End
 	
 End
 
+
 Function GetCursorPos:Vec2i( tv:TextView )
+	Local cursor := tv.Cursor
+	Local line := tv.Document.FindLine( cursor )
 	
-	Local cursor:=tv.Cursor,line:=tv.Document.FindLine( cursor )
-	Return New Vec2i( line+1,cursor-tv.Document.StartOfLine( line ) )
+	Return New Vec2i( line+1, cursor-tv.Document.StartOfLine( line ) )
 End

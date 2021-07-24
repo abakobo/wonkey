@@ -3,15 +3,16 @@ Namespace wide
 
 
 Class JavaHighlighter Extends HighlighterPlugin
-	
+
+
 	Property Name:String() Override
 		Return "JavaHighlighter"
 	End
 	
 	
-	Private
-	
+Private
 	Global _instance:=New JavaHighlighter
+
 	
 	Method New()
 		Super.New()
@@ -19,9 +20,9 @@ Class JavaHighlighter Extends HighlighterPlugin
 		_hl=New Highlighter
 		_hl.Painter=HL
 	End
+
 	
 	Method HL:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
-		
 		Local i0:=sol
 		Local icolor:=0
 		Local istart:=sol
@@ -31,7 +32,6 @@ Class JavaHighlighter Extends HighlighterPlugin
 		If _keywords = Null Then _keywords=KeywordsManager.Get( GetMainFileType() )
 		
 		While i0<eol
-			
 			Local start:=i0
 			Local chr:=text[i0]
 			Local chr2:=(i0+1<eol) ? text[i0+1] Else 0
@@ -45,7 +45,6 @@ Class JavaHighlighter Extends HighlighterPlugin
 			Endif
 			
 			If chr="/"[0] And chr2="*"[0] ' /*  opened
-				
 				' colors for previous line part
 				For Local i:=istart Until start
 					colors[i]=icolor
@@ -78,12 +77,10 @@ Class JavaHighlighter Extends HighlighterPlugin
 			Local color:=icolor
 			
 			If chr="/"[0] And chr2="/"[0] ' // single-line comment
-			
 				i0=eol
 				color=Highlighter.COLOR_COMMENT
 				
 			Else If chr=34 Or chr=39
-				
 				While i0<eol And text[i0]<>chr
 					i0+=1
 				Wend
@@ -92,7 +89,6 @@ Class JavaHighlighter Extends HighlighterPlugin
 				color=Highlighter.COLOR_STRING
 				
 			Else If IsAlpha( chr ) Or chr=95 Or state>=10
-	
 				While i0<eol And (IsAlpha( text[i0] ) Or IsDigit( text[i0] )  Or text[i0]=95)
 					i0+=1
 				Wend
@@ -104,7 +100,6 @@ Class JavaHighlighter Extends HighlighterPlugin
 				If _keywords.Contains( id ) Then color=Highlighter.COLOR_KEYWORD
 				
 			Else If IsDigit( chr )
-			
 				While i0<eol And IsDigit( text[i0] )
 					i0+=1
 				Wend
@@ -112,7 +107,6 @@ Class JavaHighlighter Extends HighlighterPlugin
 				color=Highlighter.COLOR_NUMBER
 				
 			Else If chr=36 And i0<eol And IsHexDigit( text[i0] )
-			
 				i0+=1
 				While i0<eol And IsHexDigit( text[i0] )
 					i0+=1
@@ -121,9 +115,7 @@ Class JavaHighlighter Extends HighlighterPlugin
 				color=Highlighter.COLOR_NUMBER
 				
 			Else
-				
 				color=Highlighter.COLOR_NONE
-				
 			Endif
 			
 			If color=icolor Continue
@@ -135,7 +127,6 @@ Class JavaHighlighter Extends HighlighterPlugin
 			
 			icolor=color
 			istart=start
-		
 		Wend
 		
 		' set colors for the last line part
@@ -144,7 +135,6 @@ Class JavaHighlighter Extends HighlighterPlugin
 		Next
 		
 		Return state
-	
 	End
 	
 End

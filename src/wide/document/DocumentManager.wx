@@ -3,24 +3,24 @@ Namespace wide
 
 
 Class DocumentManager
-
 	Field nextDocument:Action
 	Field prevDocument:Action
 
 	Field CurrentDocumentChanged:Void()
 	Field LockedDocumentChanged:Void()
+	field IWantToBeParsed:void( path:string )
 	
 	Field DocumentAdded:Void( doc:WideDocument )
 	Field DocumentRemoved:Void( doc:WideDocument )
 	Field DocumentDoubleClicked:Void( doc:WideDocument )
 
-	Method New( tabView:TabViewExt,browser:DocBrowserView )
-	
+
+	Method New( tabView:TabViewExt, browser:DocBrowserView )
 		_tabView=tabView
 		_browser=browser
 		
 		_tabView.CurrentChanged+=Lambda()
-			CurrentDocument=FindDocument( _tabView.CurrentView )
+			CurrentDocument = FindDocument( _tabView.CurrentView )
 		End
 		
 		_tabView.Dragged+=Lambda()
@@ -38,7 +38,6 @@ Class DocumentManager
 		prevDocument.Triggered=OnPrevDocument
 		
 		DocumentRemoved+=Lambda( doc:WideDocument )
-			
 			If doc=_locked Then OnLockedChanged( Null )
 		End
 		
@@ -46,34 +45,49 @@ Class DocumentManager
 			New Fiber( OnAppActivated )
 		End
 	End
+
+	
+	method ThemeChanged()
+		Local docs:=New Stack<WideDocument>
+		For Local i:=0 Until _tabView.NumTabs
+			FindDocument( _tabView.TabView( i ) ).OnThemeChanged()
+		Next
+	End Method
+	
+	
+	Method ForceParse()
+'		Print "forceparse"
+		Local doc:CodeDocument = Cast<CodeDocument>( CurrentDocument )
+		OnWantParsed( doc )
+'		IWantToBeParsed()
+		
+	End Method
+	
 	
 	Method LockBuildFile()
-	
-		Local doc:=Cast<CodeDocument>( CurrentDocument )
+		Local doc:CodeDocument = Cast<CodeDocument>( CurrentDocument )
 		OnLockBuildFile( doc )
 	End
+
 	
 	Property LockedDocument:CodeDocument()
-	
 		Return _locked
 	End
+
 	
 	Property TabView:TabViewExt()
-	
 		Return _tabView
 	End
 
+
 	Property CurrentCodeDocument:CodeDocument()
-		
 		Return Cast<CodeDocument>( _currentDoc )
 	End
+
 	
 	Property CurrentDocument:WideDocument()
-	
 		Return _currentDoc
-		
 	Setter( doc:WideDocument )
-	
 		If doc=_currentDoc Return
 		
 		_currentDoc=doc
@@ -90,28 +104,28 @@ Class DocumentManager
 		
 		CurrentDocumentChanged()
 	End
+
 	
 	Property CurrentTextView:TextView()
-		
 		If _currentDoc Return _currentDoc.TextView
 		
 		Return Null
 	End
+
 	
 	Property CurrentView:View()
-	
 		If _currentDoc Return _currentDoc.View
 		
 		Return Null
 	End
+
 	
 	Property OpenDocuments:WideDocument[]()
-	
 		Return _openDocs.ToArray()
 	End
+
 	
 	Property OpenCodeDocuments:CodeDocument[]()
-		
 		Local stack:=New Stack<CodeDocument>
 		For Local i:=Eachin _openDocs
 			Local doc:=Cast<CodeDocument>( i )
@@ -119,14 +133,14 @@ Class DocumentManager
 		Next
 		Return stack.ToArray()
 	End
+
 	
 	Property CurrentDocumentLabel:String()
-		
 		Return DocumentLabel( CurrentDocument )
 	End
+
 	
 	Method DocumentLabel:String( doc:WideDocument )
-		
 		If Not doc Return ""
 		
 		Local label:=StripDir( doc.Path )
@@ -140,40 +154,39 @@ Class DocumentManager
 	
 		Return label
 	End
+
 	
 	Method UpdateCurrentTabLabel()
-		
 		Local doc:=CurrentDocument
 		If doc _tabView.SetTabText( doc.View,DocumentLabel( doc ) )
 	End
+
 	
 	Method IsDocumentOpened:Bool( path:String )
-		
 		For Local i:=Eachin _openDocs
-			
 			If i.Path=path Return True
 		Next
 		
 		Return False
 	End
+
 	
-	Method OpenDocument:WideDocument( path:String,makeCurrent:Bool=False,openByHand:Bool=True )
-	
-		path=RealPath( path )
+	Method OpenDocument:WideDocument( path:String, makeCurrent:Bool = False, openByHand:Bool = True )
+		path = RealPath( path )
 		
-		Local doc:=FindDocument( path )
-		If doc
-			If makeCurrent CurrentDocument=doc
+		Local doc:WideDocument = FindDocument( path )
+		If doc Then
+			If makeCurrent Then CurrentDocument=doc
 			Return doc
 		Endif
 		
-		If GetFileType( path )<>FileType.File Return Null
+		If GetFileType( path ) <> FileType.File Then Return Null
 		
 		Local docType:=WideDocumentType.ForExtension( ExtractExt( path ) )
-		If Not docType Return Null
+		If Not docType Then Return Null
 		
 		doc=docType.CreateDocument( path )
-		If Not doc.Load() Return Null
+		If Not doc.Load() Then Return Null
 		
 		InitDoc( doc )
 		
@@ -193,15 +206,14 @@ Class DocumentManager
 		
 		DocumentAdded( doc )
 		
-		If makeCurrent CurrentDocument=doc
+		If makeCurrent Then CurrentDocument=doc
 		
 		Return doc
 	End
+
 	
 	'Currently also saves doc.
-	'
 	Method RenameDocument:WideDocument( doc:WideDocument,newPath:String )
-	
 		For Local i:=0 Until _openDocs.Length
 			If doc<>_openDocs[i] Continue
 			
@@ -244,35 +256,35 @@ Class DocumentManager
 		
 		Return Null
 	End
-	
+
+
 	Method FindDocument:WideDocument( path:String )
-	
 		For Local doc:=Eachin _openDocs
 			If doc.Path=path Return doc
 		Next
 		
 		Return Null
 	End
+
 	
 	Method FindDocument:WideDocument( view:View )
-	
 		For Local doc:=Eachin _openDocs
 			If doc.View=view Return doc
 		Next
 		
 		Return Null
 	End
-	
+
+
 	Method FindTab:TabButtonExt( view:View )
-		
 		For Local t:=Eachin _tabView.Tabs
 			If t.View=view Return t
 		Next
 		Return Null
 	End
-	
+
+
 	Method SaveState( jobj:JsonObject )
-		
 		Local docs:=New JsonArray
 		For Local doc:=Eachin _openDocs
 			Local s:=doc.Path
@@ -288,13 +300,12 @@ Class DocumentManager
 		
 		If _locked jobj["lockedDocument"]=New JsonString( _locked.Path )
 	End
-	
+
+
 	Method LoadState( jobj:JsonObject )
-		
 		If Not jobj.Contains( "openDocuments" ) Return
 		
 		For Local doc:=Eachin jobj.GetArray( "openDocuments" )
-			
 			Local arr:=doc.ToString().Split( ",,," )
 			Local path:=arr[0]
 			If GetFileType( path )<>FileType.File Continue
@@ -326,44 +337,41 @@ Class DocumentManager
 		Endif
 		
 	End
+
 	
 	Method Update()
-		
 		nextDocument.Enabled=_openDocs.Length>1
 		prevDocument.Enabled=_openDocs.Length>1
 	End
+
 	
 	Method SetAsMainFile( path:String,set:Bool )
-		
 		Local doc:=Cast<CodeDocument>( FindDocument( path ) )
 		If doc Then SetMainFileState( doc,set )
 	End
 	
 	
-	Private
+Private
 	
 	Field _tabView:TabViewExt
 	Field _browser:DocBrowserView
 	Field _currentDoc:WideDocument
 	Field _openDocs:=New Stack<WideDocument>
 	Field _locked:CodeDocument
+
 	
 	Method InitDoc( doc:WideDocument )
-	
 		doc.DirtyChanged+=Lambda()
-		
 			UpdateTabLabel( doc )
 			
 			If doc=_currentDoc Then UpdateWindowTitle( doc )
 		End
 		
 		doc.StateChanged+=Lambda()
-		
 			UpdateTabLabel( doc )
 		End
 
 		doc.Closed+=Lambda()
-		
 			Local index:=_tabView.TabIndex( doc.View )
 			If index=-1 Return	'in case doc already removed via Rename.
 		
@@ -389,16 +397,15 @@ Class DocumentManager
 			End
 		Endif
 	End
-	
+
+
 	Method UpdateTabLabel( doc:WideDocument )
-	
 		If doc _tabView.SetTabText( doc.View,DocumentLabel( doc ) )
 	End
+
 	
 	Method UpdateWindowTitle( doc:WideDocument )
-		
 		'Can't change window title on a fiber on at least windows!
-		'
 		App.Idle+=Lambda()
 			If doc
 				Local name:=StripDir( doc.Path )
@@ -409,9 +416,9 @@ Class DocumentManager
 			Endif
 		End
 	End
+
 	
 	Method OnNextDocument()
-	
 		If _openDocs.Length<2 Return
 		
 		Local i:=_tabView.CurrentIndex+1
@@ -422,9 +429,9 @@ Class DocumentManager
 		
 		CurrentDocument=doc
 	End
+
 	
 	Method OnPrevDocument()
-		
 		If _openDocs.Length<2 Return
 		
 		Local i:=_tabView.CurrentIndex-1
@@ -435,20 +442,16 @@ Class DocumentManager
 		
 		CurrentDocument=doc
 	End
-	
+
+
 	Method OnAppActivated()
-	
 		Local docs:=_openDocs.ToArray()
-		
 		Local reloadAll:=False
 		
 		For Local doc:=Eachin docs
-		
 			Select GetFileType( doc.Path )
 			Case FileType.File
-			
 				If GetFileTime( doc.Path )>doc.ModTime
-				
 					doc.Dirty=True
 					
 					'CurrentDocument=doc
@@ -471,15 +474,12 @@ Class DocumentManager
 				Endif
 				
 			Case FileType.Directory
-			
 				doc.Dirty=True
-				
 				'CurrentDocument=doc
 				
 				Alert( "File '"+doc.Path+"' has mysteriously turned into a directory!" )
 			
 			Case FileType.None
-			
 				doc.Dirty=True
 				
 				'CurrentDocument=doc
@@ -487,18 +487,25 @@ Class DocumentManager
 				Alert( "File '"+doc.Path+"' has been deleted!" )
 				
 			End
-		
 		Next
-		
 	End
+
+	
+	method OnWantParsed( doc:CodeDocument )
+		If Not doc Then Return
+		
+'		Print "onwantparsed:"+doc.Path
+		
+		IWantToBeParsed( doc.Path )
+	End Method
+	
 	
 	Method OnLockBuildFile( doc:CodeDocument )
-		
-		If Not doc Return
+		If Not doc Then Return
 		
 		If _locked Then SetLockedState( _locked,False )
 		
-		If doc=_locked
+		If doc=_locked Then
 			OnLockedChanged( Null )
 			Return
 		Endif
@@ -506,23 +513,23 @@ Class DocumentManager
 		SetLockedState( doc,True )
 		OnLockedChanged( doc )
 	End
+
 	
 	Method SetLockedState( doc:CodeDocument,locked:Bool )
-	
 		doc.State=locked ? "+" Else ""
 		Local tab:=FindTab( doc.View )
 		If tab Then tab.SetLockedState( locked )
 		CurrentDocumentChanged()
 	End
+
 	
 	Method SetMainFileState( doc:CodeDocument,state:Bool )
-	
 		doc.State=state ? ">" Else ""
 		CurrentDocumentChanged()
 	End
+
 	
 	Method OnLockedChanged( locked:CodeDocument )
-		
 		_locked=locked
 		LockedDocumentChanged()
 	End

@@ -1,10 +1,10 @@
 
 Namespace wide
 
+
 #Rem wonkeydoc Capitalize of numOfChars first chars of the string.
 #End
 Function Capitalize:String( str:String,numOfChars:Int=1 )
-	
 	If numOfChars>=str.Length
 		Return str.ToUpper()
 	Endif
@@ -14,9 +14,7 @@ End
 
 
 Class TextUtils Final
-	
 	Function GetSpacesForTabEquivalent:String()
-	
 		If Prefs.EditorTabSize<>_storedTabSize
 			_storedTabSize=Prefs.EditorTabSize
 			_spacesForTab=" ".Dup( _storedTabSize )
@@ -24,14 +22,14 @@ Class TextUtils Final
 	
 		Return _spacesForTab
 	End
+
 	
 	Function GetIndentStr:String()
-		
 		Return Prefs.EditorUseSpacesAsTabs ? GetSpacesForTabEquivalent() Else "~t"
 	End
+
 	
 	Function GetPosInLineCheckingTabSize:Int( line:String,posInLine:Int,tabSize:Int )
-	
 		Local pos:=0
 		For Local i:=0 Until posInLine
 			If line[i]=Chars.TAB
@@ -44,9 +42,9 @@ Class TextUtils Final
 	
 		Return pos
 	End
+
 	
 	Function Split:String[]( text:String,splitters:Int[] )
-		
 		Local results:=New StringStack
 		Local s:="",prev:=0
 		For Local i:=0 Until text.Length
@@ -70,8 +68,9 @@ Class TextUtils Final
 		
 		Return results.ToArray()
 	End
+
 	
-	Private
+Private
 	
 	Global _storedTabSize:=0,_spacesForTab:String
 	
@@ -82,7 +81,8 @@ End
 
 
 Struct Chars
-	
+	Const A:="A"[0] '65
+	Const Z:="Z"[0] '90
 	Const SINGLE_QUOTE:="'"[0] '39
 	Const DOUBLE_QUOTE:="~q"[0] '34
 	Const COMMA:=","[0] '44

@@ -1,29 +1,41 @@
-
 Namespace wide
+
+
+
+Class JsonDocumentView Extends WideCodeTextView
+	
+	Method New( doc:WideDocument )
+		Super.New( doc )
+
+		AddView( New GutterView( Self ), "left" )
+	End
+	
+End
+
 
 
 Class JsonDocument Extends WideDocument
 
 	Method New( path:String )
 		Super.New( path )
+
+		If _audioTimer Then _audioTimer.Suspended = True
 		
-		_view=New JsonDocumentView( Self )
+		_view = New JsonDocumentView( Self )
 		
-		_doc=_view.Document
-		
-		_browser=New JsonTreeView
-		
-		_browser.NodeClicked+=Lambda( node:TreeView.Node )
+		_doc = _view.Document
+
+		_browser = New JsonTreeView
+		_browser.NodeClicked += Lambda( node:TreeView.Node )
+			Local i := FindInText( node,-1 )
 			
-			Local i:=FindInText( node,-1 )
-			
-			If i=-1 Return
+			If i=-1 Then Return
 			
 			Local from:=Min( _view.Cursor,_view.Anchor )
 			
 			If i=from
 				i=FindInText( node,from )
-				If i=-1 Return
+				If i=-1 Then Return
 			Endif
 			
 			Local name:=node.Text.Slice( 0,node.Text.Find( ":" ) )
@@ -32,7 +44,6 @@ Class JsonDocument Extends WideDocument
 		End
 		
 		_doc.TextChanged+=Lambda()
-		
 			_browser.Value=JsonValue.Parse( _doc.Text )
 			
 			Dirty=True
@@ -40,52 +51,49 @@ Class JsonDocument Extends WideDocument
 		
 	End
 
-	Protected
+Protected
+
 	
 	Method OnLoad:Bool() Override
-	
 		Local json:=stringio.LoadString( Path )
 		
 		_doc.Text=json
 		
 		Return True
 	End
+
 	
 	Method OnSave:Bool() Override
-	
 		Local json:=_doc.Text
 		
 		Return stringio.SaveString( json,Path )
 	End
+
 	
 	Method OnCreateView:View() Override
-	
 		Return _view
 	End
+
 	
 	Method OnCreateBrowser:View() Override
-	
 		Return _browser
 	End
+
 	
 	Method OnGetTextView:TextView( view:View ) Override
-	
 		Return Cast<TextView>( view )
 	End
 	
-	Private
-	
+Private
 	Field _doc:TextDocument
-	
 	Field _view:JsonDocumentView
-	
 	Field _browser:JsonTreeView
+
 	
 	Method FindInText:Int( node:TreeView.Node,fromIndex:Int )
-		
 		Local nodes:=New Stack<TreeView.Node>
 		While node And node.Text.Contains( ":" )
-			If node.Text.Contains( ":[" )
+			If node.Text.Contains( ":[" ) Then
 				' skip array indexing nodes
 				nodes.Erase( 0 )
 			Endif
@@ -99,7 +107,7 @@ Class JsonDocument Extends WideDocument
 			Local i:=s.Find( ":" )
 			Local name:="~q"+s.Slice( 0,i )+"~q"
 			i=_view.Text.Find( name,index+1 )
-			If i=-1 Return -1
+			If i=-1 Then Return -1
 			index=i
 		Next
 		
@@ -109,33 +117,27 @@ Class JsonDocument Extends WideDocument
 End
 
 
+
 Class JsonDocumentType Extends WideDocumentType
 
-	Protected
+Protected
 	
 	Method New()
 		AddPlugin( Self )
 		
 		Extensions=New String[]( ".json" )
 	End
+
 	
 	Method OnCreateDocument:WideDocument( path:String ) Override
-	
 		Return New JsonDocument( path )
 	End
 	
-	Private
+Private
 	
 	Global _instance:=New JsonDocumentType
 	
 End
 
 
-Class JsonDocumentView Extends WideCodeTextView
-	
-	Method New( doc:WideDocument )
-		
-		Super.New( doc )
-	End
-	
-End
+

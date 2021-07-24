@@ -1,0 +1,251 @@
+Namespace myapp
+
+
+#Import "<std>"
+#Import "<mojo>"
+Using std..
+Using mojo..
+
+
+#Import "miniui.wx"
+
+
+
+Function Main()
+	New AppInstance
+	New ControlWindow
+	App.Run()
+End
+
+
+class Number
+	field minus:bool
+	field units:int
+	field decimals:Int
+	field decs:float
+	
+	
+	method New( input:string )
+		Convert( input )
+	End Method
+	
+	
+	method Convert( input:string )
+		minus = False
+		If input.Left( 1 ) = "-" Then
+			minus = True
+			input = input.Right( input.Length-1 )
+		End If
+		
+		local dot:int = input.Find( "." )
+		If dot = -1 Then
+			units = StringToULong( input, 10 )
+			decimals = 0
+		Else
+			units = StringToULong( input.Left( dot ), 10 )
+			local str:string = input.Right( input.Length - dot -1 )
+			decimals = StringToULong( str, 10 )
+		End If
+		If minus Then units = -units
+	End method
+
+
+	method Add:string( mn:bool, unit:int, dec:int )
+		local u:int = units + unit
+		Return u
+	End Method
+
+	method Minus:string( mn:bool, unit:int, dec:int )
+		local u:int = units - unit
+		Return u
+	End Method
+
+	method Multiply:string( mn:bool, unit:int, dec:int )
+		local u:int = units * unit
+		Return u
+	End Method
+
+	method Divide:string( mn:bool, unit:int, dec:int )
+		local u:int = units
+		If unit <> 0 Then u = units / unit
+		Return u
+	End Method
+	
+End Class
+
+
+class ControlWindow Extends Window
+	const OPERAND_NONE:int = 0
+	const OPERAND_PLUS:int = 1
+	const OPERAND_MINUS:int = 2
+	const OPERAND_DIVIDE:int = 3
+	const OPERAND_MULTIPLY:int = 4
+
+	field ctrls:MiniUI = New MiniUI()
+	
+	field _display:int
+
+	field _button0:int
+	field _button1:int
+	field _button2:int
+	field _button3:int
+	field _button4:int
+	field _button5:int
+	field _button6:int
+	field _button7:int
+	field _button8:int
+	field _button9:int
+
+	field _buttonC:int
+	field _buttonEquals:int
+	field _buttonAdd:int
+	field _buttonMinus:int
+	field _buttonMul:int
+	field _buttonDiv:int
+
+	field _buttonDot:int
+	field _buttonSign:int
+	
+	field entry:string = ""
+	field operand:int = OPERAND_NONE
+	field _dot:bool = False
+
+
+	Method New( title:String = "Calculator", width:Int = 340, height:Int = 480, flags:WindowFlags = Null )
+		Super.New( title, width, height, flags )
+
+		ClearColor = Color.PicoBlack
+		
+		ctrls.SetGrid( 4, 6 )
+		ctrls.GridInset = 10
+'		ctrls.ShowGrid = true
+
+		ctrls.OverColor = Color.UIPink * 0.8
+
+		_display = ctrls.AddTextPanel( 0,0, 4,1, Color.Black * 0.4, "0", ALIGN_RIGHT, True )
+		ctrls.SetBorder( _display, 10 )
+
+'		_buttonC = ctrls.AddButton( 0,1, 1,1, Color.Blood, "C", True )
+		_buttonSign = ctrls.AddButton( 0,1, 1,1, Color.VicGreen, "+/-", True )
+		_buttonDiv = ctrls.AddButton( 1,1, 1,1, Color.SeaGreen, "/", True )
+
+		_button7 = ctrls.AddButton( 0,2, 1,1, Color.DarkGrey, "7", True )
+		_button8 = ctrls.AddButton( 1,2, 1,1, Color.DarkGrey, "8", True )
+		_button9 = ctrls.AddButton( 2,2, 1,1, Color.DarkGrey, "9", True )
+
+		_buttonMul = ctrls.AddButton( 2,1, 1,1, Color.SeaGreen, "*", True )
+
+		_button4 = ctrls.AddButton( 0,3, 1,1, Color.DarkGrey, "4", True )
+		_button5 = ctrls.AddButton( 1,3, 1,1, Color.DarkGrey, "5", True )
+		_button6 = ctrls.AddButton( 2,3, 1,1, Color.DarkGrey, "6", True )
+
+		_buttonMinus = ctrls.AddButton( 3,1, 1,1, Color.SeaGreen, "-", True )
+
+		_button1 = ctrls.AddButton( 0,4, 1,1, Color.DarkGrey, "1", True )
+		_button2 = ctrls.AddButton( 1,4, 1,1, Color.DarkGrey, "2", True )
+		_button3 = ctrls.AddButton( 2,4, 1,1, Color.DarkGrey, "3", True )
+
+		_buttonAdd = ctrls.AddButton( 3,2, 1,2, Color.SeaGreen, "+", True )
+
+		_button0 = ctrls.AddButton( 1,5, 1,1, Color.DarkGrey, "0", True )
+		_buttonDot = ctrls.AddButton( 2,5, 1,1, Color.DarkGrey, ".", True )
+		ctrls.SetEnabled( _buttonDot, False )
+		_buttonC = ctrls.AddButton( 0,5, 1,1, Color.Blood, "C", True )
+'		_buttonSign = ctrls.AddButton( 0,5, 1,1, Color.DarkGrey, "+/-", True )
+
+		_buttonEquals = ctrls.AddButton( 3,4, 1,2, Color.Brown, "=", True )
+
+		ctrls.Clicked = lambda( ctrl:int )
+			Select ctrl
+				Case _buttonAdd
+					entry = ctrls.GetText( _display )
+					operand = OPERAND_PLUS
+					ctrls.SetText( _display, "0" )
+					_dot = False
+
+				Case _buttonMinus
+					entry = ctrls.GetText( _display )
+					operand = OPERAND_MINUS
+					ctrls.SetText( _display, "0" )
+					_dot = False
+
+				Case _buttonMul
+					entry = ctrls.GetText( _display )
+					operand = OPERAND_MULTIPLY
+					ctrls.SetText( _display, "0" )
+					_dot = False
+
+				Case _buttonDiv
+					entry = ctrls.GetText( _display )
+					operand = OPERAND_DIVIDE
+					ctrls.SetText( _display, "0" )
+					_dot = False
+
+				Case _buttonEquals
+					local display:string = ctrls.GetText( _display )
+					local num:Number = New Number( entry )
+					local dnum:Number = New Number( display )
+					Select operand
+						Case OPERAND_PLUS
+							ctrls.SetText( _display, num.Add( False, dnum.units, dnum.decimals ) )
+						Case OPERAND_MINUS
+							ctrls.SetText( _display, num.Minus( False, dnum.units, dnum.decimals ) )
+						Case OPERAND_MULTIPLY
+							ctrls.SetText( _display, num.Multiply( False, dnum.units, dnum.decimals ) )
+						Case OPERAND_DIVIDE
+							ctrls.SetText( _display, num.Divide( False, dnum.units, dnum.decimals ) )
+'							Print entry+"+"+display
+					End Select
+'					If entry = ""
+'					entry = ctrls.GetText( _display )
+'					ctrls.SetText( _display, "0" )
+					
+				Case _button0, _button1, _button2, _button3, _button4, _button5, _button6, _button7, _button8, _button9
+					If ctrls.GetText( _display ) = "0" Then
+						ctrls.SetText( _display, ctrls.GetText( ctrl ) )
+					Else If ctrls.GetText( _display ) = "-0" Then
+						ctrls.SetText( _display, "-"+ctrls.GetText( ctrl ) )
+					Else
+						ctrls.SetText( _display, ctrls.GetText( _display ) + ctrls.GetText( ctrl ) )
+					End If
+					
+				Case _buttonDot
+					If Not _dot Then
+						ctrls.SetText( _display, ctrls.GetText( _display ) + "." )
+						_dot = True
+					End If
+
+				Case _buttonSign
+					local display:string = ctrls.GetText( _display )
+					If display.Left( 1 ) = "-" Then
+						ctrls.SetText( _display, display.Right( display.Length-1 ) )
+					Else
+						ctrls.SetText( _display, "-"+display )
+					End If
+					
+				Case _buttonC
+					operand = 0
+					entry = ""
+					ctrls.SetText( _display, "0" )
+					_dot = False
+			End Select
+		End
+	End method
+
+
+	Method OnRender( canvas:Canvas ) Override
+		App.RequestRender()
+		
+		ctrls.DrawControls( canvas, _mouseX, _mouseY, _mouseDown )
+	End method
+	
+	
+	method OnMouseMove() Override
+		If ctrls.Over( _mouseX, _mouseY ) Then
+			App.RequestRender()
+		End If
+	End method
+
+	
+End Class
+

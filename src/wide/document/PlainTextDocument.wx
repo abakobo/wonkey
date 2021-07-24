@@ -1,23 +1,25 @@
-
 Namespace wide
+
 
 
 Class PlainTextDocumentView Extends TextView
 
-	Method New( doc:PlainTextDocument )
 
+	Method New( doc:PlainTextDocument )
 		_doc=doc
+
+		If _audioTimer Then _audioTimer.Suspended = True
 		
-		Document=_doc.TextDocument
+		Document = _doc.TextDocument
 		
-		AddView( New GutterView( Self ),"left" )
+		AddView( New GutterView( Self ), "left" )
 		
-		ContentView.Style.Border=New Recti( -4,-4,4,4 )
+		ContentView.Style.Border = New Recti( -4,-4,4,4 )
 		
-		BlockCursor=False
-		CursorBlinkRate=2.5
+		BlockCursor = False
+		CursorBlinkRate = 2.5
 		
-		WordWrap=True
+		WordWrap = True
 	End
 	
 	Private
@@ -25,6 +27,8 @@ Class PlainTextDocumentView Extends TextView
 	Field _doc:PlainTextDocument
 	
 End
+
+
 
 Class PlainTextDocument Extends WideDocument
 
@@ -39,60 +43,59 @@ Class PlainTextDocument Extends WideDocument
 		
 		_view=New PlainTextDocumentView( Self )
 	End
+
 	
 	Property TextDocument:TextDocument()
-	
 		Return _doc
 	End
+
 	
-	Protected
+Protected
+
 	
 	Method OnLoad:Bool() Override
-	
 		Local text:=stringio.LoadString( Path )
 		
 		_doc.Text=text
 		
 		Return True
 	End
+
 	
 	Method OnSave:Bool() Override
-	
 		Local text:=_doc.Text
 		
 		Return stringio.SaveString( text,Path )
 	End
+
 	
 	Method OnCreateView:PlainTextDocumentView() Override
-	
 		Return _view
 	End
 	
-	Private
-	
+Private
 	Field _doc:TextDocument
-	
 	Field _view:PlainTextDocumentView
-
 End
+
+
 
 Class PlainTextDocumentType Extends WideDocumentType
 
-	Protected
+Protected
 	
 	Method New()
 		AddPlugin( Self )
 		
 		Extensions=New String[](".*" )
 	End
+
 	
 	Method OnCreateDocument:WideDocument( path:String ) Override
-	
 		Return New PlainTextDocument( path )
 	End
 	
-	Private
-	
+Private
 	Global _instance:=New PlainTextDocumentType
 	
 End

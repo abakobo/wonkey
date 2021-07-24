@@ -1,27 +1,49 @@
-
 Namespace wide
+
+
+#Import "../assets/debug/debug_play.png"
+#Import "../assets/debug/debug_stop.png"
+#Import "../assets/debug/debug_pause.png"
+#Import "../assets/debug/debug_resume.png"
+#Import "../assets/debug/debug_into.png"
+#Import "../assets/debug/debug_out.png"
 
 
 Class DebugView Extends DockingView
 
-	Method New( docs:DocumentManager,console:ConsoleExt )
+	field _playImage:Image
+	field _stopImage:Image
+	field _pauseImage:Image
+	field _resumeImage:Image
+	field _intoImage:Image
+	field _outImage:Image
 	
-		_docs=docs
-		_console=console
+
+	Method New( docs:DocumentManager, console:ConsoleExt )
+		_docs = docs
+		_console = console
 		
 		'FIXME: this will never get removed...
-		_console.Finished+=Lambda( exitCode:Int )
+		_console.Finished += Lambda( exitCode:Int )
 			If Not _debugging Return
 			
 			If _stopped Resume()
 		End
+		
+		_playImage = Image.Load( "asset::debug_play.png" )
+		_stopImage = Image.Load( "asset::debug_stop.png" )
+		_pauseImage = Image.Load( "asset::debug_pause.png" )
+		_resumeImage = Image.Load( "asset::debug_resume.png" )
+		_intoImage = Image.Load( "asset::debug_into.png" )
+		_outImage = Image.Load( "asset::debug_out.png" )
 
-		_toolBar=New ToolBar
-		_toolBar.Style=GetStyle( "DebugToolBar" )
-		Local icons:=_toolBar.Style.Icons
+		_toolBar = New ToolBarExt
+		_toolBar.Style = GetStyle( "DebugToolBar" )
+'		Local icons:=_toolBar.Style.Icons
 		
 		'run/pause
-		_run=_toolBar.AddAction( "",icons[2] )
+'		_run=_toolBar.AddAction( "",icons[2] )
+		_run = _toolBar.AddAction( "", _pauseImage )
 		_run.Triggered=Lambda()
 			If Not _debugging Return
 		
@@ -36,7 +58,8 @@ Class DebugView Extends DockingView
 		End
 
 		'step over
-		_step=_toolBar.AddAction( "",icons[3] )
+'		_step=_toolBar.AddAction( "",icons[3] )
+		_step = _toolBar.AddAction( "", _resumeImage )
 		_step.Triggered=Lambda()
 			If Not _debugging Return
 			
@@ -48,7 +71,8 @@ Class DebugView Extends DockingView
 		End
 		
 		'step into
-		_enter=_toolBar.AddAction( "",icons[4] )
+'		_enter=_toolBar.AddAction( "",icons[4] )
+		_enter = _toolBar.AddAction( "", _intoImage )
 		_enter.Triggered=Lambda()
 			If Not _debugging Return
 		
@@ -60,7 +84,8 @@ Class DebugView Extends DockingView
 		End
 
 		'step out
-		_leave=_toolBar.AddAction( "",icons[5] )
+'		_leave=_toolBar.AddAction( "",icons[5] )
+		_leave = _toolBar.AddAction( "", _outImage )
 		_leave.Triggered=Lambda()
 			If Not _debugging Return
 		
@@ -72,7 +97,8 @@ Class DebugView Extends DockingView
 		End
 		
 		'kill
-		_kill=_toolBar.AddAction( "",icons[1] )
+'		_kill=_toolBar.AddAction( "",icons[1] )
+		_kill = _toolBar.AddAction( "", _stopImage )
 		_kill.Triggered=Lambda()
 			If Not _debugging Return
 		
@@ -93,27 +119,25 @@ Class DebugView Extends DockingView
 		_tree.RootNode.Expanded=True
 		
 		_tree.NodeClicked += Lambda( tnode:TreeView.Node )
-		
 			Local node:=Cast<Node>( tnode )
-			If Not node Return
+			If Not node Then Return
 			
-			If node.srcFile
+			If node.srcFile Then
 			
 				Local doc:=Cast<CodeDocument>( _docs.OpenDocument( node.srcFile,True ) )
-				If Not doc Return
+				If Not doc Then Return
 				
 				MainWindow.UpdateWindow( False )
 
 				doc.DebugLine=node.srcLine-1
 			Endif
-		
 		End
 		
 		_tree.NodeExpanded=Lambda( tnode:TreeView.Node )
-			If Not _stopped Return
+			If Not _stopped Then Return
 			
 			Local node:=Cast<Node>( tnode )
-			If Not node Or Not node.scope Return
+			If Not node Or Not node.scope Then Return
 			
 			New Fiber( Lambda()
 				UpdateExpanded( node )
@@ -125,9 +149,9 @@ Class DebugView Extends DockingView
 		UpdateActions()
 	End
 	
+	
 	Method DebugApp( appFile:String,config:String )
-		
-		If _console.Running Return
+		If _console.Running Then Return
 		
 		_console.Clear()
 		
@@ -135,8 +159,7 @@ Class DebugView Extends DockingView
 	
 		Local cmd:="~q"+RealPath( appFile )+"~q"
 		
-		If config<>"debug"
-		
+		If config<>"debug" Then
 			_console.Run( cmd )
 			
 			_console.Write( "~nFinished running app.~n" )
@@ -146,8 +169,7 @@ Class DebugView Extends DockingView
 			Return
 		End
 		
-		If Not _console.Start( cmd )
-			
+		If Not _console.Start( cmd ) Then
 			Alert( "Failed to start process: '"+cmd+"'" )
 			OnStopRunning( "Failed to start process: '"+cmd+"'" )
 			Return
@@ -156,17 +178,16 @@ Class DebugView Extends DockingView
 		DebugBegin()
 		
 		Repeat
-			
 			Local stdout:=_console.ReadStdout()
 			If Not stdout Exit
 			
+'			If stdout="{{!DEBUG!}}~n"
 			If stdout="{{*** DEBUG ***}}~n"
 				DebugStop()
 				Continue
 			End
 			
 			_console.Write( stdout )
-		
 		Forever
 		
 		DebugEnd()
@@ -177,26 +198,25 @@ Class DebugView Extends DockingView
 		
 		OnStopRunning( "Finished debugging app." )
 	End
+
 	
 	Method KillApp()
-		
 		_kill.Trigger()
 	End
 	
-	Private
+Private
+
 	
 	Method OnStopRunning( info:String )
-		
 		MainWindow.UpdateKeyView()
 		MainWindow.SetStatusBarActive( False )
 		MainWindow.ShowStatusBarText( info )
 		MainWindow.RestoreConsoleVisibility()
 		MainWindow.HideStatusBarProgress()
-		
 	End
+
 	
 	Method ResetDebugLines()
-	
 		For Local doc:=Eachin _docs.OpenDocuments
 			Local wxDoc:=Cast<CodeDocument>( doc )
 			If wxDoc wxDoc.DebugLine=-1
@@ -205,7 +225,6 @@ Class DebugView Extends DockingView
 	
 	
 	Class Node Extends TreeView.Node
-
 		Field srcFile:String
 		Field srcLine:Int
 		Field seq:Int
@@ -214,6 +233,7 @@ Class DebugView Extends DockingView
 		Field type:String
 		Field value:String
 		Field scope:Bool
+
 	
 		Method New( label:String,parent:TreeView.Node=Null,seq:Int=0,index:Int=-1 )
 			Super.New( "",parent,index )
@@ -221,9 +241,9 @@ Class DebugView Extends DockingView
 			
 			Update( label )
 		End
+
 		
 		Method Update( label:String )
-		
 			Local tname:=name
 			Local ttype:=type
 			Local tvalue:=value
@@ -234,55 +254,54 @@ Class DebugView Extends DockingView
 			scope=False
 			
 			Local i0:=label.Find( ":" )
-			If i0<>-1
+			If i0<>-1 Then
 				name=label.Slice( 0,i0 )
 				Local i1:=label.Find( "=",i0+1 )
-				If i1=-1
+				If i1=-1 Then
 					type=label.Slice( i0+1 )
 				Else
 					type=label.Slice( i0+1,i1 )
 					value=label.Slice( i1+1 )
 					
-					If value.StartsWith( "@" )
-					
+					If value.StartsWith( "@" ) Then
 						label=name+":"+type
 						
-						If value.Contains( ":" )
+						If value.Contains( ":" ) Then
 							scope=True
 						Else
 							Local p:ULong
-							If value.StartsWith( "@0x" )
+							If value.StartsWith( "@0x" ) Then
 								p=StringToULong( value.Slice( 3 ),16 )
 							Else
 								p=StringToULong( value.Slice( 1 ),16 )
 							Endif
-							If p
+							If p Then
 								label+="="+value
 								scope=True
 							Else
 								label+="=Null"
 							Endif
 						Endif
-					Endif					
+					Endif
 				Endif
 			Endif
 			
 			Text=label
 			
-			If name=tname And type=ttype And value=tvalue Return
+			If name=tname And type=ttype And value=tvalue Then Return
 			
 			RemoveAllChildren()
 			
 			If scope New Node( "",Self )
 		End
-	
 	End
+
 	
 	Field _tree:TreeView
 	
 	Field _toolBar:ToolBar
 
-	Field _docs:DocumentManager	
+	Field _docs:DocumentManager
 	Field _console:ConsoleExt
 
 	Field _debugging:Bool
@@ -295,13 +314,12 @@ Class DebugView Extends DockingView
 	Field _enter:Action
 	Field _leave:Action
 	Field _kill:Action
+
 	
 	Method UpdateExpanded( node:Node )
-	
-		If Not node.scope Return
+		If Not node.scope Then Return
 
 		Local lines:=New StringStack
-		
 		_console.WriteStdin( node.value+"~n" )
 		
 		Repeat
@@ -312,13 +330,12 @@ Class DebugView Extends DockingView
 		Forever
 		
 		For Local i:=0 Until lines.Length
-		
 			Local line:=lines[i]
 			Local child:=Cast<Node>( node.GetChild( i ) )
 			
-			If child
+			If child Then
 				child.Update( line )
-				If child.Expanded UpdateExpanded( child )
+				If child.Expanded Then UpdateExpanded( child )
 			Else
 				New Node( line,node )
 			Endif
@@ -329,28 +346,25 @@ Class DebugView Extends DockingView
 		
 		RequestRender()
 	End
+
 	
 	Method UpdateTree()
-	
 		Local root:=_tree.RootNode
-		
+
 		Local funcIndex:=0
-		
 		Local func:Node
 		Local varIndex:=0
 		
 		Local first:Node
 		
 		Local expanded:=New Stack<Node>
-		
 		Repeat
-		
 			Local line:=_console.ReadStdout().Trim()
-			If Not line Exit
+			If Not line Then Exit
 			
-			If line.StartsWith( ">" )
+			If line.StartsWith( ">" ) Then
 			
-				If func func.RemoveChildren( varIndex )
+				If func Then func.RemoveChildren( varIndex )
 			
 				Local bits:=line.Split( ";" )
 				Local label:=bits[0].Slice( 1 )
@@ -365,7 +379,7 @@ Class DebugView Extends DockingView
 					Exit
 				Next
 				
-				If func
+				If func Then
 					func.Text=label
 					func.srcLine=Int( bits[2] )
 				Else
@@ -377,7 +391,7 @@ Class DebugView Extends DockingView
 					If Not first func.Expanded=True
 				Endif
 				
-				If Not first
+				If Not first Then
 					_docs.CurrentCodeDocument?.JumpToDebugLine( func.srcFile,func.srcLine-1 )
 					first=func
 				Endif
@@ -387,12 +401,11 @@ Class DebugView Extends DockingView
 				varIndex=0
 			
 				Continue
-				
 			Endif
 			
 			Local node:=Cast<Node>( func.GetChild( varIndex ) )
 			
-			If node
+			If node Then
 				node.Update( line )
 				If node.Expanded expanded.Push( node )
 			Else
@@ -400,7 +413,6 @@ Class DebugView Extends DockingView
 			Endif
 			
 			varIndex+=1
-
 		Forever
 		
 		For Local node:=Eachin expanded
@@ -413,9 +425,9 @@ Class DebugView Extends DockingView
 		
 		RequestRender()
 	End
+
 	
 	Method DebugBegin()
-	
 		Assert( Not _stopped )
 		
 		_tree.RootNode.RemoveAllChildren()
@@ -425,24 +437,24 @@ Class DebugView Extends DockingView
 		
 		UpdateActions()
 	End
+
 	
 	Method DebugEnd()
-	
 		Assert( Not _stopped )
 		
 		_debugging=False
 		UpdateActions()
 	End
+
 	
 	Method DebugStop()
-	
 		Assert( Not _stopped )
 		
 		MainWindow.ShowDebugView()
 	
 		UpdateTree()
 		
-		If _killme
+		If _killme Then
 			_console.WriteStdin( "q~n" )
 			Return
 		Endif
@@ -454,9 +466,9 @@ Class DebugView Extends DockingView
 		
 		_resume.Get()
 	End
+
 	
 	Method Resume()
-	
 		Assert( _stopped )
 		
 		_stopped=False
@@ -466,6 +478,7 @@ Class DebugView Extends DockingView
 		_resume.Set( True )
 		_resume=Null
 	End
+
 	
 	Method UpdateActions()
 		Local icons:=_toolBar.Style.Icons

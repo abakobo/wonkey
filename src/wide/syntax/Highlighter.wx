@@ -4,19 +4,31 @@ Namespace wide
 
 Class Highlighter
 
-	Const COLOR_NONE:=0
-	Const COLOR_IDENT:=1
-	Const COLOR_KEYWORD:=2
-	Const COLOR_STRING:=3
-	Const COLOR_NUMBER:=4
-	Const COLOR_COMMENT:=5
-	Const COLOR_PREPROC:=6
-	Const COLOR_OTHER:=7
-	Const COLOR_CORETYPE:=8
+	Const COLOR_NONE:int = 0
+	Const COLOR_IDENT:int = 1
+	Const COLOR_KEYWORD:int = 2
+	Const COLOR_STRING:int = 3
+	Const COLOR_NUMBER:int = 4
+	Const COLOR_COMMENT:int = 5
+	Const COLOR_PREPROC:int = 6
+	Const COLOR_OTHER:int = 7
+	Const COLOR_CORETYPE:int = 8
 	
+	Const COLOR_CLASS:int = 9
+	Const COLOR_VARIABLE:int = 10
+	Const COLOR_METHOD:int = 11
+	Const COLOR_FUNCTION:int = 12
+	Const COLOR_PROPERTY:int = 13
+	Const COLOR_LAMBDA:int = 14
+	
+	Const COLOR_BACKGROUND:int = 15
+	Const COLOR_LINE:int = 16
+	Const COLOR_LINENUMBERS:int = 17
+	Const COLOR_CURSOR:int = 18
+	Const COLOR_ERROR:int = 19
 	
 	'use it like a property, as readonly
-	Field Painter:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
+	Field Painter:Int( text:String, colors:Byte[], sol:Int, eol:Int, state:Int )
 	
 End
 
@@ -26,13 +38,14 @@ Class HighlighterPlugin Extends PluginDependsOnFileType
 	Property Name:String() Override
 		Return "HighlighterPlugin"
 	End
-	
+
+
 	Property Highlighter:Highlighter()
 		Return _hl
 	End
 	
 	
-	Protected
+Protected
 	
 	Method New()
 		AddPlugin( Self )
@@ -48,15 +61,15 @@ End
 Class HighlightersManager
 	
 	Function Get:Highlighter( fileType:String )
-		Local plugins:=Plugin.PluginsOfType<HighlighterPlugin>()
-		For Local p:=Eachin plugins
+		Local plugins := Plugin.PluginsOfType<HighlighterPlugin>()
+		For Local p := Eachin plugins
 			If p.CheckFileTypeSuitability( fileType ) Then Return p.Highlighter
 		Next
 		Return _empty
 	End
 	
-	Private
+Private
 	
-	Global _empty:=New Highlighter
+	Global _empty := New Highlighter
 	
 End

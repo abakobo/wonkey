@@ -12,13 +12,12 @@ Class TreeViewExt Extends TreeView
 	Field SelectedChanged:Void( selNode:Node )
 	
 	Field ExpandParentsForSelected:=True
+
 	
 	Method New()
-		
 		Super.New()
 		
 		NodeClicked2+=Lambda( node:Node )
-			
 			If _singleClickExpanding
 				If TrySwitchExpandingState( node ) Return
 			Endif
@@ -28,7 +27,6 @@ Class TreeViewExt Extends TreeView
 		End
 		
 		Super.NodeDoubleClicked+=Lambda( node:Node )
-			
 			If TrySwitchExpandingState( node ) Return
 			
 			OnSelect( node )
@@ -36,30 +34,25 @@ Class TreeViewExt Extends TreeView
 		End
 		
 		Super.NodeRightClicked+=Lambda( node:Node )
-			
 			OnSelect( node )
 			NodeRightClicked( node )
 		End
 		
 		Super.NodeExpanded+=Lambda( node:Node )
-			
 			OnExpanded( node,True )
 		End
 		
 		Super.NodeCollapsed+=Lambda( node:Node )
-			
 			OnCollapsed( node,True )
 		End
 		
 		OnThemeChanged()
 	End
+
 	
 	Property Selected:TreeView.Node()
-	
 		Return _sel
-		
 	Setter( value:TreeView.Node )
-		
 		If _sel<>value
 			_sel=value
 			SelectedChanged( _sel )
@@ -69,47 +62,40 @@ Class TreeViewExt Extends TreeView
 		
 		RequestRender()
 	End
+
 	
 	Property SingleClickExpanding:Bool()
-	
 		Return _singleClickExpanding
-	
 	Setter( value:Bool )
-	
 		_singleClickExpanding=value
-		
 	End
+
 	
 	Method SaveState( jobj:JsonObject,jkey:String )
-		
 		_expander.SaveState( RootNode,jobj,jkey )
 	End
+
 	
 	Method LoadState( jobj:JsonObject,jkey:String )
-		
 		_expander.LoadState( jobj,jkey )
 	End
+
 	
 	Method FindByText:TreeView.Node( text:String,recursive:Bool=False )
-	
-		Return FindSubNode( RootNode,
-						recursive,
-						Lambda:Bool( n:TreeView.Node )
-							Return n.Text=text
-						End )
+		Return FindSubNode( RootNode, recursive, Lambda:Bool( n:TreeView.Node )
+			Return n.Text=text
+		End )
 	End
+
 	
 	Method FindSubNode:TreeView.Node( text:String,whereNode:TreeView.Node,recursive:Bool=False )
-		
-		Return FindSubNode( whereNode,
-						recursive,
-						Lambda:Bool( n:TreeView.Node )
-							Return n.Text=text
-						End )
+		Return FindSubNode( whereNode, recursive, Lambda:Bool( n:TreeView.Node )
+			Return n.Text=text
+		End )
 	End
+
 	
 	Method FindSubNode:TreeView.Node( whereNode:TreeView.Node,recursive:Bool,findCondition:Bool(TreeView.Node) )
-	
 		If findCondition( whereNode ) Return whereNode
 	
 		For Local i:=Eachin whereNode.Children
@@ -122,15 +108,15 @@ Class TreeViewExt Extends TreeView
 	
 		Return Null
 	End
+
 	
 	Method RemoveNode( node:Node )
-		
 		node.Remove()
 		If node=Selected Then Selected=Null
 	End
+
 	
 	Method SelectByPath( path:String )
-		
 		Local n:=FindSubNode( RootNode,
 						True,
 						Lambda:Bool( n:TreeView.Node )
@@ -139,9 +125,9 @@ Class TreeViewExt Extends TreeView
 		
 		If n Then Selected=n
 	End
+
 	
 	Method SelectByPathEnds( pathEnding:String )
-		
 		Local n:=FindSubNode( RootNode,
 						True,
 						Lambda:Bool( n:TreeView.Node )
@@ -151,8 +137,8 @@ Class TreeViewExt Extends TreeView
 		If n Then Selected=n
 	End
 	
+	
 	Method Sort( func:Int( lhs:TreeView.Node,rhs:TreeView.Node )=Null )
-		
 		If func=Null
 			func=Lambda:Int( lhs:TreeView.Node,rhs:TreeView.Node )
 				Return lhs.Text<=>rhs.Text
@@ -163,17 +149,26 @@ Class TreeViewExt Extends TreeView
 	End
 	
 	
-	Protected
+Protected
 	
 	Field _expander:=New TreeViewExpander
+
 	
 	Method OnThemeChanged() Override
-		
-		_selColor=App.Theme.GetColor( "treeview-selected-row" )
+'		_selColor = App.Theme.GetColor( "treeview-selected" )
+'		_selColor = RenderStyle.SkinColor
+		_selColor = MainWindow._theme.IDE[3] * 0.8
 	End
+
 	
+	Method OnRender( canvas:Canvas ) Override
+		canvas.Color = MainWindow._theme.IDE[0]
+		canvas.DrawRect( 0,0, Width,Height)
+	End Method
+	
+
 	Method OnRenderContent( canvas:Canvas ) Override
-	
+'		Print "OnRender treeViewExt"
 		If _sel <> Null
 			canvas.Color=_selColor
 			Local r:=_sel.Rect
@@ -184,54 +179,46 @@ Class TreeViewExt Extends TreeView
 		Endif
 	
 		Super.OnRenderContent( canvas )
-		
 	End
 	
+
 	Method OnContentMouseEvent( event:MouseEvent ) Override
-	
 		Select event.Type
-			
 			Case EventType.MouseWheel
 				' make scroll little faster
 				Scroll-=New Vec2i( 0,RenderStyle.Font.Height*event.Wheel.Y*2 )
 				Return
 			
 			Case EventType.MouseClick
-				
 				_expandStateChanged=False
 			
 			Case EventType.MouseDoubleClick
-				
 				_doubleClicked=True
 				
 			Case EventType.MouseUp
-				
 				If Not _doubleClicked And event.Button=MouseButton.Left
-					
 					Local p:=TransformWindowPointToView( Mouse.Location )
 					Local node:=FindNodeAtPoint( p )
 					If node And Not _expandStateChanged Then NodeClicked2( node )
 				Endif
 				
 				_doubleClicked=False
-				
 		End
 		
 		Super.OnContentMouseEvent( event )
-		
 	End
+
 	
 	Method OnCollapsed( node:Node,sel:Bool )
-	
 		_expandStateChanged=True
 	
 		_expander.Store( node )
 		If sel Then OnSelect( node )
 		NodeCollapsed( node )
 	End
+
 	
 	Method OnExpanded( node:Node,sel:Bool )
-	
 		_expandStateChanged=True
 	
 		_expander.Store( node )
@@ -244,7 +231,7 @@ Class TreeViewExt Extends TreeView
 '		_expander.PrintExpanded()
 '	End
 	
-	Private
+Private
 	
 	Field _sel:TreeView.Node
 	Field _selColor:Color
@@ -253,9 +240,9 @@ Class TreeViewExt Extends TreeView
 	Field _doubleClicked:Bool
 	
 	Field NodeClicked2:Void( node:Node )
+
 	
 	Method TrySwitchExpandingState:Bool( node:TreeView.Node )
-		
 		If node.Children.Length=0 Return False
 		
 		node.Expanded=Not node.Expanded
@@ -267,17 +254,17 @@ Class TreeViewExt Extends TreeView
 		
 		Return True
 	End
+
 	
 	Method OnSelect( node:TreeView.Node )
-		
 		Selected=node
 		Self.MakeKeyView()
 		
 		RequestRender()
 	End
+
 	
 	Method EnsureVisible( node:TreeView.Node )
-	
 		If Not node Return
 		
 		If ExpandParentsForSelected
@@ -294,9 +281,9 @@ Class TreeViewExt Extends TreeView
 		scroll.Y=Scroll.y
 		Scroll=scroll
 	End
-	
+
+
 	Method SortNode( node:TreeView.Node,func:Int( lhs:TreeView.Node,rhs:TreeView.Node ) )
-		
 		If node.Children.Length=0 Return
 		
 		Local children:=New Stack<TreeView.Node>
@@ -317,18 +304,16 @@ End
 
 
 Class TreeViewExpander
-	
 	Function ExpandParents( node:TreeView.Node )
-		
 		Local p:=node.Parent
 		While p<>Null
 			p.Expanded=True
 			p=p.Parent
 		Wend
 	End
+
 	
 	Method Store( node:TreeView.Node,recurse:Bool=False )
-	
 		Local key:=GetNodePath( node )
 	
 		If node.Expanded
@@ -349,9 +334,9 @@ Class TreeViewExpander
 			Store( i,True )
 		Next
 	End
-	
+
+
 	Method Restore( node:TreeView.Node,recurse:Bool=False )
-	
 		Local key:=GetNodePath( node )
 		
 		node.Expanded=_expands.Contains( key )
@@ -362,9 +347,9 @@ Class TreeViewExpander
 			Restore( i,True )
 		Next
 	End
-	
+
+
 	Method SaveState( rootNode:TreeView.Node,jobj:JsonObject,jkey:String )
-	
 		Store( rootNode,True ) '
 		
 		Local jarr:=New JsonArray
@@ -374,9 +359,9 @@ Class TreeViewExpander
 		Next
 		jobj[jkey]=jarr
 	End
+
 	
 	Method LoadState( jobj:JsonObject,jkey:String )
-		
 		_expands.Clear()
 		
 		If Not jobj.Contains( jkey ) Return
@@ -385,46 +370,42 @@ Class TreeViewExpander
 			_expands[key.ToString()]=True
 		Next
 	End
+
 	
 	Method PrintExpanded()
-		
 		For Local key:=Eachin _expands.Keys
 			If _expands[key] Print "expanded: "+key
 		Next
 	End
 	
-	Protected
+Protected
 	
 	Field _expands:=New StringMap<Bool>
 	
 End
 
 
-Class NodeWithData<T> Extends TreeView.Node
 
+Class NodeWithData<T> Extends TreeView.Node
 	Field data:T
 	
-	Method New( text:String,parent:TreeView.Node=Null,index:Int=-1 )
-		
-		Super.New( text,parent,index )
+	Method New( text:String, parent:TreeView.Node = Null, index:Int =- 1 )
+		Super.New( text, parent, index )
 	End
-	
 End
 
 
 Class FileJumpData
-
 	Field path:String
+	Field lineStr:String
 	Field pos:Int
 	Field len:Int
 	Field line:Int
 	Field posInLine:Int
-	
 End
 
 
 Function GetNodePath:String( node:TreeView.Node )
-	
 	If Not node Return ""
 	
 	Local s:=node.Text
@@ -436,8 +417,8 @@ Function GetNodePath:String( node:TreeView.Node )
 	Return s
 End
 
+
 Function GetNodeDeepLevel:Int( node:TreeView.Node )
-	
 	Local level:=-1
 	While node
 		level+=1

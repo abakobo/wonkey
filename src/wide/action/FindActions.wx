@@ -4,6 +4,8 @@ Namespace wide
 
 Class FindActions
 
+	Const DEFAULT_FILES_FILTER:="wx,monkey2" ',txt,htm,html,h,cpp,json,xml,ini"
+
 	Field find:Action
 	Field findNext:Action
 	field findPrevious:Action
@@ -11,53 +13,73 @@ Class FindActions
 	Field replaceNext:Action
 	Field replaceAll:Action
 	Field findInFiles:Action
+	Field findInFilesQuick:Action
+	Field findQuick:Action
 	Field findAllInFiles:Action
 	
 	Field options:FindOptions
 	Field lastFindResults:FindResults
-	
-	Method New( docs:DocumentManager,projView:ProjectView,findConsole:TreeViewExt )
-		
-		_docs=docs
-		_findConsole=findConsole
+
+
+	Method New( docs:DocumentManager, projView:ProjectView, findConsole:FindTreeView )
+		_docs = docs
+		_findConsole = findConsole
 		
 		find=ActionById( ActionId.Find )
-		find.Triggered=OnFind
+		find.Triggered = OnFind
+
 		
-		findNext=ActionById( ActionId.FindNext )
-		findNext.Triggered=OnFindNext
+		findNext = ActionById( ActionId.FindNext )
+		findNext.Triggered = OnFindNext
 		
-		findPrevious=ActionById( ActionId.FindPrev )
-		findPrevious.Triggered=OnFindPrevious
+		findPrevious = ActionById( ActionId.FindPrev )
+		findPrevious.Triggered = OnFindPrevious
 		
-		replace=ActionById( ActionId.Replace )
-		replace.Triggered=OnReplace
+		replace = ActionById( ActionId.Replace )
+		replace.Triggered = OnReplace
 		
-		replaceNext=ActionById( ActionId.ReplaceNext )
-		replaceNext.Triggered=OnReplaceNext
+		replaceNext = ActionById( ActionId.ReplaceNext )
+		replaceNext.Triggered = OnReplaceNext
 		
-		replaceAll=ActionById( ActionId.ReplaceAll )
-		replaceAll.Triggered=OnReplaceAll
+		replaceAll = ActionById( ActionId.ReplaceAll )
+		replaceAll.Triggered = OnReplaceAll
 		
-		findInFiles=ActionById( ActionId.FindInFiles )
-		findInFiles.Triggered=Lambda()
+		findInFiles = ActionById( ActionId.FindInFiles )
+		findInFiles.Triggered = Lambda()
+			Local path := docs.CurrentDocument?.Path
+			If Not path Then path = projView.SelectedItem?.Path
 			
-			Local path:=docs.CurrentDocument?.Path
-			If Not path Then path=projView.SelectedItem?.Path
-			
-			Local proj:=ProjectView.FindProject( path )?.Folder
+			Local proj := ProjectView.FindProject( path )?.Folder
 			OnFindInFiles( "",proj )
 		End
 		
-		findAllInFiles=New Action( "Find all" )
-		findAllInFiles.Triggered=OnFindAllInFiles
+		findInFilesQuick = ActionById( ActionId.FindInFiles )
+		findInFilesQuick.Triggered = Lambda()
+			Local path := docs.CurrentDocument?.Path
+			If Not path Then path = projView.SelectedItem?.Path
+			
+			Local proj := ProjectView.FindProject( path )?.Folder
+			OnFindInFilesQuick( "", proj )
+		End
+
+		findQuick = ActionById( ActionId.FindQuick )
+		findQuick.Triggered = Lambda()
+			Local path := docs.CurrentDocument?.Path
+			If Not path Then path = projView.SelectedItem?.Path
+			
+			Local proj := ProjectView.FindProject( path )?.Folder
+			OnFindQuick( "", proj )
+		End
+
+		findAllInFiles = New Action( "Find all" )
+		findAllInFiles.Triggered = OnFindAllInFiles
 		
-		_findDialog=New FindDialog( Self )
-		_findInFilesDialog=New FindInFilesDialog( Self,projView )
+		_findDialog = New FindDialog( Self )
+		_findInFilesDialog = New FindInFilesDialog( Self, projView )
 	End
+
 	
 	Method Update()
-	
 		Local tv:=_docs.CurrentTextView
 		findNext.Enabled=tv
 		findPrevious.Enabled=tv
@@ -70,33 +92,144 @@ Class FindActions
 		If Not entireProject Then OnFindNext( False )
 	End
 	#End
+
 	
+	Method CheckIcons()
+		If Not _errorIcon Then
+			_blankIcon = CodeItemIcons.GetIcon( "blank" )
+
+			_errorIcon = CodeItemIcons.GetIcon( "warning" )
+			
+			_constructIcon = CodeItemIcons.GetIcon( "constructor_public" )
+			_enumIcon = CodeItemIcons.GetIcon( "enum_public" )
+			_structIcon = CodeItemIcons.GetIcon( "struct_public" )
+			_interfaceIcon = CodeItemIcons.GetIcon( "interface" )
+
+			_lambdaIcon = CodeItemIcons.GetIcon( "lambda" )
+			
+			_methodIcon = CodeItemIcons.GetIcon( "method_public" )
+			_functionIcon = CodeItemIcons.GetIcon( "function_public" )
+			_propertyIcon = CodeItemIcons.GetIcon( "property_public" )
+			_classIcon = CodeItemIcons.GetIcon( "class_public" )
+			_classPrivateIcon = CodeItemIcons.GetIcon( "class_private" )
+			_classProtectedIcon = CodeItemIcons.GetIcon( "class_protected" )
+			_globalIcon = CodeItemIcons.GetIcon( "global_public" )
+			_constIcon = CodeItemIcons.GetIcon( "const" )
+			_fieldIcon = CodeItemIcons.GetIcon( "field_public" )
+			_localIcon = CodeItemIcons.GetIcon( "local" )
+		End If
+	End Method
+
+
+	Method FindInFilesQuick( folder:String )
+		OnFindInFilesQuick( folder )
+	End
+
 	Method FindInFiles( folder:String )
-	
 		OnFindInFiles( folder )
 	End
 	
+	Method FindText( text:string )
+		Local path := _docs.CurrentDocument?.Path
+'		If Not path Then path = _projView.SelectedItem?.Path
+			
+'		Local proj := ProjectView.FindProject( path )?.Folder
+'		OnFindQuick( "", proj )
+
+		MainWindow.ShowFindResults()
+		
+		Local what:string = text.ToLower()
+
+		FindQuick( what, "" )
+	End Method
+
+
+	Method TextFindInFiles( what:string )
+'		Local s := GetInitialText()
+		_findInFilesDialog.SetInitialText( what )
+		_findInFilesDialog.CustomFolder = ""
+
+		If Not _findInFilesDialog.FindText
+			Return
+		Endif
+		
+'		Local path:string = _docs.CurrentDocument?.Path '<- ? is cast to base type
+'		Local selProj:WonkeyProject = ProjectView.FindProject( path )?.Folder
+		local path:string = ""
+		If _docs.CurrentDocument Then path = _docs.CurrentDocument.Path
+		Print "textfindinfiles path:"+path
+
+		Local projectPath:string = ""
+		local project:WonkeyProject = ProjectView.FindProject( path )
+		If project Then projectPath = project.Folder
+		Print "textfindinfiles projectpath:"+projectPath
+		
+'		If Not path Then path = projectPath
 	
-	Private
+'		Print "proj:"+proj
+'		Print "selProj:"+selProj
+
+		If projectPath = "" Then
+			ShowMessage( "",StripDir(path)+"~nnot found in a project!" )
+			Return
+		Endif
+		
+		MainWindow.ShowFindResults()
+		
+		New Fiber( Lambda()
+'			Local what := _findInFilesDialog.FindText
+			Local sens := _findInFilesDialog.CaseSensitive
+
+			Local result := FindInProject( what, projectPath, sens )
+			lastFindResults = result
+			If result Then CreateResultTree( _findConsole.RootNode, result, what, projectPath )
+		End)
+	End
+
 	
-	Const NXT:=1
-	Const PREV:=-1
+Private
+
+	
+	Const NXT := 1
+	Const PREV := -1
 	
 	Field _docs:DocumentManager
 	
 	Field _findDialog:FindDialog
 	Field _findInFilesDialog:FindInFilesDialog
-	Field _findConsole:TreeViewExt
-	Field _cursorPos:=0
+	Field _findConsole:FindTreeView
+	Field _cursorPos := 0
+
 	
 	Method OnFind()
+		Local findText:string = GetInitialText()
+'		Print "onFind text:"+findText
+		If findText <> "" Then
+			Local path:string = _docs.CurrentDocument?.Path
+'			If Not path Then path = _projView.SelectedItem?.Path
+
+			Local proj := ProjectView.FindProject( path )?.Folder
+			OnFindQuick( "", proj )
+
+'			If Not MainWindow.FindVisible Then
+				MainWindow.ShowFind( findText )
+'			End If
+
+			Return
+		End If
 		
-		Local s:=GetInitialText()
-		MainWindow.ShowFind( s )
+'		If Not MainWindow.FindVisible Then
+'			MainWindow.ShowFind( findText )
+'		End If
+'			MainWindow.HideFindPanel()
+'			Return
+'		End If
+
+		MainWindow.ShowFind( findText )
 	End
+
 	
 	Method GetInitialText:String()
-		
 		Local tv:=_docs.CurrentTextView
 		If Not tv Return ""
 		
@@ -109,9 +242,9 @@ Class FindActions
 		Endif
 		Return ""
 	End
+
 	
 	Method GetRange:Vec2i( tv:TextView )
-		
 		If options.selectionOnly
 			Local code:=Cast<CodeTextView>( tv )
 			If code And code.HasExtraSelection
@@ -121,18 +254,168 @@ Class FindActions
 		
 		Return New Vec2i( 0,tv.Text.Length )
 	End
+
 	
-	Method OnFindInFiles( folder:String=Null,selProj:String=Null )
-	
-		Local s:=GetInitialText()
+	Method OnFindInFiles( folder:String = Null, selProj:String = Null )
+		Local s := GetInitialText()
 		If s Then _findInFilesDialog.SetInitialText( s )
 		_findInFilesDialog.SetSelectedProject( selProj )
-		_findInFilesDialog.CustomFolder=folder
+		_findInFilesDialog.CustomFolder = folder
 		_findInFilesDialog.Show()
 	End
-	
-	Method OnFindNext()
+
+
+	Method OnFindQuick( folder:String = Null, selProj:String = Null )
+		Local s:string = GetInitialText()
+		If s.Length < 1 Then Return
 		
+		MainWindow.ShowFindResults()
+		
+'		Local s:string = GetInitialText()
+		Local what:string = s.ToLower()
+
+		FindQuick( what, folder, selProj )
+	End Method
+
+
+	
+
+	Method FindQuick( what:string, folder:string, selProj:String = Null )
+'		Print "findQuick:"+folder+" "+selProj+" "+what
+		Print _docs.CurrentDocument.Path
+
+		Local filesFilter:string = DEFAULT_FILES_FILTER
+
+		Local len:int = what.Length
+
+		Local i := 0
+		Local text := _docs.CurrentDocument.TextView.Document.Text.ToLower()
+		
+		Local path:string = _docs.CurrentDocument.Path
+		Local pos:int
+		Local line:int
+		Local lineStr:string
+
+		Local root:TreeView.Node = _findConsole.RootNode
+
+		root.RemoveAllChildren()
+		root.Text="Results for '"+what+"'"
+		root.Expanded=True
+		
+		Local count:int = 0
+		
+		CheckIcons()
+
+		Repeat
+			i = text.Find( what, i )
+			If i = -1 Exit
+			
+			count += 1
+			pos = i
+			line = _docs.CurrentDocument.TextView.Document.FindLine( i ) + 1
+			lineStr = _docs.CurrentDocument.TextView.Document.GetLine( line - 1 ).TrimStart()
+			
+			Local data := New FileJumpData
+			data.path = path
+			data.pos = i
+			data.len = len
+			data.line = line
+			data.lineStr = lineStr
+			data.posInLine = i - _docs.CurrentDocument.TextView.Document.StartOfLine( data.line )
+			
+			Local lineNum:string = line
+			
+			Local node:NodeWithData<FileJumpData>
+			If data.lineStr.Left( 1 ).Trim() = "'" Then
+				node = New NodeWithData<FileJumpData>( "~"+lineNum.Length+data.line+"    "+data.lineStr, root )
+			Else
+				node = New NodeWithData<FileJumpData>( " "+lineNum.Length+data.line+"    "+data.lineStr, root )
+			End If
+
+			node.data = data
+			node.Icon = _blankIcon
+				
+			Select lineStr.Left(5).ToLower()
+				Case "metho"
+					node.Icon = _methodIcon
+				Case "funct"
+					node.Icon = _functionIcon
+				Case "class"
+					node.Icon = _classIcon
+				Case "priva"
+					node.Icon = _classPrivateIcon
+				Case "prote"
+					node.Icon = _classProtectedIcon
+				Case "prope"
+					node.Icon = _propertyIcon
+				Case "struc"
+					node.Icon = _structIcon
+				Case "enum "
+					node.Icon = _enumIcon
+				Case "inter"
+					node.Icon = _interfaceIcon
+				Case "const"
+					If lineStr.Left(8).ToLower() = "construc" Then
+						node.Icon = _constructIcon
+					Else
+						node.Icon = _constIcon
+					End If
+				Case "field"
+					node.Icon = _fieldIcon
+				Case "local"
+					node.Icon = _localIcon
+				Case "globa"
+					node.Icon = _globalIcon
+			End Select
+			
+			i += len
+		Forever
+		
+		If count = 0 Then
+			New TreeView.Node( "  No Results found", root )
+			Return
+		End If
+	End
+
+
+'			Local path := docs.CurrentDocument?.Path
+'			If Not path Then path = projView.SelectedItem?.Path
+'			
+'			Local proj := ProjectView.FindProject( path )?.Folder
+'			OnFindInFilesQuick( "", proj )
+
+
+
+	Method OnFindInFilesQuick( folder:String = Null, selProj:String = Null )
+		Local s := GetInitialText()
+		If s Then _findInFilesDialog.SetInitialText( s )
+		
+		_findInFilesDialog.CustomFolder = folder
+
+		If Not _findInFilesDialog.FindText
+			Return
+		Endif
+		
+		If selProj = "" then
+			ShowMessage( "","2 Please, select project in the list." )
+			Return
+		Endif
+		
+		MainWindow.ShowFindResults()
+		
+		New Fiber( Lambda()
+			Local what := _findInFilesDialog.FindText
+			Local sens := _findInFilesDialog.CaseSensitive
+
+			Local result := FindInProject( what, selProj, sens )
+			lastFindResults = result
+			If result Then CreateResultTree( _findConsole.RootNode, result, what, selProj )
+		End)
+	End
+
+
+
+	Method OnFindNext()
 		Local tv:=_docs.CurrentTextView
 		If Not tv Return
 		
@@ -167,11 +450,10 @@ Class FindActions
 		Endif
 		
 		OnSelectText( tv,i,i+what.Length )
-		
 	End
+
 	
 	Method OnFindPrevious()
-		
 		Local tv:=_docs.CurrentTextView
 		If Not tv Return
 		
@@ -216,49 +498,45 @@ Class FindActions
 		
 		OnSelectText( tv,i,i+what.Length )
 	End
-	
+
+
 	Method OnSelectText( tv:TextView,anchor:Int,cursor:Int )
-		
 		tv.SelectText( anchor,cursor )
 		
 		Local code:=Cast<CodeTextView>( tv )
 		If code Then code.MakeCentered()
 	End
+
 	
 	Method OnFindAllInFiles()
-	
-		If Not _findInFilesDialog.FindText
-			ShowMessage( "","Please, enter text to find what." )
-			Return
-		Endif
-		
-		If Not _findInFilesDialog.SelectedProject
-			ShowMessage( "","Please, select project in the list." )
-			Return
-		Endif
-		
-		'_findInFilesDialog.Hide()
-		MainWindow.ShowFindResults()
-		
-		New Fiber( Lambda()
-		
-			Local what:=_findInFilesDialog.FindText
-			Local proj:=_findInFilesDialog.SelectedProject
-			Local sens:=_findInFilesDialog.CaseSensitive
-			Local filter:=_findInFilesDialog.FilterText
-			
-			Local result:=FindInProject( what,proj,sens,filter )
-			lastFindResults=result
-			
-			If result Then CreateResultTree( _findConsole.RootNode,result,what,proj )
-		End)
-		
+		Print "FindAllInFiles"
+'		If Not _findInFilesDialog.FindText
+'			ShowMessage( "","Please, enter text to find what." )
+'			Return
+'		Endif
+'		
+'		If Not _findInFilesDialog.SelectedProject
+'			ShowMessage( "","1 Please, select project in the list." )
+'			Return
+'		Endif
+'		
+'		'_findInFilesDialog.Hide()
+'		MainWindow.ShowFindResults()
+'		
+'		New Fiber( Lambda()
+'			Local what:=_findInFilesDialog.FindText
+'			Local proj:=_findInFilesDialog.SelectedProject
+'			Local sens:=_findInFilesDialog.CaseSensitive
+'			Local filter:=_findInFilesDialog.FilterText
+'			
+'			Local result:=FindInProject( what,proj,sens,filter )
+'			lastFindResults = result
+'			If result Then CreateResultTree( _findConsole.RootNode, result, what, proj )
+'		End)
 	End
 	
-	Const DEFAULT_FILES_FILTER:="wx,monkey2" ',txt,htm,html,h,cpp,json,xml,ini"
 	
-	Method FindInProject:FindResults( what:String,projectPath:String,caseSensitive:Bool,filesFilter:String=DEFAULT_FILES_FILTER )
-		
+	Method FindInProject:FindResults( what:String, projectPath:String, caseSensitive:Bool, filesFilter:String=DEFAULT_FILES_FILTER )
 		If Not filesFilter Then filesFilter=DEFAULT_FILES_FILTER
 		
 		Local exts:=filesFilter.Split( "," )
@@ -276,7 +554,6 @@ Class FindActions
 		Local tmpFolder:=PathsProvider.WX_TMP+"/"
 		Local doc:=New TextDocument 'use it to get line number
 		For Local f:=Eachin files
-			
 			' skip temp-folders
 			If f.Find( tmpFolder )<>-1 Continue
 			
@@ -295,15 +572,18 @@ Class FindActions
 				If i=-1 Exit
 				
 				Local data:=New FileJumpData
-				data.path=f
-				data.pos=i
-				data.len=len
-				data.line=doc.FindLine( i )+1
-				data.posInLine=i-doc.StartOfLine( data.line )
+				data.path = f
+				data.pos = i
+				data.len = len
+				data.line = doc.FindLine( i )+1
+				
+				data.lineStr = doc.GetLine( doc.FindLine( i ) ).TrimStart()
+				
+				data.posInLine = i - doc.StartOfLine( data.line )
 				
 				items.Add( data )
 				
-				i+=len
+				i += len
 			Forever
 			
 			If Not items.Empty Then result[f]=items
@@ -317,7 +597,8 @@ Class FindActions
 		
 		Return result
 	End
-	
+
+
 	#Rem
 	Method FindInFile:Stack<FileJumpData>( filePath:String,what:String,caseSensitive:Bool,doc:TextDocument=Null )
 	
@@ -353,42 +634,90 @@ Class FindActions
 		Return result
 	End
 	#End
-	
-	Method CreateResultTree( root:TreeView.Node,results:FindResults,what:String,projectPath:String )
-		
+
+
+	Method CreateResultTree( root:TreeView.Node, results:FindResults, what:String, projectPath:String )
 		root.RemoveAllChildren()
 		
-		root.Text="Results for '"+what+"'"
+		root.Text = "Results for '"+what+"'"
 		
 		Local subRoot:TreeView.Node
+		Local lStr:string
+		CheckIcons()
 		
-		For Local file:=Eachin results.Files
+		For Local file := Eachin results.Files
+			Local items := results[file]
 			
-			Local items:=results[file]
-			
-			subRoot=New TreeView.Node( file.Replace( projectPath+"/","" )+" ("+items.Length+")",root )
-	
-			For Local d:=Eachin items
-				Local node:=New NodeWithData<FileJumpData>( " at line "+d.line,subRoot )
-				node.data=d
+			subRoot = New TreeView.Node( file.Replace( projectPath+"/","" )+" ("+items.Length+")",root )
+
+			For Local d := Eachin items
+				Local node:NodeWithData<FileJumpData>
+
+				Local lineNum:string = d.line
+				If d.lineStr.Left( 1 ).Trim() = "'" Then
+					node = New NodeWithData<FileJumpData>( "~"+lineNum.Length+d.line+"    "+d.lineStr, subRoot )
+				Else
+					node = New NodeWithData<FileJumpData>( " "+lineNum.Length+d.line+"    "+d.lineStr, subRoot )
+				End If
+
+'				node = New NodeWithData<FileJumpData>( d.lineStr, subRoot )
+'				If d.lineStr.Left( 1 ) = "'" Then
+'					node = New NodeWithData<FileJumpData>( "~"+d.line+"    "+d.lineStr, subRoot )
+'				Else
+'					node = New NodeWithData<FileJumpData>( " "+d.line+"    "+d.lineStr, subRoot )
+'				End If
+				node.data = d
+				node.Icon = _blankIcon
+				
+				lStr = d.lineStr.ToLower()
+				Select lStr.Left(5)
+					Case "metho"
+						node.Icon = _methodIcon
+					Case "funct"
+						node.Icon = _functionIcon
+					Case "class"
+						node.Icon = _classIcon
+					Case "priva"
+						node.Icon = _classPrivateIcon
+					Case "prote"
+						node.Icon = _classProtectedIcon
+					Case "prope"
+						node.Icon = _propertyIcon
+					Case "struc"
+						node.Icon = _structIcon
+					Case "enum "
+						node.Icon = _enumIcon
+					Case "inter"
+						node.Icon = _interfaceIcon
+					Case "const"
+						If lStr.Left(8) = "construc" Then
+							node.Icon = _constructIcon
+						Else
+							node.Icon = _constIcon
+						End If
+					Case "field"
+						node.Icon = _fieldIcon
+					Case "local"
+						node.Icon = _localIcon
+					Case "globa"
+						node.Icon = _globalIcon
+				End Select
 			Next
-		
 		Next
 		
-		If root.NumChildren=0 Then New TreeView.Node( "not found :(",root )
+		If root.NumChildren=0 Then New TreeView.Node( "  no results found",root )
 		
 		root.Expanded=True
-		
 	End
+
 	
 	Method OnReplace()
-		
 		Local s:=GetInitialText()
 		MainWindow.ShowReplace( s )
 	End
+
 	
 	Method OnReplaceNext()
-	
 		Local tv:=_docs.CurrentTextView
 		If Not tv Return
 		
@@ -418,11 +747,10 @@ Class FindActions
 		Endif
 		
 		OnFindNext()
-
 	End
+
 	
 	Method OnReplaceAll()
-	
 		Local tv:=_docs.CurrentTextView
 		If Not tv Return
 		
@@ -430,7 +758,6 @@ Class FindActions
 		If Not what Return
 		
 		Local with:=options.replaceText
-		
 		Local text:=tv.Text
 
 		If Not options.caseSensitive
@@ -448,7 +775,6 @@ Class FindActions
 		
 		Local i:=range.x,t:=0
 		Repeat
-		
 			i=text.Find( what,i )
 			If i=-1 Or i+lenWhat>range.y Exit
 			
@@ -469,35 +795,31 @@ Class FindActions
 			
 			t+=dlen
 			i+=lenWhat
-			
 		Forever
 		
 		OnSelectText( tv,anchor,cursor )
-		
 	End
-	
 End
 
 
 Class FindResults
-	
+
 	Operator[]:Stack<FileJumpData>( filePath:String )
-		
 		Return _map[filePath]
 	End
-	
-	Operator[]=( filePath:String,results:Stack<FileJumpData> )
-	
+
+
+	Operator[]=( filePath:String, results:Stack<FileJumpData> )
 		_map[filePath]=results
 	End
-	
+
+
 	Property Files:StringMap<Stack<FileJumpData>>.KeyIterator()
-		
 		Return _map.Keys.All()
 	End
-	
+
+
 	Method ProcessLinesModified( filePath:String,first:Int,removed:Int,inserted:Int )
-		
 		Local list:=_map[filePath]
 		If Not list Return
 		
@@ -505,15 +827,14 @@ Class FindResults
 			If d.line>first Then d.line+=(inserted-removed)
 		Next
 	End
-	
+
+
 	Method Empty:Bool()
-		
 		Return _map.Empty
 	End
-	
-	
-	Private
-	
+
+
+Private
 	Field _map:=New StringMap<Stack<FileJumpData>>
 End
 

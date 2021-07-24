@@ -1,0 +1,316 @@
+Namespace MiniRa
+Using MiniRa
+
+#Import "<mojo>"
+Using mojo..
+
+#import "object.wx"
+#import "projection.wx"
+
+
+class MiniRa3D Extends Projection
+	field objGrid:Object3D
+	
+	
+	
+	method Grid()
+		objGrid = New Object3D( 88, 44 )
+		local k:float
+		local v1:int
+		local v2:int
+
+		local col2:Uint = ICol( 128, 128, 128, 255 )
+		local col:Uint = ICol( 64, 64, 64, 255 )
+
+		For k = -2 To 2.2 Step 0.2
+			v1 = objGrid.Vertex( k, -2, 0 )
+			v2 = objGrid.Vertex( k, 2, 0 )
+			If (k > -1.1 And k < -0.9) or (k > 0.9 And k < 1.1) Then
+				objGrid.Triangle( v1, v2, v2, col2 )
+			Else
+				objGrid.Triangle( v1, v2, v2, col )
+			End If
+
+			v1 = objGrid.Vertex( -2, k, 0 )
+			v2 = objGrid.Vertex( 2, k, 0 )
+			If (k > -1.1 And k < -0.9) or (k > 0.9 And k < 1.1) Then
+				objGrid.Triangle( v1, v2, v2, col2 )
+			Else
+				objGrid.Triangle( v1, v2, v2, col )
+			End If
+		Next
+	End method
+	
+	
+	method DrawAxis( canvas:Canvas, xoff:float,  yoff:float )
+		local x:int = _screen._x
+		local y:int = _screen._y
+		local V:Point3D = new Point3D( 0, 0, 0 )
+		Trans_PointMid( V, xoff, yoff, x, y )
+
+		local k:int
+		
+		local _selCX:float
+		local _selCY:float
+		local _selFX:float
+		local _selFY:float
+		local _selSX:float
+		local _selSY:float
+		local _selUX:float
+		local _selUY:float
+
+			_selCX = _p1._h
+			_selCY = _p1._v
+			local xc:float = _p1._h
+			local yc:float = _p1._v * _screen._ratio
+			local V2:Point3D = new Point3D( 0, 0, 0 )
+			V._x = 0
+			V._y = 0
+			V._z = -4
+			V2._x = 0
+			V2._y = 0
+			V2._z = 4
+
+			Trans_PointMid( V, xoff, yoff, x, y )
+			local xp:float = _p1._h
+			local yp:float = _p1._v
+
+			Trans_PointMid( V2, xoff, yoff, x, y )
+			_selUX = (_p1._h - _selCX) * (0.3 / CameraZoom )
+			_selUY = ((_p1._v) - _selCY) * (0.3 / CameraZoom )
+			canvas.Color = Color.Sky * 0.65
+			canvas.DrawLine( xp, yp, _p1._h, _p1._v )
+
+			V._x = 0
+			V._y = -4
+			V._z = 0
+			V2._x = 0
+			V2._y = 4
+			V2._z = 0
+
+			Trans_PointMid( V, xoff, yoff, x, y )
+			xp = _p1._h
+			yp = _p1._v
+
+			Trans_PointMid( V2, xoff, yoff, x, y )
+			_selFX = (_p1._h - _selCX) * (0.3 / CameraZoom )
+			_selFY = ((_p1._v) - _selCY) * (0.3 / CameraZoom )
+			canvas.Color = Color.Green * 0.65
+			canvas.DrawLine( xp, yp, _p1._h, _p1._v )
+
+			V._x = -4
+			V._y = 0
+			V._z = 0
+			V2._x = 4
+			V2._y = 0
+			V2._z = 0
+
+			Trans_PointMid( V, xoff, yoff, x, y )
+			xp = _p1._h
+			yp = _p1._v
+
+			Trans_PointMid( V2, xoff, yoff, x, y )
+			_selSX = (_p1._h - _selCX) * (0.3 / CameraZoom )
+			_selSY = ((_p1._v) - _selCY) * (0.3 / CameraZoom )
+			canvas.Color = Color.Red * 0.65
+			canvas.DrawLine( xp, yp, _p1._h, _p1._v )
+	End method
+
+
+	method DrawGrid( canvas:Canvas, ox:int, oy:int )
+		local x:int = _screen._x
+		local y:int = _screen._y
+		local w:int = _screen._w
+		local h:int = _screen._h
+		local xoff:float = ox
+		local yoff:float = oy
+
+		local V:Point3D = new Point3D( 0, 0, 0 )
+		Trans_PointMid( V, xoff, yoff, x, y )
+		
+		'draw the grid
+			TransformObject( objGrid, V, xoff, yoff, x, y )
+			Draw3DWire( canvas, objGrid, x, y, w, h )
+	End method
+	
+
+	method DrawNormals( canvas:Canvas, obj:Object3D, ox:int, oy:int )
+		local x:int = _screen._x
+		local y:int = _screen._y
+		local w:int = _screen._w
+		local h:int = _screen._h
+		local xoff:float = ox
+		local yoff:float = oy
+		
+		canvas.Color = Color.Green
+		Draw3DNormals( canvas, obj, x, y, w, h )
+	End method
+	
+
+	method DrawObjectNormals( canvas:Canvas, obj:Object3D, ox:int, oy:int )
+		DrawNormals( canvas, obj, ox, oy )
+	End method
+
+	
+	method DrawFlatObject( canvas:Canvas, obj:Object3D, ox:int, oy:int,  rot:float = 0 )
+		CameraOrbit( 0, rot ) 'up, round
+
+		local x:int = _screen._x
+		local y:int = _screen._y
+		local w:int = _screen._w
+		local h:int = _screen._h
+		local xoff:float = ox
+		local yoff:float = oy
+
+		local V:Point3D = new Point3D( 0, 0, 0 )
+		Trans_PointMid( V, xoff, yoff, x, y )
+		
+			TransformObject( obj, V, xoff, yoff )
+			Draw3DFlat( canvas, obj, x, y, w, h )
+	End method
+
+
+	method DrawFlatObjectMono( canvas:Canvas, obj:Object3D, ox:int, oy:int,  rot:float = 0 )
+		CameraOrbit( 0, rot ) 'up, round
+
+		local x:int = _screen._x
+		local y:int = _screen._y
+		local w:int = _screen._w
+		local h:int = _screen._h
+		local xoff:float = ox
+		local yoff:float = oy
+
+		local V:Point3D = new Point3D( 0, 0, 0 )
+		Trans_PointMid( V, xoff, yoff, x, y )
+		
+			TransformObject( obj, V, xoff, yoff )
+			Draw3DFlatM( canvas, obj, x, y, w, h )
+	End method
+
+
+	method DrawWireObject( canvas:Canvas, obj:Object3D, ox:int, oy:int,  rot:float = 0 )
+		CameraOrbit( 0, rot ) 'up, round
+
+		local x:int = _screen._x
+		local y:int = _screen._y
+		local w:int = _screen._w
+		local h:int = _screen._h
+		local xoff:float = ox
+		local yoff:float = oy
+
+		local V:Point3D = new Point3D( 0, 0, 0 )
+		Trans_PointMid( V, xoff, yoff, x, y )
+		
+			TransformObject( obj, V, xoff, yoff )
+			Draw3DWire( canvas, obj, x, y, w, h )
+	End method
+
+
+	method DrawWireObjectMono( canvas:Canvas, obj:Object3D, ox:int, oy:int,  rot:float = 0,  scale:float = 1 )
+		CameraOrbit( 0, rot ) 'up, round
+
+		local x:int = _screen._x
+		local y:int = _screen._y
+		local w:int = _screen._w
+		local h:int = _screen._h
+		local xoff:float = ox
+		local yoff:float = oy
+
+		local V:Point3D = new Point3D( 0, 0, 0 )
+		Trans_PointMid( V, xoff, yoff, x, y )
+		
+		'draw the 3d axis
+'			DrawAxis( canvas, xoff, yoff )
+
+		'draw the grid
+'			TransformObject( objGrid, V, xoff, yoff, x, y )
+'			Draw3DWire1( canvas, objGrid, x, y, w, h )
+
+
+		'1st do the transfrom to the camera
+			TransformObject( obj, V, xoff, yoff, 0,0, scale )
+			Draw3DWireM( canvas, obj, x, y, w, h )
+	End method
+
+private
+	method Draw3DWireM( canvas:Canvas, obj:Object3D, x:float, y:float, w:float, h:float )
+		obj.Sort3D2( x, y, w, h )
+		obj.Draw3DWire( canvas, x, y, w, h, canvas.Color )
+	End method
+
+
+	method Draw3DWire( canvas:Canvas, obj:Object3D, x:float, y:float, w:float, h:float )
+		obj.Sort3D2( x, y, w, h )
+		obj.Draw3DWire2( canvas, x, y, w, h )
+	End method
+
+	method Draw3DFlatM( canvas:Canvas, obj:Object3D, x:float, y:float, w:float, h:float )
+		obj.Sort3D2( x, y, w, h )
+		obj.Draw3D( canvas, x, y, w, h, canvas.Color )
+	End method
+
+	method Draw3DFlat( canvas:Canvas, obj:Object3D, x:float, y:float, w:float, h:float )
+		obj.Sort3D2( x, y, w, h )
+		obj.Draw3D( canvas, x, y, w, h )
+	End method
+
+	method Draw3DNormals( canvas:Canvas, obj:Object3D, x:float, y:float, w:float, h:float )
+		obj.Draw3DNormals( canvas, x, y, w, h )
+	End method
+
+private
+	method TransformObject( obj:Object3D, V:Point3D, midx:float, midy:float, x:float = 0, y:float = 0, scale:float = 1 )
+		local k:int
+		'transform vertxes
+		For k = 0 To obj.vertexCount
+			V._x = obj.vX[k] * scale
+			V._y = obj.vY[k] * scale
+			V._z = obj.vZ[k] * scale
+
+			Trans_PointMid( V, midx, midy, x, y )
+			obj.xx[k] = _p1._h
+			obj.yy[k] = _p1._v
+		Next
+
+		'transform triangles
+		For k = 0 To obj.triangleCount
+			V._x = obj.triCenterX[k]
+			V._y = obj.triCenterY[k]
+			V._z = obj.triCenterZ[k]
+			
+			obj.visible[k] = Trans_PointMid( V, midx, midy, x, y )
+			
+			obj.cx[k] = _p1._h
+			obj.cy[k] = _p1._v
+
+			obj.triDist[k] = Length( V._x - _camera._from._x, V._y - _camera._from._y, V._z - _camera._from._z )
+
+			V._x = obj.triCenterX[k] - obj.triNormalX[k]
+			V._y = obj.triCenterY[k] - obj.triNormalY[k]
+			V._z = obj.triCenterZ[k] - obj.triNormalZ[k]
+
+			Trans_PointMid( V, midx, midy, x, y )
+			obj.nx[k] = _p1._h
+			obj.ny[k] = _p1._v
+		Next
+	End method
+	
+
+	method Trans_PointMid:bool( w1:Point3D, midx:float, midy:float, x:float = 0, y:float = 0 )
+		Trans_World2Eye( w1, _e1 )
+
+		Trans_Visible( _e1 )
+'		If _e1._visible Then Print "ok"
+		
+		Trans_Eye2Norm( _e1, _n1 )
+		Trans_Norm2ScreenMid( _n1, _p1, midx, midy, x, y )
+		Return _e1._visible
+	End method
+
+	method Trans_Norm2ScreenMid( norm:Point3D, projected:Point2D, midx:float, midy:float, x:float = 0, y:float = 0 )
+		'new corrected aspect ratio
+		projected._h = x + (_screen._center._h + midx)- (norm._x / _screen._ratioh)
+		projected._v = y + (_screen._center._v + midy)- (norm._z / _screen._ratiov)
+	End method
+
+End Class

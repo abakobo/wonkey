@@ -2,13 +2,13 @@
 Namespace wide
 
 
+
 Function InitHotkeys()
-	
 	ActionsProvider.Init()
 End
 
+
 Function ActionById:Action( actionId:String )
-	
 	Return ActionsProvider.GetAction( actionId )
 End
 
@@ -16,7 +16,6 @@ End
 Class ActionsProvider
 	
 	Function Init()
-		
 		CreateDefaultActions()
 		
 		Local pathToJson:=Prefs.HotkeysFilePath
@@ -26,9 +25,9 @@ Class ActionsProvider
 		' save merged version: default+custom
 		Save( pathToJson )
 	End
-	
+
+
 	Function GetAction:Action( actionId:String )
-		
 		Local act:=_actions[actionId]
 		If act=Null
 			RuntimeError( "Have no action for actionId="+actionId )
@@ -36,20 +35,19 @@ Class ActionsProvider
 		
 		Return act
 	End
+
 	
 	Function CreateAction:Action( actionId:String,hotKeyString:String )
-		
 		' todo !!! check for duplicates
-		
 		Local actionTitle:=ActionTitle.Get( actionId )
 		Local act:=ActionFromString( actionTitle,hotKeyString )
 		_actions[actionId]=act
 		
 		Return act
 	End
+
 	
 	Function Save( pathToJson:String )
-		
 		Local jobj:=New JsonObject
 		Local jarr:=New JsonArray
 		jobj["hotkeys"]=jarr
@@ -63,17 +61,17 @@ Class ActionsProvider
 		Next
 		
 		Local json:=jobj.ToJson()
-		
 		SaveString( json,pathToJson )
 	End
 	
 	
-	Private
+Private
+
 	
 	Global _actions:=New StringMap<Action>
+
 	
 	Function Load( pathToJson:String )
-		
 		Local jobj:=JsonObject.Load( pathToJson )
 		If Not jobj Return
 		
@@ -92,10 +90,10 @@ Class ActionsProvider
 			Endif
 		Next
 	End
+
 	
 	Function CreateDefaultActions()
-		
-		#If __TARGET__="macos"
+#If __TARGET__="macos"
 		CreateAction( ActionId.Build,"Ctrl+B" )
 		CreateAction( ActionId.Run,"Ctrl+R" )
 		CreateAction( ActionId.Semant,"Ctrl+C" )
@@ -137,6 +135,7 @@ Class ActionsProvider
 		CreateAction( ActionId.Preferences,"Cmd+," )
 		
 		CreateAction( ActionId.Find,"Cmd+F" )
+		CreateAction( ActionId.FindQuick,"Ctrl+F" )
 		CreateAction( ActionId.FindNext,"F3" )
 		CreateAction( ActionId.FindPrev,"Shift+F3" )
 		CreateAction( ActionId.FindInFiles,"Cmd+Shift+F" )
@@ -158,16 +157,17 @@ Class ActionsProvider
 		CreateAction( ActionId.JumpToNextScope,"Cmd+Alt+Down" )
 		CreateAction( ActionId.JumpToPrevScope,"Cmd+Alt+Up" )
 		
-		CreateAction( ActionId.FullscreenWindow,"Cmd+Ctrl+F" )
-		CreateAction( ActionId.FullscreenEditor,"Cmd+Ctrl+Shift+F" )
-		CreateAction( ActionId.ZoomIn,"Ctrl+Keypad +" )
-		CreateAction( ActionId.ZoomOut,"Ctrl+Keypad -" )
-		CreateAction( ActionId.ZoomDefault,"Ctrl+Keypad 0" )
+		CreateAction( ActionId.FullscreenWindow,"xxxx" )
+		CreateAction( ActionId.FullscreenEditor,"xxxx" )
+
+		CreateAction( ActionId.ZoomIn, "" )
+		CreateAction( ActionId.ZoomOut, "" )
+		CreateAction( ActionId.ZoomDefault, "" )
 		
 		CreateAction( ActionId.RecentlyViewedFiles,"Cmd+E" )
 		CreateAction( ActionId.DuplicateBlock,"Cmd+D" )
 		
-		#Else
+#Else
 		
 		CreateAction( ActionId.Build,"F6" )
 		CreateAction( ActionId.Run,"F5" )
@@ -209,8 +209,10 @@ Class ActionsProvider
 		CreateAction( ActionId.Quit,"Alt+F4" )
 		CreateAction( ActionId.Preferences,"Ctrl+P" )
 		
-		CreateAction( ActionId.Find,"Ctrl+F" )
+		CreateAction( ActionId.Find,"Shift+F" )
+		CreateAction( ActionId.FindQuick,"Ctrl+F" )
 		CreateAction( ActionId.FindNext,"F3" )
+		CreateAction( ActionId.FindPrev,"Ctrl+F" )
 		CreateAction( ActionId.FindPrev,"Shift+F3" )
 		CreateAction( ActionId.FindInFiles,"Ctrl+Shift+F" )
 		CreateAction( ActionId.Replace,"Ctrl+H" )
@@ -233,20 +235,21 @@ Class ActionsProvider
 		
 		CreateAction( ActionId.FullscreenWindow,"F11" )
 		CreateAction( ActionId.FullscreenEditor,"Shift+F11" )
-		CreateAction( ActionId.ZoomIn,"Ctrl+Keypad +" )
-		CreateAction( ActionId.ZoomOut,"Ctrl+Keypad -" )
-		CreateAction( ActionId.ZoomDefault,"Ctrl+Keypad 0" )
+
+		CreateAction( ActionId.ZoomIn,"Ctrl+Equals" )
+		CreateAction( ActionId.ZoomOut,"Ctrl+Minus" )
+		CreateAction( ActionId.ZoomDefault,"Ctrl+0" )
 		
 		CreateAction( ActionId.RecentlyViewedFiles,"Ctrl+E" )
 		CreateAction( ActionId.DuplicateBlock,"Ctrl+D" )
 		
-		#Endif
+#Endif
 	End
 End
 
 
+
 Class ActionId Final
-	
 	Const Build:="build"
 	Const Run:="run"
 	Const Semant:="check"
@@ -288,6 +291,7 @@ Class ActionId Final
 	Const Preferences:="preferences"
 	
 	Const Find:="find"
+	Const FindQuick:="find_quick"
 	Const FindNext:="find_next"
 	Const FindPrev:="find_prev"
 	Const FindInFiles:="find_in_files"
@@ -317,28 +321,30 @@ Class ActionId Final
 	
 	Const RecentlyViewedFiles:="recently_viewed_files"
 	Const DuplicateBlock:="duplicate_block"
+
 	
-	Private
+Private
+
 	
 	Method New()
 	End
 End
 
 
+
 Class ActionTitle Final
-	
 	Function Get:String( actionId:String )
-		
 		Return _titles[actionId]
 	End
 	
 	
-	Private
+Private
+
 	
 	Global _titles:=Init()
-	
+
+
 	Function Init:StringMap<String>()
-		
 		Local map:=New StringMap<String>
 		
 		map.Add( ActionId.Build,"Build" )
@@ -346,12 +352,12 @@ Class ActionTitle Final
 		map.Add( ActionId.Semant,"Check" )
 		map.Add( ActionId.Debug,"Debug" )
 		map.Add( ActionId.ForceStop,"Force stop" )
-		map.Add( ActionId.ProductSettings,"Product settings..." )
+		map.Add( ActionId.ProductSettings,"Build settings..." )
 		map.Add( ActionId.NextError,"Next build error" )
-		map.Add( ActionId.LockBuildFile,"Lock build file" )
+		map.Add( ActionId.LockBuildFile,"Set Main build file" )
 		map.Add( ActionId.UpdateModules,"Update / Rebuild modules..." )
 		map.Add( ActionId.ModuleManager,"Module manager..." )
-		map.Add( ActionId.RebuildDocs,"Rebuild documentation" )
+		map.Add( ActionId.RebuildDocs,"Rebuild help" )
 		
 		map.Add( ActionId.ExpandSelection,"Expand selection" )
 		map.Add( ActionId.ShrinkSelection,"Shrink selection" )
@@ -382,9 +388,10 @@ Class ActionTitle Final
 		map.Add( ActionId.Preferences,"Preferences..." )
 		
 		map.Add( ActionId.Find,"Find..." )
+		map.Add( ActionId.FindQuick,"Quick Find" )
 		map.Add( ActionId.FindNext,"Find next" )
 		map.Add( ActionId.FindPrev,"Find previous" )
-		map.Add( ActionId.FindInFiles,"Find in files..." )
+		map.Add( ActionId.FindInFiles,"In project files" )
 		map.Add( ActionId.Replace,"Replace..." )
 		map.Add( ActionId.ReplaceNext,"Replace next" )
 		map.Add( ActionId.ReplaceAll,"Replace all" )
@@ -398,13 +405,14 @@ Class ActionTitle Final
 		
 		map.Add( ActionId.JumpBack,"Jump back" )
 		map.Add( ActionId.JumpForward,"Jump forward" )
-		map.Add( ActionId.JumpToLine,"Goto line" )
+		map.Add( ActionId.JumpToLine,"Goto line..." )
 		map.Add( ActionId.JumpToDefinition,"Goto definition" )
 		map.Add( ActionId.JumpToNextScope,"Next scope" )
 		map.Add( ActionId.JumpToPrevScope,"Previous scope" )
 		
 		map.Add( ActionId.FullscreenWindow,"Fullscreen window" )
 		map.Add( ActionId.FullscreenEditor,"Fullscreen editor" )
+		
 		map.Add( ActionId.ZoomIn,"Zoom in" )
 		map.Add( ActionId.ZoomOut,"Zoom out" )
 		map.Add( ActionId.ZoomDefault,"Reset zoom" )
@@ -414,6 +422,7 @@ Class ActionTitle Final
 		
 		Return map
 	End
+
 	
 	Method New()
 	End
@@ -421,7 +430,6 @@ End
 
 
 Function HotKeyFromString:Tuple2<Key,Modifier>( str:String )
-	
 	str=str.Trim()
 	
 	Local endsWithPlus:=str.EndsWith( "+" )
@@ -459,8 +467,8 @@ Function HotKeyFromString:Tuple2<Key,Modifier>( str:String )
 	Return New Tuple2<Key,Modifier>( key,modifiers )
 End
 
+
 Function ActionFromString:Action( title:String,hotKeyString:String )
-	
 	Local action:=New Action( title )
 	Local pair:=HotKeyFromString( hotKeyString )
 	action.HotKey=pair.Item1

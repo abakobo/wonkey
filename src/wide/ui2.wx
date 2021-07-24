@@ -1,0 +1,892 @@
+ Namespace myapp
+
+
+#Import "<std>"
+#Import "<mojo>"
+Using std..
+Using mojo..
+
+
+#Import "miniui.wx"
+'#Import "storm.wx"
+
+
+'#Import "assets/wonkey.png"
+'#Import "assets/icon4.png"
+
+'#Import "assets/star.png"
+
+'#Import "assets/node_open.png"
+'#Import "assets/node_closed.png"
+
+
+#Import "assets/theme_icons.png"
+
+#Import "assets/method.png"
+#Import "assets/property.png"
+#Import "assets/class.png"
+#Import "assets/field.png"
+
+#Import "assets/fonts/LUCON.TTF"
+#Import "assets/fonts/Monoid-Regular.ttf"
+#Import "assets/fonts/DejaVuSansMono.ttf"
+#Import "assets/fonts/Courier New.ttf"
+#Import "assets/fonts/UbuntuMono-R.ttf"
+#Import "assets/fonts/Inconsolata-Regular.ttf"
+
+
+Function Main()
+	New AppInstance
+	New ControlWindow
+	App.Run()
+End
+
+global _themeCol:Color[] = New Color[]( Color.PicoBlack, Color.UIDarkGrey, Color.UICharcoal, Color.UISilver, Color.UITeal,
+	Color.UILightGreen, Color.UIVibrantGreen, Color.UIGreen, Color.UILeaf, Color.UILime, Color.UIOrange, Color.UIBurntOrange,
+	Color.UIDarkOrange, Color.UIBrown, Color.UIMango, Color.UIYellow, Color.VicRed, Color.UIMagenta, Color.UIPink,
+	Color.UIPurple, Color.UILavender, Color.LabCyan, Color.UIBlue, Color.UIFontBlue, Color.UIPaleBlue )
+
+
+
+class MiniUITheme
+	field IDE:Color[] = New Color[]( Color.PicoBlack, Color.UISilver, Color.UIDarkGrey, Color.UIBlue )
+	field IDEColor:int[] = New int[]( 0, 3, 1, 22 )
+	field IDEHue:int[] = New int[]( 3, 3, 3, 3 )
+
+	field SyntaxFont:Byte
+
+	field Syntax:Color[] = New Color[](
+		Color.UISilver, Color.UIPaleBlue, Color.VicRed, Color.UITeal,
+		Color.UILeaf, Color.UIMango, Color.UIDarkGrey, Color.UILightGreen,
+		
+		Color.UIPurple, Color.UILightGreen, Color.UIFontBlue, Color.UIPurple,
+		Color.UIYellow, Color.UIOrange,
+
+		Color.PicoBlack, Color.UIDarkGrey, Color.UIBlue, Color.UIGreen )
+		
+	field SyntaxColor:int[] = New int[]( 3,24,16,4,  8,10,22,5,  19,5,23,19,  15,14,  0,0,22,7 )
+	field SyntaxHue:int[] = New int[](   3,2,5,3,  4,3,3,3,     3,3,3,3,    3,4,    3,4,3,3 )
+	
+	method New()
+		ResetIDE()
+		ResetSyntax()
+	End Method
+	
+	
+	method ResetIDE()
+		IDE = New Color[]( Color.PicoBlack, Color.UISilver, Color.UIDarkGrey, Color.UIBlue )
+		IDEColor = New int[]( 0, 3, 1, 22 )
+		IDEHue = New int[]( 3, 3, 3, 3 )
+	End Method
+	
+	
+	method ResetSyntax()
+		SyntaxFont = 2
+
+		Syntax = New Color[](
+			Color.UISilver, Color.UIPaleBlue, Color.VicRed, Color.UITeal,
+			Color.UILeaf, Color.UIMango, Color.UIDarkGrey, Color.UILightGreen,
+		
+			Color.UIPurple, Color.UILightGreen, Color.UIFontBlue, Color.UIPurple,
+			Color.UIYellow, Color.UIOrange,
+
+			Color.PicoBlack, Color.UIDarkGrey, Color.UIBlue, Color.UIGreen )
+		
+		SyntaxColor = New int[]( 3,24,16,4,  8,10,22,5,  19,5,23,19,  15,14,  0,0,22,7 )
+		SyntaxHue = New int[](   3,2,5,3,  4,3,3,3,     3,3,3,3,    3,4,    3,4,3,3 )
+
+		local change:float
+		local k:int
+		For k = 0 To 17
+			change = (SyntaxHue[ k ]-3) * 0.18
+			
+			local red:float = Clamp( Syntax[ k ].R + change, 0, 1 )
+			local green:float = Clamp( Syntax[ k ].G + change, 0, 1 )
+			local blue:float = Clamp( Syntax[ k ].B + change, 0, 1 )
+
+			Syntax[ k ] = New Color( red, green, blue )
+		Next
+	End Method
+	
+End class
+
+	
+	
+class ControlWindow Extends Window
+	field ctrls:MiniUI = New MiniUI()
+	
+	field theme:MiniUITheme[] = New MiniUITheme[13]
+	field _currentTheme:byte = 0
+'	field storm:StormSystem = New StormSystem()
+
+	field _iconsImage:Image
+	
+	field _methodImage:Image
+	field _classImage:Image
+	field _propertyImage:Image
+	field _fieldImage:Image
+'	field _tapeImage:Image
+'	field _tapeSelectImage:Image
+
+'	field _wideImage:Image
+'	field _wonkeyImage:Image
+
+'	field _particleImage:Image
+
+	field ctrlTab:int
+	
+	field ctrlThemeList:int
+	
+	field ctrlSyntaxSample:int
+	field ctrlSyntaxSample2:int
+	
+	field ctrlSyntax:int
+
+	field Syntax:Color[] = New Color[](
+		Color.UISilver, Color.UIPaleBlue, Color.VicRed, Color.UITeal,
+		Color.UILeaf, Color.UIMango, Color.UIDarkGrey, Color.UILightGreen,
+		
+		Color.UIPurple, Color.UILightGreen, Color.UIFontBlue, Color.UIPurple,
+		Color.UIYellow, Color.UIOrange,
+
+		Color.PicoBlack, Color.UIDarkGrey, Color.UIBlue, Color.UIGreen )
+		
+	field SyntaxColor:int[] = New int[]( 3,24,16,4,  8,10,22,5,  19,5,23,19,  15,14,  0,0,22,7 )
+	field SyntaxHue:int[] = New int[](   3,2,5,3,  4,3,3,3,     3,3,3,3,    3,4,    3,4,3,3 )
+
+	field ctrlIDESample:int
+	field ctrlIDESample2:int
+	
+	field ctrlIDE:int
+
+	field ctrlColors:int
+	field ctrlHues:int
+
+	field IDE:Color[] = New Color[]( Color.PicoBlack, Color.UISilver, Color.UIDarkGrey, Color.UIBlue )
+	field IDEColor:int[] = New int[]( 0, 3, 1, 22 )
+	field IDEHue:int[] = New int[]( 3, 3, 3, 3 )
+
+	field ctrlColors2:int
+	field ctrlHues2:int
+
+	field _currentFont:int = 2
+	field ctrlFont:int[] = New int[6]
+	field _font:Font[] = New Font[6]
+
+'	field VFade1:int
+'	field VText1:int
+	field ButtonMinus:int
+	field ButtonPlus:int
+
+	field ButtonApply:int
+	field ButtonDefault:int
+	field ButtonOK:int
+	field ButtonCancel:int
+
+	field lst:string[]
+	field ctrlList:int = -1
+	field ctrlColorList:int = -1
+	field syntaxList:string[]
+
+	
+	Method New( title:String = "Simple mojo app", width:Int = 960, height:Int = 640, flags:WindowFlags = Null )
+		Super.New( title, width, height, flags )
+
+		ClearColor = Color.PicoBlack
+		
+		_iconsImage = Image.Load( "asset::theme_icons.png" )
+
+		_methodImage = Image.Load( "asset::method.png" )
+		_classImage = Image.Load( "asset::class.png" )
+		_fieldImage = Image.Load( "asset::field.png" )
+		_propertyImage = Image.Load( "asset::property.png" )
+
+		local k:int
+		For k = 0 To 12
+			theme[k] = New MiniUITheme()
+		Next
+		
+		
+'		_tapeImage = Image.Load( "asset::tape.png" )
+'		_tapeSelectImage = Image.Load( "asset::tape-select.png" )
+
+'		_wideImage = Image.Load( "asset::wonkey.png" )
+'		_wonkeyImage = Image.Load( "asset::icon4.png" )
+		
+'		_particleImage = Image.Load( "asset::star.png" )
+
+		' use a different highlight color - default is uiblue
+'		ctrls.OverColor = Color.UIMango * 0.8
+
+		'example 1 20x20 grib with use drawn lists
+		ctrls.SetGrid( 30, 24 )
+		'show the underlying grid
+'		ctrls.ShowGrid = true
+'		ctrls.ShowGuides = True
+		ctrls.GridInset = 6
+
+		Local scale:int = App.Theme.Scale.x
+
+		local tabs:string[] = New string[]( "Themes", "IDE Interface", "Syntax Editor", "Palettes" )
+		ctrlTab = ctrls.AddTabList( 0,0,30,1.7, Color.Black* 0.2, tabs )
+		ctrls.AddPanel( 0,1.3, 30,0.35, Color.UIBlue )
+
+'		local tabs:string[] = New string[]( "General", "Interface", "Editor", "UI Colors", "you", "All" )
+'		ctrlTab = ctrls.AddTabList( 0,0,20,1.3, Color.Black* 0.2, tabs )
+'		ctrls.AddPanel( 0,1.3,20,0.1, Color.UIBlue )
+
+'		lst = New string[]( "About Wide", "About Wonkey", "Thanks" )
+'		ctrlList = ctrls.AddCustomList( 0.5,0.5,6,17, Color.Black* 0.2, lst.Length, 40, True )
+'		ctrls.SetBorder( ctrlList, 6 )
+'		ctrls.SetSelected( ctrlList, 0 )
+
+'		ButtonApply = ctrls.AddButton( 0.5,22, 4, 1.75, Color.DarkGrey, "Apply", True )
+		ButtonDefault = ctrls.AddButton( 11.5,21.75, 4, 1.75, Color.DarkGrey, "Default", True )
+		ButtonCancel = ctrls.AddButton( 21.5,21.75, 4, 1.75, Color.DarkGrey, "Cancel", True )
+		ButtonOK = ctrls.AddButton( 25.5,21.75, 4, 1.75, Color.UIBlue* 0.8, "OK", True )
+
+		'----------------------------
+		ctrls.Page = 1
+
+		ctrls.AddTextBold( 0.5,2, 10, 1, Color.LightGrey, "Select Theme" )
+
+		local themeHeight:int = 40
+		local themeLength:int = 12
+		ctrlThemeList = ctrls.AddCustomList( 0.5,3,10,20.5, Color.Black* 0.2, themeLength, themeHeight, True )
+		ctrls.SetBorder( ctrlThemeList, 6 )
+		ctrls.SetSelected( ctrlThemeList, 0 )
+		_currentTheme = 0
+		SetSyntaxColors()
+
+		ctrls.AddTextBold( 11.5,2, 10, 1, Color.LightGrey, "Sample" )
+		ctrlIDESample2 = ctrls.AddCustomPanel( 11.5,3, 14,11, Color.Black )
+		ctrlSyntaxSample2 = ctrls.AddCustomPanel( 15.5,8.5, 14,13, Color.Black )
+'		ctrlThemeSample = ctrls.AddCustomPanel( 11,3, 18.5,19, Color.Black*0.2 )
+
+
+'		ctrls.AddGrid( 11,3, 18.5,19, Color.Black*0.2, 5,5 )
+		
+'		ctrls.AddImage( 8.5,0, 10, 10, Color.White, _wideImage )
+'		ctrls.AddTextBold( 8.5,10, 10, 1, Color.White, "Wide Ver 1.0", ALIGN_CENTER )
+
+'		local check:int = ctrls.AddCheckBox( 8.5,11, 10, 1, Color.DarkGrey, "Wide Ver 1.0", ALIGN_LEFT, True )
+'		ctrls.SetBorder( check, 3 )
+'		check = ctrls.AddCheckBox( 8.5,12, 10, 1, Color.DarkGrey, "Wide Ver 1.0", ALIGN_RIGHT, True )
+'		ctrls.SetBorder( check, 3 )
+'
+'		ctrls.AddSwitch( 8.5,13, 2, 1, Color.Grey )
+
+'		local c:int = ctrls.AddPanel( 8,13, 10, 5, Color.Black*0.2, True )
+'		ctrls.SetCustomRender( c )
+
+		'----------------------------
+		ctrls.Page = 2
+
+		ctrls.AddTextBold( 0.5,2, 10, 1, Color.LightGrey, "Select IDE part" )
+
+		local ide:string[] = New string[]( "Background", "Text", "Buttons", "Accent" )
+'		ctrlIDE = ctrls.AddList( 0.5,3,10,8, Color.Black* 0.2, ide, 45, True )
+		ctrlIDE = ctrls.AddCustomList( 0.5,3,10,9, Color.Black* 0.2, ide.Length, 45, True )
+		ctrls.SetBorder( ctrlIDE, 6 )
+
+		ctrlHues = ctrls.AddCustomGrid( 0.5,14, 10,2.5, Color.Black*0.2, 6,1 )
+		ctrlColors = ctrls.AddCustomGrid( 0.5,16.25, 10,7.4, Color.Black*0.2, 5,5, _themeCol.Length-1 )
+
+		ctrls.AddTextBold( 11.5,2, 10, 1, Color.LightGrey, "IDE Sample" )
+		ctrlIDESample = ctrls.AddCustomPanel( 11.5,3, 14,11, Color.Black )
+
+'		ctrls.AddImage( 8.5,0, 10, 10, Color.White, _wonkeyImage )
+'		ctrls.AddTextBold( 8.5,10, 10, 1, Color.White, "Wonkey Ver 1.0", ALIGN_CENTER )
+
+		'----------------------------
+		ctrls.Page = 3
+
+		local syntax:string[] = New string[]( "Ident", "Keyword", "String", "Number", "Comment", "PreProcessor", "Other", "Type",
+			"Class", "Variable", "Method", "Function", "Property", "Lambda",
+			"Background", "Line Highlight", "Cursor", "Debug Error Line" )
+'		ctrlIDE = ctrls.AddList( 0.5,3,10,8, Color.Black* 0.2, ide, 45, True )
+		ctrlSyntax = ctrls.AddCustomList( 0.5,2,10,12, Color.Black* 0.2, syntax.Length, 16, True )
+		ctrls.SetBorder( ctrlSyntax, 6 )
+
+		ctrlHues2 = ctrls.AddCustomGrid( 0.5,14, 10,2.5, Color.Black*0.2, 6,1 )
+		ctrlColors2 = ctrls.AddCustomGrid( 0.5,16.25, 10,7.4, Color.Black*0.2, 5,5, _themeCol.Length-1 )
+
+		ctrls.AddTextBold( 11.5,2, 10, 1, Color.LightGrey, "Syntax Sample" )
+		ctrlSyntaxSample = ctrls.AddCustomPanel( 11.5,3, 14,13, Color.Black )
+
+		_font[0] = App.Theme.OpenFont( "asset::LUCON.TTF", 14 )
+		_font[1] = App.Theme.OpenFont( "asset::Monoid-Regular.ttf", 14 )
+		_font[2] = App.Theme.OpenFont( "asset::DejaVuSansMono.ttf", 14 )
+		_font[3] = App.Theme.OpenFont( "asset::Courier New.ttf", 14 )
+		_font[4] = App.Theme.OpenFont( "asset::UbuntuMono-R.ttf", 14 )
+		_font[5] = App.Theme.OpenFont( "asset::Inconsolata-Regular.ttf", 14 )
+		ctrls.AddTextBold( 11.5,16.5, 10, 1, Color.LightGrey, "Syntax Font" )
+		ctrlFont[0] = ctrls.AddCustomFont( 11.5,17.5, 6, 2, Color.White, "Lucon", "asset::LUCON.TTF" )
+		ctrls.SetActive( ctrlFont[0], True )
+		ctrlFont[1] = ctrls.AddCustomFont( 11.5,19.5, 6, 2, Color.White, "Monoid", "asset::Monoid-Regular.ttf" )
+		ctrls.SetActive( ctrlFont[1], True )
+		ctrlFont[2] = ctrls.AddCustomFont( 17.5,17.5, 6, 2, Color.White, "DejaVuSans", "asset::DejaVuSansMono.ttf" )
+		ctrls.SetActive( ctrlFont[2], True )
+		ctrlFont[3] = ctrls.AddCustomFont( 17.5,19.5, 6, 2, Color.White, "Courier New", "asset::Courier New.ttf" )
+		ctrls.SetActive( ctrlFont[3], True )
+		ctrlFont[4] = ctrls.AddCustomFont( 23.5,17.5, 6, 2, Color.White, "Ubuntu", "asset::UbuntuMono-R.ttf" )
+		ctrls.SetActive( ctrlFont[4], True )
+		ctrlFont[5] = ctrls.AddCustomFont( 23.5,19.5, 6, 2, Color.White, "Inconsolata", "asset::Inconsolata-Regular.ttf" )
+		ctrls.SetActive( ctrlFont[5], True )
+		ctrls.SetSelected( ctrlFont[ _currentFont ], 1 )
+
+		SetAllSyntaxColors()
+		
+'		syntaxList = New string[](
+'			"Identifier", "Keyword", "String", "Number", "Remark", "Compiler", "Other", "CoreType",
+'			"Class", "Variable", "Method", "Function", "Property", "Lambda",
+'			"Background", "Current Line", "Line Number", "Cursor", "Line Error" )
+'		ctrls.AddTextBold( 7,0.5, 10, 1, Color.White, "Special thanks go to:" )
+'		ctrlColorList = ctrls.AddCustomList( 7,1.5, 12.5,16, Color.Black* 0.2, syntaxList.Length, 20, True )
+'		ctrls.SetBorder( ctrlColorList, 6 )
+
+		'----------------------------
+		ctrls.Page = 4
+
+'		ButtonDefault = ctrls.AddButton( 12,21.75, 4, 1.75, Color.DarkGrey, "Default", True )
+		ButtonMinus = ctrls.AddButton( 12,19, 4, 1.75, Color.Violet, "-", True )
+		ButtonPlus = ctrls.AddButton( 16,19, 4, 1.75, Color.UIPurple, "+", True )
+		
+
+		ctrls.Page = 1
+		'example 2 basic text list on 20x20 grid
+'		ctrls.SetGrid( 20, 20 )
+'		lst = New string[]( "Syntax Colors", "Syntax Font", "UI Colors", "you", "All" )
+'		ctrlList = ctrls.AddList( 2,3,5,10, Color.Black* 0.2, lst, 20, True )
+'		ButtonMinus = ctrls.AddButton( 0,15, 3, 1, Color.Violet, "-", True )
+'		ButtonPlus = ctrls.AddButton( 5,15, 3, 1, Color.UIPurple, "+", True )
+
+
+		'example 3 faders no grid direct to canvas
+'		ctrls.AddPanelText( 10,10, 245, 25, Color.VicRed*0.8, "ENVELOPE", ALIGN_CENTER )
+'		ctrls.AddVFader( 15,50, 40, 180, Color.UIDarkGrey, True )
+'		ctrls.AddVFader( 75,50, 40, 180, Color.UIDarkGrey, True )
+'		ctrls.AddVFader( 135,50, 40, 180, Color.UIDarkGrey, True )
+'		ctrls.AddVFader( 205,50, 40, 180, Color.UIDarkGrey, True )
+'		ctrls.AddTextBold( 15,230, 35, 25, Color.LightGrey, "A" )
+'		ctrls.AddTextBold( 75,230, 35, 25, Color.LightGrey, "D" )
+'		ctrls.AddTextBold( 135,230, 35, 25, Color.LightGrey, "S" )
+'		ctrls.AddTextBold( 205,230, 35, 25, Color.LightGrey, "R" )
+		
+		
+		'example 4 buttons no grid direct to canvas
+'		ctrls.AddImageButton( 1,1, 50, 20, Color.Pine, "", _openImage )
+'		VFade1 = ctrls.AddVFader( 400,10, 48, 200, Color.DarkGrey, True )
+'		VText1 = ctrls.AddText( 400,210, 48, 20, Color.UIPink, "0" )
+'		ctrls.AddButton( 200,10, 150, 50, Color.Red, "Hello" )
+'		ctrls.AddButton( 10,100, 100, 40, Color.Sky, "Hola", True )
+'		ctrls.AddButton( 170,100, 200, 50, Color.Gold*0.5, "Hello", True )
+'
+'		ButtonMinus = ctrls.AddButton( 10,160, 30, 30, Color.Violet, "-", True )
+'		ButtonPlus = ctrls.AddButton( 50,160, 30, 30, Color.UIPurple, "+", True )
+
+		ctrls.Clicked = lambda( ctrl:int )
+			Select ctrl
+				Case ctrlThemeList
+					_currentTheme = ctrls.GetSelected( ctrlThemeList )
+					Print "currentTheme:"+_currentTheme
+					SetIDEColors()
+
+					SetSyntaxCtrls()
+					SetAllSyntaxColors()
+
+					_currentFont = theme[_currentTheme].SyntaxFont
+					SetFontControls( _currentFont + ctrlFont[0] )
+					
+				Case ctrlIDE
+					SetIDECtrls()
+					SetIDEColors()
+					
+				Case ctrlColors
+					ctrls.SetSelected( ctrlHues, 3 )
+					SetIDEColor()
+					SetIDEHue()
+					SetIDEColors()
+
+				Case ctrlHues
+					SetIDEHue()
+					SetIDEColors()
+					
+				Case ctrlSyntax
+					SetSyntaxCtrls()
+					SetSyntaxColors()
+					
+				Case ctrlColors2
+					ctrls.SetSelected( ctrlHues2, 3 )
+					SetSyntaxColor()
+					SetSyntaxHue()
+					SetSyntaxColors()
+
+				Case ctrlHues2
+					SetSyntaxHue()
+					SetSyntaxColors()
+
+				Case ctrlTab
+					ctrls.Page = ctrls.GetSelected( ctrl )+1
+					
+				Case ButtonMinus
+					ctrls.Scale -= 0.1
+					
+				Case ButtonPlus
+					ctrls.Scale += 0.1
+					
+				Case ButtonDefault
+					Select ctrls.GetSelected( ctrlTab )
+						Case 0 'reset all
+							theme[_currentTheme].ResetIDE()
+							theme[_currentTheme].ResetSyntax()
+
+							ctrls.SetSelected( ctrlColors, theme[_currentTheme].IDEColor[ ctrls.GetSelected( ctrlIDE ) ] )
+							ctrls.SetSelected( ctrlHues, theme[_currentTheme].IDEHue[ ctrls.GetSelected( ctrlIDE ) ] )
+
+							ctrls.SetSelected( ctrlColors2, theme[_currentTheme].SyntaxColor[ ctrls.GetSelected( ctrlSyntax ) ] )
+							ctrls.SetSelected( ctrlHues2, theme[_currentTheme].SyntaxHue[ ctrls.GetSelected( ctrlSyntax ) ] )
+
+							SetIDEColor()
+							SetIDEHue()
+							SetIDEColors()
+
+							SetAllSyntaxColors()
+							SetFontControls( theme[_currentTheme].SyntaxFont + ctrlFont[0] )
+
+						Case 1 'reset ide
+							theme[_currentTheme].ResetIDE()
+							ctrls.SetSelected( ctrlColors, theme[_currentTheme].IDEColor[ ctrls.GetSelected( ctrlIDE ) ] )
+							ctrls.SetSelected( ctrlHues, theme[_currentTheme].IDEHue[ ctrls.GetSelected( ctrlIDE ) ] )
+							
+							SetIDEColor()
+							SetIDEHue()
+							SetIDEColors()
+
+						Case 2 'reset syntax
+							theme[_currentTheme].ResetSyntax()
+							ctrls.SetSelected( ctrlColors2, theme[_currentTheme].SyntaxColor[ ctrls.GetSelected( ctrlSyntax ) ] )
+							ctrls.SetSelected( ctrlHues2, theme[_currentTheme].SyntaxHue[ ctrls.GetSelected( ctrlSyntax ) ] )
+
+							SetAllSyntaxColors()
+							SetFontControls( theme[_currentTheme].SyntaxFont + ctrlFont[0] )
+					End Select
+
+				Default
+					Print "ctrl clicked: "+ctrl
+					
+					'deal with block ctrls of a certain kind
+					Select ctrls.GetKind( ctrl )
+						Case CTRL_CUSTOMFONT
+							SetFontControls( ctrl )
+					End Select
+			End Select
+		end
+
+		'used in example 1
+		ctrls.OnDraw = lambda( canvas:Canvas, ctrl:int, x:int, y:int, width:int, height:int, color:Color, border:int )
+			local draw:bool = False
+			Select ctrl
+				Case ctrlThemeList, ctrlIDE, ctrlSyntax
+					canvas.Color = Color.Grey * 0.5
+					canvas.DrawFrameRoundedRect( x, y, width, height, 5 )
+
+				Case ctrlList, ctrlColorList
+					canvas.Color = Color.Grey * 0.5
+					canvas.DrawFrameRoundedRect( x, y, width, height, 5 )
+					draw = True
+					
+				Case ctrlIDESample, ctrlIDESample2
+					DrawIDESample( canvas, x, y, width, height )
+
+				Case ctrlSyntaxSample, ctrlSyntaxSample2
+					DrawSyntaxSample( canvas, x, y, width, height )
+			End Select
+			
+			If Not draw Then
+				Select ctrls.GetKind( ctrl )
+					Case CTRL_CUSTOMFONT
+						If ctrls.ControlOver = ctrl
+							canvas.Color = ctrls.OverColor
+						Else
+							canvas.Color = Color.ExBuff
+						End If
+						canvas.Alpha = 0.5
+						If ctrls.GetSelected( ctrl ) = 1 Then canvas.Alpha = 1
+						canvas.DrawRoundedRect( x,y,width,height, 5 )
+
+						canvas.Alpha = 1
+						If ctrls.GetSelected( ctrl ) = 1 Then
+							canvas.Color = ctrls.OverColor
+							canvas.DrawRoundedRect( x,y,width,height, 5 )
+						End If
+
+						canvas.Color = Color.Black * 0.9
+						canvas.DrawRect( x,y,width,height, ctrls.GetImage( ctrl ) )
+						canvas.DrawRect( x+1,y,width,height, ctrls.GetImage( ctrl ) )
+						
+					Case CTRL_CUSTOMPANELROUND
+						canvas.Color = color
+						canvas.DrawRoundedRect( x, y, width, height, 5 )
+						canvas.Color = Color.Grey * 0.5
+						canvas.DrawFrameRoundedRect( x, y, width, height, 5 )
+				End Select
+			End If
+		End
+
+		'used in example 1
+		ctrls.OnDrawItem = lambda( canvas:Canvas, ctrl:int, item:int, selected:bool, x:int, y:int, width:int, height:int, border:int )
+			Select ctrl
+				Case ctrlThemeList
+					canvas.Color = Color.Black * 0.8
+					canvas.DrawRect( x+5,y+2, height*3,height-4 )
+
+					canvas.Color = theme[item].IDE[0]
+					canvas.DrawRect( x+7,y+4, height-4,height-8 )
+					canvas.Color = theme[item].IDE[2]
+					canvas.DrawRect( x+7+height,y+4, height-4,height-8 )
+					canvas.Color = theme[item].IDE[3]
+					canvas.DrawRect( x+7+height+height,y+4, height-4,height-8 )
+					
+					canvas.Color = theme[item].Syntax[14]
+					canvas.DrawRoundedRect( x+7+height*3.25,y+4, 150,height-8, 5 )
+					If ctrls.GetImage( ctrlFont[theme[item].SyntaxFont] ) Then
+						canvas.Color = theme[item].Syntax[0]
+						canvas.DrawRect( x+7+height*3.25,y+4, 150,height-8, ctrls.GetImage( ctrlFont[theme[item].SyntaxFont] ) )
+					End If
+
+				Case ctrlList
+					If selected Then
+						canvas.Color = Color.LightGrey
+					Else
+						canvas.Color = Color.Grey
+					End If
+					canvas.DrawText( lst[item], x+border, y+height*0.5, 0,0.5 )
+					canvas.DrawText( lst[item], x+border+1, y+height*0.5, 0,0.5 )
+					
+				Case ctrlColors, ctrlColors2
+					canvas.Color = _themeCol[item]
+					canvas.DrawRect( x+3,y+3, width-6,height-6 )
+
+				Case ctrlHues
+					local change:float = (item - 3) * 0.18
+					canvas.Color = GetNewColor( _themeCol[ ctrls.GetSelected( ctrlColors ) ], change )
+					canvas.DrawRect( x+2,y+2, width-4,height-4 )
+					
+				Case ctrlHues2
+					local change:float = (item - 3) * 0.18
+					canvas.Color = GetNewColor( _themeCol[ ctrls.GetSelected( ctrlColors2 ) ], change )
+					canvas.DrawRect( x+2,y+2, width-4,height-4 )
+
+				Case ctrlIDE
+					If selected Then
+						canvas.Color = Color.LightGrey
+					Else
+						canvas.Color = Color.Grey
+					End If
+					canvas.DrawText( ide[item], x+border, y )
+					
+					canvas.Color = theme[_currentTheme].IDE[item]
+					canvas.DrawRect( x+width-border, y+2, -width * 0.25, height-4 )
+
+				Case ctrlSyntax
+					If selected Then
+						canvas.Color = Color.LightGrey
+					Else
+						canvas.Color = Color.Grey
+					End If
+					canvas.DrawText( syntax[item], x+border, y )
+					
+					canvas.Color = theme[_currentTheme].Syntax[item]
+					canvas.DrawRect( x+width-border, y+2, -width * 0.25, height-4 )
+			End Select
+		End
+	End method
+
+
+	method SetFontControls( ctrl:int )
+		local k:Int
+		For k = 0 To ctrls.ControlCount
+			If ctrls.GetKind( k ) = CTRL_CUSTOMFONT Then
+				ctrls.SetSelected( k, 0 )
+			End If
+		Next
+		ctrls.SetSelected( ctrl, 1 )
+		_currentFont = ctrl - ctrlFont[0]
+
+		theme[_currentTheme].SyntaxFont = _currentFont
+	End Method
+	
+	
+	method SetIDEHue()
+		local change:float = ctrls.GetSelected( ctrlHues )
+		IDEHue[ ctrls.GetSelected( ctrlIDE ) ] = change
+		
+		theme[_currentTheme].IDEHue[ ctrls.GetSelected( ctrlIDE ) ] = change
+	End Method
+
+
+	method SetIDEColor()
+		local color:int = ctrls.GetSelected( ctrlColors )
+		IDEColor[ ctrls.GetSelected( ctrlIDE ) ] = color
+
+		theme[_currentTheme].IDEColor[ ctrls.GetSelected( ctrlIDE ) ] = color
+	End Method
+
+
+	method SetIDECtrls()
+		ctrls.SetSelected( ctrlHues, IDEHue[ctrls.GetSelected( ctrlIDE )] )
+		ctrls.SetSelected( ctrlColors, IDEColor[ctrls.GetSelected( ctrlIDE )] )
+	End Method
+
+
+	method SetIDEColors()
+		local change:float = (theme[_currentTheme].IDEHue[ ctrls.GetSelected( ctrlIDE ) ] - 3) * 0.18
+		IDE[ctrls.GetSelected( ctrlIDE )] = GetNewColor( _themeCol[ IDEColor[ ctrls.GetSelected( ctrlIDE ) ] ], change )
+
+		theme[_currentTheme].IDE[ctrls.GetSelected( ctrlIDE )] = GetNewColor( _themeCol[ theme[_currentTheme].IDEColor[ ctrls.GetSelected( ctrlIDE ) ] ], change )
+	End Method
+	
+
+	method SetSyntaxHue()
+		local change:float = ctrls.GetSelected( ctrlHues2 )
+		SyntaxHue[ ctrls.GetSelected( ctrlSyntax ) ] = change
+
+		theme[_currentTheme].SyntaxHue[ ctrls.GetSelected( ctrlSyntax ) ] = change
+	End Method
+
+
+	method SetSyntaxColor()
+		local color:int = ctrls.GetSelected( ctrlColors2 )
+		SyntaxColor[ ctrls.GetSelected( ctrlSyntax ) ] = color
+
+		theme[_currentTheme].SyntaxColor[ ctrls.GetSelected( ctrlSyntax ) ] = color
+	End Method
+
+
+	method SetSyntaxCtrls()
+		ctrls.SetSelected( ctrlHues2, theme[_currentTheme].SyntaxHue[ctrls.GetSelected( ctrlSyntax )] )
+		ctrls.SetSelected( ctrlColors2, theme[_currentTheme].SyntaxColor[ctrls.GetSelected( ctrlSyntax )] )
+	End Method
+
+
+	method SetSyntaxColors()
+		local change:float = (theme[_currentTheme].SyntaxHue[ ctrls.GetSelected( ctrlSyntax ) ] - 3) * 0.18
+		Syntax[ctrls.GetSelected( ctrlSyntax )] = GetNewColor( _themeCol[ SyntaxColor[ ctrls.GetSelected( ctrlSyntax ) ] ], change )
+
+		theme[_currentTheme].Syntax[ctrls.GetSelected( ctrlSyntax )] = GetNewColor( _themeCol[ theme[_currentTheme].SyntaxColor[ ctrls.GetSelected( ctrlSyntax ) ] ], change )
+	End Method
+
+
+	method SetAllSyntaxColors()
+		local change:float
+		local k:int
+		For k = 0 To 17
+			change = (theme[_currentTheme].SyntaxHue[ k ]-3) * 0.18
+			theme[_currentTheme].Syntax[ k ] = GetNewColor( _themeCol[ theme[_currentTheme].SyntaxColor[ k ] ], change )
+		Next
+	End Method
+
+
+	method GetNewColor:Color( base:Color, change:float )
+		local red:float = Clamp( base.R + change, 0, 1 )
+		local green:float = Clamp( base.G + change, 0, 1 )
+		local blue:float = Clamp( base.B + change, 0, 1 )
+
+		Return New Color( red, green, blue )
+	End Method
+	
+
+	method DrawSyntaxSample( canvas:Canvas, x:float, y:float, width:float, height:float )
+		canvas.Color = Color.Black * 0.5
+		canvas.DrawRect( x-2,y-2,width+4,height+4 )
+
+		'background
+		canvas.Color = theme[_currentTheme].Syntax[14]
+		canvas.DrawRect( x,y,width,height )
+
+		local font:Font = canvas.Font
+		canvas.Font = _font[_currentFont]
+
+		'gutter
+		canvas.Color = GetNewColor( theme[_currentTheme].Syntax[14], 0.065 )
+		canvas.DrawRect( x,y, 70,height)
+		'gutter line numbers
+		canvas.Color = IDE[1] * 0.8
+		local k:int
+		For k = 0 To 16
+			If y+6+(19*k) < y+height Then
+				canvas.DrawText( (k+32), x+25, y+6+(19*k) )
+			End If
+		Next
+		
+		'highlight line
+		canvas.Color = theme[_currentTheme].Syntax[15]
+		canvas.DrawRect( x+73,y+24,width-78,19 )
+
+		'preprocessor
+		canvas.Color = theme[_currentTheme].Syntax[5]
+		local str:String = "#Import "+Chr(34)+"assets/thing.png"+Chr(34)
+		canvas.DrawText( str, x+76,y+6 )
+
+		'cursor
+		canvas.Color = theme[_currentTheme].Syntax[16]
+		canvas.DrawRect( x+140,y+25, 3,19 )
+
+		'comment
+		canvas.Color = theme[_currentTheme].Syntax[4]
+		canvas.DrawText( "'-----------------", x+76,y+25 )
+		canvas.DrawText( "' remarkable comments found here", x+76,y+44 )
+		
+		'var/normal/number
+'		const ALIGN_LEFT:int = 0
+		canvas.Color = theme[_currentTheme].Syntax[9]
+		canvas.DrawRect( x+45,y+4+(19*4), 16, 16, _fieldImage )
+		canvas.DrawText( "Const", x+76,y+6+(19*4) )
+		canvas.Color = theme[_currentTheme].Syntax[0]
+		canvas.DrawText( "ALIGN_LEFT", x+76+canvas.Font.TextWidth("Const "),y+6+(19*4) )
+		canvas.Color = theme[_currentTheme].Syntax[0] * 0.8
+		canvas.DrawText( ":", x+76+canvas.Font.TextWidth("Const ALIGN_LEFT"),y+6+(19*4) )
+		canvas.Color = theme[_currentTheme].Syntax[7]
+		canvas.DrawText( "Int", x+76+canvas.Font.TextWidth("Const ALIGN_LEFT:"),y+6+(19*4) )
+		canvas.Color = theme[_currentTheme].Syntax[0] * 0.8
+		canvas.DrawText( "=", x+76+canvas.Font.TextWidth("Const ALIGN_LEFT:int "),y+6+(19*4) )
+		canvas.Color = theme[_currentTheme].Syntax[3]
+		canvas.DrawText( "37", x+76+canvas.Font.TextWidth("Const ALIGN_LEFT:int = "),y+6+(19*4) )
+
+		'var/normal/string
+'		field myText:String = "Some Text..."
+		canvas.Color = theme[_currentTheme].Syntax[9]
+		canvas.DrawRect( x+45,y+4+(19*5), 16, 16, _fieldImage )
+		canvas.DrawText( "Field", x+76,y+6+(19*5) )
+		canvas.Color = theme[_currentTheme].Syntax[0]
+		canvas.DrawText( "myText", x+76+canvas.Font.TextWidth("Field "),y+6+(19*5) )
+		canvas.Color = theme[_currentTheme].Syntax[0] * 0.8
+		canvas.DrawText( ":", x+76+canvas.Font.TextWidth("Field myText"),y+6+(19*5) )
+		canvas.Color = theme[_currentTheme].Syntax[7]
+		canvas.DrawText( "String", x+76+canvas.Font.TextWidth("Field myText:"),y+6+(19*5) )
+		canvas.Color = theme[_currentTheme].Syntax[0] * 0.8
+		canvas.DrawText( "=", x+76+canvas.Font.TextWidth("Field myText:String "),y+6+(19*5) )
+		str = Chr(34)+"Some text here..."+Chr(34)
+		canvas.Color = theme[_currentTheme].Syntax[2]
+		canvas.DrawText( str, x+76+canvas.Font.TextWidth("Field myText:String = "),y+6+(19*5) )
+		
+		'Class myClass
+		canvas.Color = theme[_currentTheme].Syntax[8]
+		canvas.DrawRect( x+45,y+4+(19*7), 16, 16, _classImage )
+		canvas.DrawText( "Class", x+76,y+6+(19*7) )
+		canvas.Color = theme[_currentTheme].Syntax[0]
+		canvas.DrawText( "myClass", x+76+canvas.Font.TextWidth("Class "),y+6+(19*7) )
+
+		'property Scale:float()
+		canvas.Color = theme[_currentTheme].Syntax[12]
+		canvas.DrawRect( x+45,y+4+(19*9), 16, 16, _propertyImage )
+		canvas.DrawText( "Property", x+76,y+6+(19*9) )
+		canvas.Color = theme[_currentTheme].Syntax[0]
+		canvas.DrawText( "Scale", x+76+canvas.Font.TextWidth("Property "),y+6+(19*9) )
+		canvas.Color = theme[_currentTheme].Syntax[0] * 0.8
+		canvas.DrawText( ":", x+76+canvas.Font.TextWidth("Property Scale"),y+6+(19*9) )
+		canvas.Color = theme[_currentTheme].Syntax[7]
+		canvas.DrawText( "Float", x+76+canvas.Font.TextWidth("Property Scale:"),y+6+(19*9) )
+		canvas.Color = theme[_currentTheme].Syntax[0] * 0.8
+		canvas.DrawText( "()", x+76+canvas.Font.TextWidth("Property Scale:Float "),y+6+(19*9) )
+		
+		'method MyMethod()
+		canvas.Color = theme[_currentTheme].Syntax[10]
+		canvas.DrawRect( x+45,y+4+(19*11), 16, 16, _methodImage )
+		canvas.DrawText( "Method", x+76,y+6+(19*11) )
+		canvas.Color = theme[_currentTheme].Syntax[0]
+		canvas.DrawText( "MyMethod", x+76+canvas.Font.TextWidth("method "),y+6+(19*11) )
+		canvas.Color = theme[_currentTheme].Syntax[0] * 0.8
+		canvas.DrawText( "()", x+76+canvas.Font.TextWidth("Method MyMethod "),y+6+(19*11) )
+		
+		'Function MyFunction()
+		canvas.Color = theme[_currentTheme].Syntax[11]
+		canvas.DrawRect( x+45,y+4+(19*12), 16, 16, _methodImage )
+		canvas.DrawText( "Function", x+76,y+6+(19*12) )
+		canvas.Color = theme[_currentTheme].Syntax[0]
+		canvas.DrawText( "MyFunction", x+76+canvas.Font.TextWidth("Function "),y+6+(19*12) )
+		canvas.Color = theme[_currentTheme].Syntax[0] * 0.8
+		canvas.DrawText( "()", x+76+canvas.Font.TextWidth("Function MyFunction "),y+6+(19*12) )
+
+		'if down then return
+		canvas.Color = theme[_currentTheme].Syntax[1]
+		canvas.DrawText( "  If", x+76,y+6+(19*14) )
+		canvas.Color = theme[_currentTheme].Syntax[0]
+		canvas.DrawText( "down", x+76+canvas.Font.TextWidth("  IF "),y+6+(19*14) )
+		canvas.Color = theme[_currentTheme].Syntax[1]
+		canvas.DrawText( "Then Return", x+76+canvas.Font.TextWidth("  IF down "),y+6+(19*14) )
+		
+		canvas.Font = font
+	End method
+
+
+	method DrawIDESample( canvas:Canvas, x:float, y:float, width:float, height:float )
+		canvas.Color = Color.Black * 0.5
+		canvas.DrawRect( x-2,y-2,width+4,height+4 )
+		canvas.Color = theme[_currentTheme].IDE[0]
+		canvas.DrawRect( x,y,width,height )
+
+		'title bg
+		canvas.Color = GetNewColor( theme[_currentTheme].IDE[0], 0.065 )
+		canvas.DrawRect( x,y, width, 65 )
+		canvas.DrawRect( x+300,y, 5, height )
+
+		'tab bg
+		canvas.Color = GetNewColor( theme[_currentTheme].IDE[0], 0.02 )
+		canvas.DrawRect( x,y+68, 300, 35 )
+
+		'tab buttons
+		canvas.Color = GetNewColor( theme[_currentTheme].IDE[0], 0.08 )
+		canvas.DrawRect( x,y+68, 80, 32 )
+		canvas.DrawRect( x+166,y+68, 80, 32 )
+
+		
+		'buttons
+		canvas.Color = theme[_currentTheme].IDE[2]
+		canvas.DrawRect( x+20, y + 160, 130, 40 )
+
+		'accent button
+		canvas.Color = theme[_currentTheme].IDE[3] * 0.8
+		canvas.DrawRoundedRect( x+20, y + 220, 130, 40, 5 )
+
+		'accent
+		canvas.Color = theme[_currentTheme].IDE[3]
+		canvas.DrawRect( x,y+98, 300, 3 )
+'		'selected tab
+		canvas.Color = theme[_currentTheme].IDE[3]
+		canvas.DrawRect( x+83,y+68, 80, 32 )
+
+		'icons
+		canvas.Color = Color.LightGrey
+		canvas.DrawRect( x+5,y+25, 128, 32, _iconsImage )
+
+		'text
+		canvas.Color = theme[_currentTheme].IDE[1]
+		canvas.DrawText( "File  Edit  Find  Goto", x+5, y+2 )
+		canvas.DrawText( "Tab 1", x+8, y+76 )
+		canvas.DrawTextBold( "Tab 2", x+92, y+76 )
+		canvas.DrawText( "Tab 3", x+174, y+76 )
+	
+		'button text
+		canvas.DrawText( "Normal", x+60, y+170 )
+		canvas.DrawText( "Selected", x+54, y+230 )
+	End method
+
+
+	Method OnRender( canvas:Canvas ) Override
+		App.RequestRender()
+		
+		ctrls.DrawControls( canvas, _mouseX, _mouseY, _mouseDown )
+	End method
+	
+	
+	method OnMouseMove() Override
+		If ctrls.Over( _mouseX, _mouseY ) Then
+			App.RequestRender()
+		End If
+	End method
+
+	
+End Class
+

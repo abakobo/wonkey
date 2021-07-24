@@ -15,6 +15,7 @@ Class ToolButton Extends Button
 	
 End
 
+
 #rem wonkeydoc The ToolBar class.
 #end
 Class ToolBar Extends DockingView
@@ -24,6 +25,7 @@ Class ToolBar Extends DockingView
 	Method New()
 		Self.New( std.geom.Axis.X )
 	End
+
 	
 	Method New( axis:Axis )
 		Style=GetStyle( "ToolBar" )
@@ -35,6 +37,7 @@ Class ToolBar Extends DockingView
 		_axis=axis
 		_add=axis=Axis.X ? "left" Else "top"
 	End
+
 	
 	#rem wonkeydoc Toolbar axis.
 	#end
@@ -42,11 +45,13 @@ Class ToolBar Extends DockingView
 		Return _axis
 	End
 
+
 	#rem wonkeydoc Adds a view to the tool bar.
 	#end	
 	Method AddView( view:View )
 		AddView( view,_add )
 	End
+
 	
 	#rem wonkeydoc Adds a separator to the tool bar.
 	#end	
@@ -54,12 +59,14 @@ Class ToolBar Extends DockingView
 		AddView( New MenuSeparator )
 	End
 
+
 	#rem wonkeydoc Adds an action to the tool bar.
 	#end	
 	Method AddAction( action:Action )
 		Local button:=New ToolButton( action )
 		AddView( button,_add )
 	End
+
 	
 	Method AddAction:Action( label:String,icon:Image=Null )
 		Local action:=New Action( label,icon )
@@ -67,7 +74,8 @@ Class ToolBar Extends DockingView
 		Return action
 	End
 	
-	Private
+Private
+
 	
 	Field _axis:Axis
 	Field _add:String

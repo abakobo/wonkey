@@ -6,27 +6,38 @@ Class DialogExt Extends Dialog
 	
 	Field OnShow:Void()
 	Field OnHide:Void()
+
 	
 	Method New()
 		Super.New()
 	End
+
 	
-	Method New( title:String,contentView:View=Null )
-		Super.New( title,contentView )
+	Method New( title:String, contentView:View = Null )
+		Super.New( title, contentView )
 	End
+
 	
 	Property IsOpened:Bool()
 		Return _opened
 	End
+
 	
 	Property FadeEnabled:Bool()
 		Return _fadeEnabled
 	Setter( value:Bool )
 		_fadeEnabled=value
 	End
+
 	
+'	Method OnRender( canvas:Canvas ) Override
+'		canvas.Color = MainWindow._theme.IDE[0]
+'		canvas.DrawRect( 0,0, Width, Height )
+'		canvas.Color = Color.None
+'	End method
+
+
 	Method Show()
-		
 		If _opened Return
 		_opened = True
 		
@@ -34,9 +45,9 @@ Class DialogExt Extends Dialog
 		Open()
 		OnShow()
 	End
+
 	
 	Method ShowModal:Bool()
-		
 		If _opened Return False
 		
 		_opened = True
@@ -52,14 +63,14 @@ Class DialogExt Extends Dialog
 		
 		Return ok
 	End
-	
+
+
 	Method Hide()
-	
 		HideWithResult( True )
 	End
+
 	
 	Method HideWithResult( ok:Bool )
-		
 		If Not _opened Return
 		
 		_opened = False
@@ -80,15 +91,15 @@ Class DialogExt Extends Dialog
 	End
 	
 	
-	Private
+Private
 	
 	Field _opened:Bool
 	Field _wait:Future<Bool>
 	Field _fadeEnabled:Bool
 	Field _fadeView:View
+
 	
 	Method TryAddFade()
-		
 		If Not _fadeEnabled Return
 		
 		Local wnd:=App.ActiveWindow
@@ -103,3 +114,4 @@ Class DialogExt Extends Dialog
 	End
 	
 End
+

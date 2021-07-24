@@ -6,62 +6,59 @@ Class PrefsDialog Extends DialogExt
 
 	Field Apply:Void()
 	Field TabulationChanged:Void()
+
 	
 	Method New()
+		Title = "Preferences"
 		
-		Title="Preferences"
-		
-		Local tabView:=New TabView
+		Local tabView := New TabView
 		Local docker:DockingView
 		
 		' Main
-		'
-		docker=GetMainDock()
+		docker = GetMainDock()
 		tabView.AddTab( "Common",docker,True )
 		
 		' Editor
-		'
-		docker=GetEditorDock()
+		docker = GetEditorDock()
 		tabView.AddTab( "Editor",docker )
 		
 		' Completion
-		'
-		docker=GetCompletionDock()
+		docker = GetCompletionDock()
 		tabView.AddTab( "AutoComplete",docker )
 		
 		' Live Templates
-		'
-		docker=GetLiveTemplatesDock()
+		docker = GetLiveTemplatesDock()
 		tabView.AddTab( "CodeTemplates",docker )
 		
-		ContentView=tabView
+		ContentView = tabView
 		
-		Local cancel:=AddAction( "Cancel" )
-		cancel.Triggered=Hide
+		Local cancel := AddAction( "Cancel" )
+		cancel.Triggered = Hide
 		SetKeyAction( Key.Escape,cancel )
 		
-		Local apply:=AddAction( "Apply changes" )
-		apply.Triggered=OnApply
+		Local apply := AddAction( "OK" )
+		apply.Triggered = OnApply
 		
-		_acShowAfter.Activated+=_acShowAfter.MakeKeyView
+		_acShowAfter.Activated += _acShowAfter.MakeKeyView
 		
-		Deactivated+=Lambda()
+		Deactivated += Lambda()
 			MainWindow.UpdateKeyView()
-			_lastTab=tabView.CurrentIndex
+			_lastTab = tabView.CurrentIndex
 		End
 		
-		OnShow+=Lambda()
+		OnShow += Lambda()
 			tabView.CurrentIndex=_lastTab
 		End
 		
-		MinSize=New Vec2i( 550,500 )
-		MaxSize=New Vec2i( 550,600 )
+		MinSize = New Vec2i( 550,500 )
+		MaxSize = New Vec2i( 550,600 )
 	End
 	
 	
-	Private
-	
-	Const _defaultFont:="(default)"
+Private
+
+
+	Const _defaultFont := "(default)"
 	Field _acEnabled:CheckButton
 	Field _acUseTab:CheckButton
 	Field _acUseEnter:CheckButton
@@ -114,117 +111,114 @@ Class PrefsDialog Extends DialogExt
 	
 	
 	Method OnApply()
-	
-		Prefs.AcEnabled=_acEnabled.Checked
-		Prefs.AcUseTab=_acUseTab.Checked
-		Prefs.AcUseEnter=_acUseEnter.Checked
-		Prefs.AcUseSpace=_acUseSpace.Checked
-		Prefs.AcUseDot=_acUseDot.Checked
-		Prefs.AcNewLineByEnter=_acNewLineByEnter.Checked
-		Prefs.AcKeywordsOnly=_acKeywordsOnly.Checked
-		Local count:=Max( 1,Int( _acShowAfter.Text ) )
-		Prefs.AcShowAfter=count
-		Prefs.AcUseLiveTemplates=_acUseLiveTemplates.Checked
+		Prefs.AcEnabled = _acEnabled.Checked
+		Prefs.AcUseTab = _acUseTab.Checked
+		Prefs.AcUseEnter = _acUseEnter.Checked
+		Prefs.AcUseSpace = _acUseSpace.Checked
+		Prefs.AcUseDot = _acUseDot.Checked
+		Prefs.AcNewLineByEnter = _acNewLineByEnter.Checked
+		Prefs.AcKeywordsOnly = _acKeywordsOnly.Checked
+		Local count := Max( 1,Int( _acShowAfter.Text ) )
+		Prefs.AcShowAfter = count
+		Prefs.AcUseLiveTemplates = _acUseLiveTemplates.Checked
 		
-		Prefs.EditorToolBarVisible=_editorToolBarVisible.Checked
-		Prefs.EditorGutterVisible=_editorGutterVisible.Checked
-		Prefs.EditorShowWhiteSpaces=_editorShowWhiteSpaces.Checked
-		Local path:=_editorFontPath.Text.Trim()
-		If Not path Or path=_defaultFont Then path=""
-		Prefs.EditorFontPath=path
-		Local size:=_editorFontSize.Text.Trim()
+		Prefs.EditorToolBarVisible = _editorToolBarVisible.Checked
+		Prefs.EditorGutterVisible = _editorGutterVisible.Checked
+		Prefs.EditorShowWhiteSpaces = _editorShowWhiteSpaces.Checked
+		Local path := _editorFontPath.Text.Trim()
+		If Not path Or path = _defaultFont Then path = ""
+		Prefs.EditorFontPath = path
+		Local size := _editorFontSize.Text.Trim()
 		If Not size Then size="16" 'default
-		Prefs.EditorFontSize=Int(size)
-		Prefs.EditorShowEvery10LineNumber=_editorShowEvery10LineNumber.Checked
-		Prefs.EditorCodeMapVisible=_editorCodeMapVisible.Checked
-		Prefs.EditorAutoIndent=_editorAutoIndent.Checked
-		Prefs.EditorAutoPairs=_editorAutoPairs.Checked
-		Prefs.EditorSurroundSelection=_editorSurround.Checked
-		Prefs.EditorShowParamsHint=_editorShowParamsHint.Checked
-		Local useSpaces:=Prefs.EditorUseSpacesAsTabs ' store
-		Prefs.EditorUseSpacesAsTabs=_editorUseSpacesAsTabs.Checked
-		size=_editorTabSize.Text.Trim()
-		If Not size Then size="4" 'default
-		Prefs.EditorTabSize=Clamp( Int(size),1,16 )
-		Prefs.EditorRemoveLinesTrailing=_editorRemoveLinesTrailing.Checked
-		Prefs.EditorLineSpacing=Clamp( Float(_editorLineSpacing.Text.Trim()),0.5,2.5 )
+		Prefs.EditorFontSize = Int(size)
+		Prefs.EditorShowEvery10LineNumber = _editorShowEvery10LineNumber.Checked
+		Prefs.EditorCodeMapVisible = _editorCodeMapVisible.Checked
+		Prefs.EditorAutoIndent = _editorAutoIndent.Checked
+		Prefs.EditorAutoPairs = _editorAutoPairs.Checked
+		Prefs.EditorSurroundSelection = _editorSurround.Checked
+		Prefs.EditorShowParamsHint = _editorShowParamsHint.Checked
+		Local useSpaces := Prefs.EditorUseSpacesAsTabs ' store
+		Prefs.EditorUseSpacesAsTabs = _editorUseSpacesAsTabs.Checked
+		size = _editorTabSize.Text.Trim()
+		If Not size Then size = "4" 'default
+		Prefs.EditorTabSize = Clamp( Int(size),1,16 )
+		Prefs.EditorRemoveLinesTrailing = _editorRemoveLinesTrailing.Checked
+		Prefs.EditorLineSpacing = Clamp( Float(_editorLineSpacing.Text.Trim()),0.5,2.5 )
 		
-		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
-		Prefs.MainToolBarSide=_mainToolBarSide.Checked
-		Prefs.MainToolBarSimple=_mainToolBarSimple.Checked
-		Prefs.MainProjectIcons=_mainProjectIcons.Checked
-		Prefs.MainProjectAutoscrollToFile=_mainProjectScrollToFile.Checked
-		Prefs.MainProjectSingleClickExpanding=_mainProjectSingleClickExpanding.Checked
-		Prefs.MainPlaceDocsAtBegin=_mainPlaceDocsAtBegin.Checked
-		Prefs.OpenGlProfile=_mainUseOpenGlEsProfile.Checked ? "es" Else ""
+		Prefs.MainToolBarVisible = _mainToolBarVisible.Checked
+		Prefs.MainToolBarSide = _mainToolBarSide.Checked
+		Prefs.MainToolBarSimple = _mainToolBarSimple.Checked
+		Prefs.MainProjectIcons = _mainProjectIcons.Checked
+		Prefs.MainProjectAutoscrollToFile = _mainProjectScrollToFile.Checked
+		Prefs.MainProjectSingleClickExpanding = _mainProjectSingleClickExpanding.Checked
+		Prefs.MainPlaceDocsAtBegin = _mainPlaceDocsAtBegin.Checked
+		Prefs.OpenGlProfile = _mainUseOpenGlEsProfile.Checked ? "es" Else ""
 		
-		Prefs.TemplatesInsertByEnter=_templatesInsertByEnter.Checked
+		Prefs.TemplatesInsertByEnter = _templatesInsertByEnter.Checked
 		
 		App.ThemeChanged()
 		
 		Hide()
 		Apply()
 		
-		If Prefs.EditorUseSpacesAsTabs<>useSpaces Then TabulationChanged()
+		If Prefs.EditorUseSpacesAsTabs <> useSpaces Then TabulationChanged()
 		
 		Prefs.SaveLocalState()
 		
 		LiveTemplates.Save()
 	End
-	
+
+
 	Method GetMainDock:DockingView()
+		_mainToolBarVisible = New CheckButton( "ToolBar visible" )
+		_mainToolBarVisible.Checked = Prefs.MainToolBarVisible
 		
-		_mainToolBarVisible=New CheckButton( "ToolBar visible" )
-		_mainToolBarVisible.Checked=Prefs.MainToolBarVisible
+		_mainToolBarSide = New CheckButton( "ToolBar on side" )
+		_mainToolBarSide.Checked = Prefs.MainToolBarSide
 		
-		_mainToolBarSide=New CheckButton( "ToolBar on side" )
-		_mainToolBarSide.Checked=Prefs.MainToolBarSide
+		_mainToolBarSimple = New CheckButton( "ToolBar simple" )
+		_mainToolBarSimple.Checked = Prefs.MainToolBarSimple
 		
-		_mainToolBarSimple=New CheckButton( "ToolBar simple" )
-		_mainToolBarSimple.Checked=Prefs.MainToolBarSimple
+		_mainProjectIcons = New CheckButton( "Project file type icons" )
+		_mainProjectIcons.Checked = Prefs.MainProjectIcons
 		
-		_mainProjectIcons=New CheckButton( "Project file type icons" )
-		_mainProjectIcons.Checked=Prefs.MainProjectIcons
+		_mainProjectScrollToFile = New CheckButton( "Autoscroll to current document" )
+		_mainProjectScrollToFile.Checked = Prefs.MainProjectAutoscrollToFile
 		
-		_mainProjectScrollToFile=New CheckButton( "Autoscroll to current document" )
-		_mainProjectScrollToFile.Checked=Prefs.MainProjectAutoscrollToFile
+		_mainProjectSingleClickExpanding = New CheckButton( "Project tree single-click mode" )
+		_mainProjectSingleClickExpanding.Checked = Prefs.MainProjectSingleClickExpanding
 		
-		_mainProjectSingleClickExpanding=New CheckButton( "Project tree single-click mode" )
-		_mainProjectSingleClickExpanding.Checked=Prefs.MainProjectSingleClickExpanding
+		_mainPlaceDocsAtBegin = New CheckButton( "Place opened document to the left side" )
+		_mainPlaceDocsAtBegin.Checked = Prefs.MainPlaceDocsAtBegin
 		
-		_mainPlaceDocsAtBegin=New CheckButton( "Place opened document to the left side" )
-		_mainPlaceDocsAtBegin.Checked=Prefs.MainPlaceDocsAtBegin
+		_mainUseOpenGlEsProfile = New CheckButton( "Use opengl 'es' mode; uncheck to use full onengl (restart required)" )
+		_mainUseOpenGlEsProfile.Checked = (Prefs.OpenGlProfile="es")
 		
-		_mainUseOpenGlEsProfile=New CheckButton( "Use opengl 'es' mode; uncheck to use full onengl (restart required)" )
-		_mainUseOpenGlEsProfile.Checked=(Prefs.OpenGlProfile="es")
+		_wonkeyRootPath = New TextFieldExt( Prefs.WonkeyRootPath )
+		_wonkeyRootPath.Enabled = False
+		Local chooseWonkeyPath := New Action( "..." )
+		chooseWonkeyPath.Triggered += Lambda()
+			Local initDir := Prefs.WonkeyRootPath
 		
-		_wonkeyRootPath=New TextFieldExt( Prefs.WonkeyRootPath )
-		_wonkeyRootPath.Enabled=False
-		Local chooseWonkeyPath:=New Action( "..." )
-		chooseWonkeyPath.Triggered+=Lambda()
-		
-			Local initDir:=Prefs.WonkeyRootPath
-		
-			Local path:=MainWindow.RequestDir( "Choose Wonkey root folder",initDir )
+			Local path := MainWindow.RequestDir( "Choose Wonkey root folder",initDir )
 			If Not path Return
 		
 			' check path
-			Local real:=SetupWonkeyRootPath( path,False )
-			If real
-				_wonkeyRootPath.Text=path
-				Prefs.WonkeyRootPath=path
+			Local real := SetupWonkeyRootPath( path,False )
+			If real Then
+				_wonkeyRootPath.Text = path
+				Prefs.WonkeyRootPath = path
 				MainWindow.UpdateToolsPaths()
 				Return
 			Else
 				' restore current
 				ChangeDir( initDir )
 			Endif
-		
 		End
-		Local btnChooseWonkeyPath:=New PushButton( chooseWonkeyPath )
+		Local btnChooseWonkeyPath := New PushButton( chooseWonkeyPath )
 		
-		Local docker:=New DockingView
-		Local wonkeyPathDock:=New DockingView
+		Local docker := New DockingView
+		Local wonkeyPathDock := New DockingView
 		wonkeyPathDock.AddView( New Label( "Wonkey root folder:" ),"left" )
 		wonkeyPathDock.AddView( _wonkeyRootPath,"left" )
 		wonkeyPathDock.AddView( btnChooseWonkeyPath,"left" )
@@ -240,16 +234,18 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _mainProjectScrollToFile,"top" )
 		docker.AddView( _mainProjectSingleClickExpanding,"top" )
 		docker.AddView( _mainPlaceDocsAtBegin,"top" )
-		#If __TARGET__="windows"
+
+#If __TARGET__="windows"
 		docker.AddView( _mainUseOpenGlEsProfile,"top" )
-		#Endif
+#Endif
+
 		docker.AddView( New Label( " " ),"top" )
 		
 		Return docker
 	End
-	
+
+
 	Method GetEditorDock:DockingView()
-		
 		_editorToolBarVisible=New CheckButton( "ToolBar visible" )
 		_editorToolBarVisible.Checked=Prefs.EditorToolBarVisible
 		
@@ -290,7 +286,6 @@ Class PrefsDialog Extends DialogExt
 		If Not path Then path=_defaultFont
 		_editorFontPath=New TextFieldExt( "" )
 		_editorFontPath.TextChanged+=Lambda()
-		
 			Local enabled:=(_editorFontPath.Text<>_defaultFont)
 			_editorFontSize.Enabled=enabled
 		End
@@ -300,7 +295,6 @@ Class PrefsDialog Extends DialogExt
 		
 		Local chooseFont:=New Action( "..." )
 		chooseFont.Triggered+=Lambda()
-		
 			Local initDir:=RealPath( AssetsDir() )
 		
 			Local path:=MainWindow.RequestFile( "Choose Font",initDir,False,"Font files:ttf;Any files:*" )
@@ -315,7 +309,6 @@ Class PrefsDialog Extends DialogExt
 		
 		Local resetFont:=New Action( "reset" )
 		resetFont.Triggered+=Lambda()
-		
 			_editorFontPath.Text=_defaultFont
 		End
 		Local btnResetFont:=New PushButton( resetFont )
@@ -342,9 +335,9 @@ Class PrefsDialog Extends DialogExt
 		Local docker:=New DockingView
 		docker.AddView( New Label( " " ),"top" )
 		docker.AddView( _editorToolBarVisible,"top" )
-		docker.AddView( _editorGutterVisible,"top" )
+'		docker.AddView( _editorGutterVisible,"top" )
 		docker.AddView( _editorShowWhiteSpaces,"top" )
-		docker.AddView( font,"top" )
+'		docker.AddView( font,"top" )
 		docker.AddView( _editorShowEvery10LineNumber,"top" )
 		docker.AddView( _editorCodeMapVisible,"top" )
 		docker.AddView( _editorAutoIndent,"top" )
@@ -356,12 +349,11 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( lineSpacing,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		
-		
 		Return docker
 	End
+
 	
 	Method GetCompletionDock:DockingView()
-		
 		_acShowAfter=New TextFieldExt( ""+Prefs.AcShowAfter )
 		
 		Local after:=New DockingView
@@ -407,9 +399,9 @@ Class PrefsDialog Extends DialogExt
 		
 		Return docker
 	End
+
 	
 	Method GetLiveTemplatesDock:DockingView()
-	
 		Local treeDock:=New DockingView
 		Local tree:=New TreeViewExt
 		_treeView=tree
@@ -464,7 +456,6 @@ Class PrefsDialog Extends DialogExt
 		_codeView=New WideCodeTextView( WideDocument.Empty )
 		_codeView.ShowWhiteSpaces=True
 		_codeView.Document.TextChanged+=Lambda()
-			
 			Local name:=TemplateSelName
 			If name Then LiveTemplates[TemplateSelLang,name]=_codeView.Text
 		End
@@ -482,27 +473,26 @@ Class PrefsDialog Extends DialogExt
 		
 		Return docker2
 	End
-	
+
+
 	Method ShowTemplate( lang:String,name:String )
-		
 		If _codeView.FileType<>lang Then _codeView.FileType=lang
 		_codeView.Text=LiveTemplates[lang,name]
 		_codeView.SelectText( 0,0 )
 	End
+
 	
 	Method PrepareTree( tree:TreeViewExt)
-		
 		tree.RootNodeVisible=False
 		tree.RootNode.Expanded=True
 		tree.SelectedChanged+=Lambda( node:TreeView.Node )
-		
 			If Not node Return
 		
 			If node.Parent=tree.RootNode Return
 		
 			ShowTemplate( node.Parent.Text,node.Text )
 		End
-		
+
 		For Local map:=Eachin LiveTemplates.All()
 			Local node:=New TreeView.Node( map.Key,tree.RootNode )
 			For Local i:=Eachin map.Value.All()
@@ -518,9 +508,9 @@ Class PrefsDialog Extends DialogExt
 			Endif
 		Endif
 	End
+
 	
 	Method AddTemplate( name:String )
-		
 		Local lang:=TemplateSelLang
 		If LiveTemplates[lang,name]
 			Alert( "Such name already exists!" )
@@ -528,9 +518,9 @@ Class PrefsDialog Extends DialogExt
 		Endif
 		AddTemplateInternal( lang,name,"" )
 	End
+
 	
 	Method CloneTemplate( name:String )
-	
 		Local lang:=TemplateSelLang
 		If LiveTemplates[lang,name]
 			Alert( "Such name already exists!" )
@@ -538,9 +528,9 @@ Class PrefsDialog Extends DialogExt
 		Endif
 		AddTemplateInternal( lang,name,LiveTemplates[lang,TemplateSelName] )
 	End
+
 	
 	Method RemoveTemplate()
-		
 		If Not TemplateSelName
 			Alert( "Have no selected item to remove!" )
 			Return
@@ -550,9 +540,9 @@ Class PrefsDialog Extends DialogExt
 		_treeView.RemoveNode( _treeView.Selected )
 		_codeView.Text=""
 	End
+
 	
 	Method AddTemplateInternal( lang:String,name:String,value:String )
-		
 		LiveTemplates[lang,name]=value
 		Local n:=_treeView.FindSubNode( lang,_treeView.RootNode )
 		Local n2:=New TreeView.Node( name,n )
@@ -560,17 +550,17 @@ Class PrefsDialog Extends DialogExt
 		
 		_codeView.MakeKeyView()
 	End
+
 	
 	Property TemplateSelLang:String()
-		
 		Local sel:=_treeView.Selected
 		If Not sel Return Null
 		
 		Return (sel.Parent=_treeView.RootNode) ? sel.Text Else sel.Parent.Text
 	End
+
 	
 	Property TemplateSelName:String()
-		
 		Local sel:=_treeView.Selected
 		If Not sel Return Null
 		

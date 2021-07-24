@@ -4,26 +4,25 @@ Namespace wide
 
 Class CodeParsing
 	
+	
 	Function IsFileBuildable:Bool( path:String )
-		
 		Local _ext := ExtractExt( path )
 
 		If _ext = ".wx" Or _ext = ".monkey2" Then Return True
 
 		Return False
 	End
+
 	
 	Function DeleteTempFiles()
-		
 		DocWatcher.DeleteTempFiles()
 	End
+
 	
 	Method New( docs:DocumentManager,projView:ProjectView )
-		
 		_docsManager=docs
 		
 		_docsManager.DocumentAdded+=Lambda( doc:WideDocument )
-		
 			Local codeDoc:=Cast<CodeDocument>( doc )
 			If codeDoc
 				StartWatching( codeDoc )
@@ -39,70 +38,83 @@ Class CodeParsing
 			Endif
 			
 '			If ProjectView.IsProjectFile( doc.Path )
-'				
 '			Endif
-			
 		End
+
 		_docsManager.DocumentRemoved+=Lambda( doc:WideDocument )
-		
 			Local codeDoc:=Cast<CodeDocument>( doc )
 			If codeDoc Then StopWatching( codeDoc )
 		End
-		_docsManager.LockedDocumentChanged+=Lambda()
+
+		_docsManager.IWantToBeParsed = Lambda( path:string )
+'			Print "docsmanager Iwanttobeparsed "
 			
+'			Local tempFile:string = PathsProvider.GetActiveMainFilePath( False )
+			PathsProvider.ForcePathParse( path )
+
+			If path Then
+'				Print "findwatcher"
+				FindWatcher( path )?.WakeUp()
+			Else
+'				Print "docwatcher"
+				DocWatcher.WakeUpGlobal()
+			Endif
+		End
+		
+		_docsManager.LockedDocumentChanged+=Lambda()
 			' have we locked or active path?
 			Local mainFile:=PathsProvider.GetActiveMainFilePath( False )
-			If mainFile
+			If mainFile Then
+				MainWindow.MainFile = mainFile
+'				Print "Mainfile:"+mainFile
 				FindWatcher( mainFile )?.WakeUp()
 			Else
+'				Print "docwatcher.wakeup"
 				DocWatcher.WakeUpGlobal()
 			Endif
 		End
 		
 		DocWatcher.docsForUpdate=Lambda:CodeDocument[]()
-			
 			Return _docsManager.OpenCodeDocuments
 		End
 		
 		DocWatcher.Init()
 		
 		projView.MainFileChanged+=Lambda( path:String,prevPath:String )
-			
 			DocWatcher.WakeUpGlobal()
 		End
 		
 		projView.ActiveProjectChanged+=Lambda( proj:WonkeyProject )
-			
 			DocWatcher.WakeUpGlobal()
 		End
 	End
 	
 	
-	Private
+Private
 	
 	Field _docsManager:DocumentManager
 	Field _watchers:=New Stack<DocWatcher>
+
 	
 	Method FindWatcher:DocWatcher( doc:CodeDocument )
-		
 		For Local i:=Eachin _watchers
 			If i.doc=doc Return i
 		Next
 		
 		Return Null
 	End
+
 	
 	Method FindWatcher:DocWatcher( path:String )
-	
 		For Local i:=Eachin _watchers
 			If i.doc.Path=path Return i
 		Next
 	
 		Return Null
 	End
-	
+
+
 	Method StartWatching( doc:CodeDocument )
-		
 		If Not IsFileBuildable( doc.Path ) Return
 		
 		If FindWatcher( doc ) Return ' already added
@@ -112,9 +124,9 @@ Class CodeParsing
 		
 		watcher.WakeUp()
 	End
-	
+
+
 	Method StopWatching( doc:CodeDocument )
-	
 		For Local i:=Eachin _watchers
 			If i.doc=doc
 				i.Dispose()
@@ -123,9 +135,9 @@ Class CodeParsing
 			Endif
 		Next
 	End
-	
+
+
 	Method Dispose()
-	
 		DocWatcher.enabled=False
 	End
 	
@@ -134,54 +146,57 @@ End
 
 Private
 
+
 Class DocWatcher
-	
 	Global enabled:=True
 	Field doc:CodeDocument
 	Global docsForUpdate:CodeDocument[]()
+
 	
 	Method New( doc:CodeDocument )
-		
 		Self.doc=doc
 		_view=doc.CodeView
 		_parser=ParsersManager.Get( _view.FileType )
 		Local canParse:=Not ParsersManager.IsFake( _parser )
 		
-		If canParse
+'		Print "new docwatcher"
+		
+		If canParse Then
 			_view.Document.TextChanged+=OnTextChanged
 			
 			UpdateDocItems( doc,_parser ) ' refresh parser info for just opened document
 		Endif
 	End
+
 	
 	Method Dispose()
-		
 		_view.Document.TextChanged-=OnTextChanged
 	End
+
 	
 	Method WakeUp()
-	
 		OnTextChanged()
 	End
+
 	
 	Function WakeUpGlobal()
-	
 		_timeTextChanged=Millisecs()
 	End
+
 	
 	Function Init()
-	
 		_timeTextChanged=Millisecs()
 	End
+
 	
 	Function DeleteTempFiles()
-		
 		For Local path:=Eachin _tempFiles
 			DeleteFile( path )
 		Next
 	End
+
 	
-	Private
+Private
 	
 	Field _view:CodeDocumentView
 	Field _parser:ICodeParser
@@ -192,19 +207,20 @@ Class DocWatcher
 	Global _parsing:Bool
 	Global _changed:=New Stack<CodeDocument>
 	Global _tempFiles:=New StringStack
+
 	
 	Method OnTextChanged()
-		
+'		Print "parse OnTextChanged"
 		' skip whitespaces ?
-		'
 '		Local char:=doc.CodeView?.LastTypedChar
 '		Print "char: '"+char+"'"
 
-		TryToParse( doc,_parser )
+		TryToParse( doc, _parser )
 	End
+
 	
-	Function TryToParse( doc:CodeDocument,parser:ICodeParser )
-		
+	Function TryToParse( doc:CodeDocument, parser:ICodeParser )
+'		Print "tryToParse"
 		_timeTextChanged=Millisecs()
 		
 		If Not _changed.Contains( doc ) Then _changed.Add( doc )
@@ -212,9 +228,7 @@ Class DocWatcher
 		If _parsing Return
 		
 		' timer that watching for changed docs
-		'
 		If Not _timer Then _timer=New Timer( 1,Lambda()
-			
 			If _parsing Or Not enabled Or _changed.Empty Return
 			
 			Local msec:=Millisecs()
@@ -225,7 +239,6 @@ Class DocWatcher
 			_parsing=True
 			
 			' copy docs and free list to collect new 'changes'
-			'
 			Global _docsToParse:=New Stack<CodeDocument>
 			_docsToParse.AddAll( _changed.ToArray() )
 			_changed.Clear()
@@ -233,9 +246,7 @@ Class DocWatcher
 			Global _paramsToParse:=New Stack<ParseFileParams>
 			
 			For Local changedDoc:=Eachin _docsToParse
-				
 				' collect all different files to be parsed
-				'
 				Local path:=PathsProvider.GetMainFileOfDocument( changedDoc.Path )
 				Local exists:=False
 				For Local p:=Eachin _paramsToParse
@@ -251,7 +262,6 @@ Class DocWatcher
 				Endif
 				' always save all dirty files in temp before parsing
 				' check changescounter here to avoid unnecessarily re-savings
-				'
 				Local tmpPath:=PathsProvider.GetTempFilePathForParsing( changedDoc.Path )
 				If changedDoc.CheckChangesCounter() 'Or Not FileExists( tmpPath )
 					SaveString( changedDoc.TextView.Text,tmpPath )
@@ -263,23 +273,19 @@ Class DocWatcher
 			Global _results:=New StringStack
 			
 			' parse all docs
-			'
 			For Local params:=Eachin _paramsToParse
 				Local errorStr:=parser.ParseFile( params )
 				_results.Add( errorStr )
 			Next
 			
 			' maybe app is in shutdown state
-			'
 			If Not enabled Return
 			
 			Global _errors:=New Stack<BuildError>
 			
 			' and collect all errors
-			'
 			Local tmpFolder:=PathsProvider.WX_TMP+"/"
 			For Local str:=Eachin _results
-				
 				If Not str Or str="#" Continue
 				
 				Local arr:=str.Split( "~n" )
@@ -306,7 +312,6 @@ Class DocWatcher
 			OnParseCompleted( parser,_errors )
 			
 			' don't remove tmp files to avoid unnecessarily re-savings
-			'
 '			For Local changedDoc:=Eachin _docsToParse
 '				Local tmpPath:=WonkeyParser.GetTempFilePathForParsing( changedDoc.Path )
 '				DeleteFile( tmpPath )
@@ -322,35 +327,36 @@ Class DocWatcher
 			_timeDocParsed=Millisecs()
 			
 		End )
-		
 	End
+
 	
 	Function CollectTempFile( path:String )
-	
 		If Not _tempFiles.Contains( path )
 			_tempFiles.Add( path )
 		Endif
 	End
+
 	
-	Function UpdateDocItems( doc:CodeDocument,parser:ICodeParser )
-	
+	Function UpdateDocItems( doc:CodeDocument, parser:ICodeParser )
+'		Print "  UpdateDocItems"
 		Local items:=GetCodeItems( doc.Path,parser )
 		doc.OnDocumentParsed( items,Null )
 	End
+
 	
-	Function OnParseCompleted( parser:ICodeParser,errors:Stack<BuildError> )
-		
+	Function OnParseCompleted( parser:ICodeParser, errors:Stack<BuildError> )
+'		Print "  OnParseCompleted"
 		Local docs:=docsForUpdate()
 		If docs
 			For Local doc:=Eachin docs
-				Local items:=GetCodeItems( doc.Path,parser )
+				Local items:=GetCodeItems( doc.Path, parser )
 				doc.OnDocumentParsed( items,GetErrors( doc.Path,errors ) )
 			Next
 		Endif
 	End
+
 	
 	Function GetErrors:Stack<BuildError>( path:String,errors:Stack<BuildError>)
-		
 		If errors.Empty Return errors
 		
 		Local st:=New Stack<BuildError>
@@ -359,9 +365,9 @@ Class DocWatcher
 		Next
 		Return st
 	End
+
 	
 	Function GetCodeItems:Stack<CodeItem>( path:String,parser:ICodeParser )
-		
 		Local items:=New Stack<CodeItem>
 		
 		' extract all items in file

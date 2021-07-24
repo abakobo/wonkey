@@ -1,325 +1,316 @@
 
 Namespace wide
 
-Private
 
-Const COLOR_NONE:=0
-Const COLOR_IDENT:=1
-Const COLOR_KEYWORD:=2
-Const COLOR_STRING:=3
-Const COLOR_NUMBER:=4
-Const COLOR_COMMENT:=5
-Const COLOR_PREPROC:=6
-Const COLOR_OTHER:=7
+Const COLOR_NONE:int = 0
+Const COLOR_IDENT:int = 1
+Const COLOR_KEYWORD:int = 2
+Const COLOR_STRING:int = 3
+Const COLOR_NUMBER:int = 4
+Const COLOR_COMMENT:int = 5
+Const COLOR_PREPROC:int = 6
+Const COLOR_OTHER:int = 7
+Const COLOR_CORETYPE:int = 8
+	
+Const COLOR_CLASS:int = 9
+Const COLOR_VARIABLE:int = 10
+Const COLOR_METHOD:int = 11
+Const COLOR_FUNCTION:int = 12
+Const COLOR_PROPERTY:int = 13
+Const COLOR_LAMBDA:int = 14
+
+
+Const COLOR_BACKGROUND:int = 15
+Const COLOR_LINE:int = 16
+Const COLOR_LINENUMBERS:int = 17
+Const COLOR_CURSOR:int = 18
+Const COLOR_ERROR:int = 19
 
 Global Keywords:=New StringMap<String>
 
-Function InitKeywords()
 
-	Local kws:=""
-	kws+="Namespace;Using;Import;Extern;"
-	kws+="Public;Private;Protected;Internal;Friend;"
-	kws+="Void;Bool;Byte;UByte;Short;UShort;Int;UInt;Long;ULong;Float;Double;String;CString;Variant;TypeInfo;DeclInfo;Object;Continue;Exit;"
-	kws+="New;Self;Super;Eachin;True;False;Null;Where;"
-	kws+="Alias;Const;Local;Global;Field;Method;Function;Property;Getter;Setter;Operator;Lambda;"
-	kws+="Enum;Class;Interface;Struct;Extends;Implements;Virtual;Override;Abstract;Final;Inline;"
-	kws+="Var;Varptr;Ptr;"
-	kws+="Not;Mod;And;Or;Shl;Shr;End;"
-	kws+="If;Then;Else;Elseif;Endif;"
-	kws+="While;Wend;"
-	kws+="Repeat;Until;Forever;"
-	kws+="For;To;Step;Next;"
-	kws+="Select;Case;Default;"
-	kws+="Try;Catch;Throw;Throwable;"
-	kws+="Return;Print;Static;Cast;Extension;"
-	kws+="Typeof"
+Function InitKeywords()
+	Local kws := ""
+	kws += "Namespace;Using;Import;Extern;"
+	kws += "Public;Private;Protected;Internal;Friend;"
+	kws += "Void;Bool;Byte;UByte;Short;UShort;Int;UInt;Long;ULong;Float;Double;String;CString;Variant;TypeInfo;DeclInfo;Object;Continue;Exit;"
+	kws += "New;Self;Super;Eachin;True;False;Null;Where;"
+	kws += "Alias;Const;Local;Global;Field;Method;Function;Property;Getter;Setter;Operator;Lambda;"
+	kws += "Enum;Class;Interface;Struct;Extends;Implements;Virtual;Override;Abstract;Final;Inline;"
+	kws += "Var;Varptr;Ptr;"
+	kws += "Not;Mod;And;Or;Shl;Shr;End;"
+	kws += "If;Then;Else;Elseif;Endif;"
+	kws += "While;Wend;"
+	kws += "Repeat;Until;Forever;"
+	kws += "For;To;Step;Next;"
+	kws += "Select;Case;Default;"
+	kws += "Try;Catch;Throw;Throwable;"
+	kws += "Return;Print;Static;Cast;Extension;"
+	kws += "Typeof"
 	
-	For Local kw:=Eachin kws.Split( ";" )
+	For Local kw := Eachin kws.Split( ";" )
 		Keywords[kw.ToLower()]=kw
 	Next
 End
 
-Function WonkeyTextHighlighter:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
 
-	Local i0:=sol
+Function WonkeyTextHighlighter:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
+	Local i0 := sol
 	
-	Local icolor:=0
-	Local istart:=sol
-	Local preproc:=False
+	Local icolor := 0
+	Local istart := sol
+	Local preproc := False
 
 	'comment nest
-	'
-	Local cnest:=state & 255
-	If cnest=255 cnest=-1
+	Local cnest := state & 255
+	If cnest = 255 Then cnest = -1
 	
 	'block string flag
-	'	
-	Local blkstr:=(state & 256)=0
+	Local blkstr := (state & 256)=0
 	
-	If cnest<>-1 
-		icolor=COLOR_COMMENT
+	If cnest <> -1 Then 
+		icolor = COLOR_COMMENT
 	Else If blkstr
-		icolor=COLOR_STRING
+		icolor = COLOR_STRING
 	Endif
 	
-	While i0<eol
-	
-		Local start:=i0
-		Local chr:=text[i0]
-		i0+=1
-		
-		If IsSpace( chr ) Continue
-		
-		If blkstr
-			If chr=34 blkstr=False
-			Continue
-		Endif
-		
-		If chr=35 And istart=sol
-			preproc=True
-			If cnest=-1 icolor=COLOR_PREPROC
-			Continue
-		Endif
-		
-		If preproc And (IsAlpha( chr ) Or chr=95)
+	Local chr:int'= text[i0]
+	While i0 < eol
+		Local start := i0
 
+'		Local chr := text[i0]
+		chr = text[i0]
+		i0 += 1
+		
+		If IsSpace( chr ) Then Continue
+		
+		If blkstr Then 
+			If chr = 34 Then blkstr = False '""
+			Continue
+		Endif
+		
+		If chr = 35 And istart = sol Then '#
+			preproc = True
+			If cnest = -1 Then icolor = COLOR_PREPROC
+			Continue
+		Endif
+		
+		If preproc And (IsAlpha( chr ) Or chr=95) Then '_
 			While i0<eol And (IsAlpha( text[i0] ) Or IsDigit( text[i0] )  Or text[i0]=95)
-				i0+=1
+				i0 += 1
 			Wend
 			
-			Local id:=text.Slice( start,i0 )
+			Local id := text.Slice( start,i0 )
 			
 			Select id.ToLower()
-			Case "rem"
-				cnest+=1
-				icolor=COLOR_COMMENT
-			Case "end"
-				If cnest<>-1
-					cnest-=1
-					icolor=COLOR_COMMENT
-				Endif
+				Case "rem"
+					cnest += 1
+					icolor = COLOR_COMMENT
+				Case "end"
+					If cnest <> -1 Then
+						cnest -= 1
+						icolor = COLOR_COMMENT
+					Endif
 			End
 			
 			Exit
-		
 		Endif
 		
-		If cnest<>-1 Or preproc Exit
+		If cnest <> -1 Or preproc Then Exit
 		
-		Local color:=icolor
-		
-		If chr=39
-		
-			i0=eol
+		Local color := icolor
+		If chr = 39 Then ''
+			i0 = eol
+			color = COLOR_COMMENT
 			
-			color=COLOR_COMMENT
-			
-		Else If chr=34
-		
-			While i0<eol And text[i0]<>34
-				i0+=1
+		Else If chr = 34 then
+			While i0 < eol And text[i0] <> 34 '"
+				i0 += 1
 			Wend
-			If i0<eol
-				i0+=1
+			If i0 < eol Then
+				i0 += 1
 			Else
-				blkstr=True
+				blkstr = True
 			Endif
+			color = COLOR_STRING
 			
-			color=COLOR_STRING
-			
-		Else If IsAlpha( chr ) Or chr=95
-
-			While i0<eol And (IsAlpha( text[i0] ) Or IsDigit( text[i0] )  Or text[i0]=95)
-				i0+=1
+		Else If IsAlpha( chr ) Or chr = 95 Then'_
+			While i0 < eol And (IsAlpha( text[i0] ) Or IsDigit( text[i0] )  Or text[i0]=95)
+				i0 += 1
 			Wend
 			
-			Local id:=text.Slice( start,i0 )
-			
+			Local id := text.Slice( start, i0 )
 			If preproc And istart=sol
-			
 				Select id.ToLower()
-				Case "rem"				
-					cnest+=1
-				Case "end"
-					cnest=Max( cnest-1,-1 )
+					Case "rem"
+						cnest += 1
+					Case "end"
+						cnest = Max( cnest-1,-1 )
 				End
-				
-				icolor=COLOR_COMMENT
+				icolor = COLOR_COMMENT
 				
 				Exit
 			Else
-			
-				color=COLOR_IDENT
+				color = COLOR_IDENT
 				
-				If Keywords.Contains( id.ToLower() ) color=COLOR_KEYWORD
-			
+				If Keywords.Contains( id.ToLower() ) Then color = COLOR_KEYWORD
 			Endif
 			
-		Else If IsDigit( chr )
-		
-			While i0<eol And IsDigit( text[i0] )
-				i0+=1
+		Else If IsDigit( chr ) Then
+			While i0 < eol And IsDigit( text[i0] )
+				i0 += 1
 			Wend
+			color = COLOR_NUMBER
 			
-			color=COLOR_NUMBER
-			
-		Else If chr=36 And i0<eol And IsHexDigit( text[i0] )
-		
-			i0+=1
-			While i0<eol And IsHexDigit( text[i0] )
-				i0+=1
+		Else If chr = 36 And i0 < eol And IsHexDigit( text[i0] ) Then
+			i0 += 1
+			While i0 < eol And IsHexDigit( text[i0] )
+				i0 += 1
 			Wend
-			
-			color=COLOR_NUMBER
+			color = COLOR_NUMBER
 			
 		Else
-			
-			color=COLOR_NONE
-			
+			color = COLOR_NONE
 		Endif
 		
-		If color=icolor Continue
+		If color = icolor Continue
 		
-		For Local i:=istart Until start
-			colors[i]=icolor
+		For Local i := istart Until start
+			colors[i] = icolor
 		Next
 		
-		icolor=color
-		istart=start
-	
+		icolor = color
+		istart = start
 	Wend
-	
-	For Local i:=istart Until eol
-		colors[i]=icolor
+
+	For Local i := istart Until eol
+		colors[i] = icolor
 	Next
 	
-	state=cnest & 255
+	state = cnest & 255
 	
-	If Not blkstr state|=256
+	If Not blkstr Then state|=256
 	
 	Return state
 End
 
+
 Public
+
 
 Class WonkeyDocumentView Extends WideTextView
 
 	Method New( doc:WonkeyDocument )
-		_doc=doc
+		_doc = doc
 		
-		Document=_doc.TextDocument
+		Document = _doc.TextDocument
 		
-		AddView( New GutterView( Self ),"left" )
+		AddView( New GutterView( Self ), "left" )
 	End
+
 	
-	Protected
+Protected
 	
+
 	Method OnRenderContent( canvas:Canvas ) Override
-	
-		Local color:=canvas.Color
+		If MainWindow._audioTimer Then
+			MainWindow._audioTimer.Suspended = True
+		End if
+
+'		Print "OnRender wonkey document"
+		Local color := canvas.Color
 		
-		If _doc._errors.Length
-		
-			canvas.Color=New Color( .5,0,0 )
+		If _doc._errors.Length Then
+			canvas.Color = New Color( .5, 0, 0 )
 			
-			For Local err:=Eachin _doc._errors
-				Local r:=LineRect( err.line )
-				r.min.x=0
-				r.max.x=Width
+			For Local err := Eachin _doc._errors
+				Local r := LineRect( err.line )
+				r.min.x = 0
+				r.max.x = Width
 				canvas.DrawRect( r )
 			Next
-			
 		Endif
 		
-		If _doc._debugLine<>-1
-
-			Local line:=_doc._debugLine
-			If line<0 Or line>=Document.NumLines Return
+		If _doc._debugLine <> -1 Then
+			Local line := _doc._debugLine
+			If line < 0 Or line >= Document.NumLines Then Return
 			
-			canvas.Color=New Color( 0,.5,0 )
-			Local r:=LineRect( line )
-			r.min.x=0
-			r.max.x=Width
+			canvas.Color = New Color( 0,.5,0 )
+			Local r := LineRect( line )
+			r.min.x = 0
+			r.max.x = Width
 			canvas.DrawRect( r )
 		Endif
 		
-		canvas.Color=color
+		canvas.Color = color
 		
 		Super.OnRenderContent( canvas )
 	End
+
 	
-	Private
+Private
 	
 	Field _doc:WonkeyDocument
-	
 	Field _typing:Bool
+
 	
 	Method Capitalize( all:Bool )
+		_typing = False
 	
-		_typing=False
-	
-		Local cursor:=Cursor
+		Local cursor := Cursor
 		
 		'ignore comments...
-		'
-		Local state:=Document.LineState( Document.FindLine( cursor ) )
-		If state & 255 <> 255 Return
+		Local state := Document.LineState( Document.FindLine( cursor ) )
+		If state & 255 <> 255 Then Return
 		
-		Local text:=Text
-		Local start:=cursor
-		Local term:=all ? text.Length Else start
+		Local text := Text
+		Local start := cursor
+		Local term := all ? text.Length Else start
 
 		'find start of ident
-		'		
 		While start And IsIdent( text[start-1] )
-			start-=1
+			start -= 1
 		Wend
-		While start<cursor And IsDigit( text[start] )
-			start+=1
+		While start < cursor And IsDigit( text[start] )
+			start += 1
 		Wend
-		If start>=term Or Not IsIdent( text[start] ) Return
+		If start >= term Or Not IsIdent( text[start] ) Then Return
 		
 		'only capitalize keywords and idents
-		'
-		Local color:=Document.Colors[start]
-		If color<>COLOR_KEYWORD And color<>COLOR_IDENT
-			'
+		Local color := Document.Colors[start]
+		If color <> COLOR_KEYWORD And color <> COLOR_IDENT
 			If color<>COLOR_PREPROC Return
-			'
+
 			'only do first ident on preproc line
-			'
-			Local i:=start
-			While i And text[i-1]<=32
-				i-=1
+			Local i := start
+			While i And text[i-1] <= 32
+				i -= 1
 			Wend
-			If Not i Or text[i-1]<>35 Return
-			i-=1
-			While i And text[i-1]<>10
-				i-=1
-				If text[i]>32 Return
+			If Not i Or text[i-1] <> 35 Then Return
+			i -= 1
+			While i And text[i-1] <> 10
+				i -= 1
+				If text[i] > 32 Then Return
 			Wend
-			'
 		Endif
 
 		'find end of ident
-		Local ends:=start
-		'
-		While ends<term And IsIdent( text[ends] ) And text[ends]<>10
-			ends+=1
+		Local ends := start
+		While ends < term And IsIdent( text[ends] ) And text[ends] <> 10
+			ends += 1
 		Wend
-		If ends=start return
+		If ends = start Then return
 
-		Local ident:=text.Slice( start,ends )
+		Local ident := text.Slice( start,ends )
 
-		Local kw:=Keywords[ident.ToLower()]
-		If Not kw Or kw=ident Return
+		Local kw := Keywords[ident.ToLower()]
+		If Not kw Or kw = ident Then Return
 		
-		Document.ReplaceText( start,ends,kw )
-		
+		Document.ReplaceText( start, ends, kw )
 	End
+
 	
 	Method IdentNearestCursor:String()
-	
 		Local text:=Text
 		Local start:=Cursor
 		
@@ -345,22 +336,19 @@ Class WonkeyDocumentView Extends WideTextView
 		
 		Return text.Slice( start,ends )
 	End
-	
+
+
 	Method OnKeyDown:Bool( key:Key,modifiers:Modifier ) Override
-	
 		Select key
 		Case Key.F1
-			
 			Local ident:=IdentNearestCursor()
 				
 			If ident MainWindow.ShowQuickHelp( ident )
 			
 		Case Key.Tab,Key.Enter
-			
 			If _typing Capitalize( False )
 			
 		Case Key.Left
-			
 			If _typing
 				Local text:=Text
 				Local cursor:=Cursor
@@ -370,7 +358,6 @@ Class WonkeyDocumentView Extends WideTextView
 			Endif
 			
 		Case Key.Right
-			
 			If _typing
 				Local text:=Text
 				Local cursor:=Cursor
@@ -380,15 +367,14 @@ Class WonkeyDocumentView Extends WideTextView
 			Endif
 			
 		Case Key.Up,Key.Down
-			
 			Capitalize( True )	'in cased we missed anything...
 		End
 		
 		Return Super.OnKeyDown( key,modifiers )
 	End
+
 	
 	Method OnKeyChar( text:String ) Override
-
 		If IsIdent( text[0] )
 			_typing=True
 		Else
@@ -397,8 +383,8 @@ Class WonkeyDocumentView Extends WideTextView
 		
 		Super.OnKeyChar( text )
 	End
-	
 End
+
 
 Class WonkeyDocument Extends WideDocument
 
@@ -408,7 +394,6 @@ Class WonkeyDocument Extends WideDocument
 		InitKeywords()
 		
 		_doc=New TextDocument
-		
 		_doc.TextHighlighter=WonkeyTextHighlighter
 		
 		_browser=New WonkeyTreeView( _doc )
@@ -434,19 +419,17 @@ Class WonkeyDocument Extends WideDocument
 			_errors.Resize( put )
 		End
 
-	
 		_view=New WonkeyDocumentView( Self )
 	End
+
 	
 	Property TextDocument:TextDocument()
-	
 		Return _doc
 	End
+
 	
 	Property DebugLine:Int()
-	
 		Return _debugLine
-	
 	Setter( debugLine:Int )
 		If debugLine=_debugLine Return
 		
@@ -455,43 +438,43 @@ Class WonkeyDocument Extends WideDocument
 		
 		_view.GotoLine( _debugLine )
 	End
-	
+
+
 	Property Errors:Stack<BuildError>()
-	
 		Return _errors
 	End
-	
-	Protected
+
+
+Protected
+
 	
 	Method OnLoad:Bool() Override
-	
 		Local text:=stringio.LoadString( Path )
 		
-		_doc.Text=text
+		_doc.Text = text
 		
 		Return True
 	End
-	
+
+
 	Method OnSave:Bool() Override
-	
 		Local text:=_doc.Text
 		
 		Return stringio.SaveString( text,Path )
-	
 	End
+
 	
 	Method OnCreateView:View() Override
-	
 		Return _view
 	End
+
 	
 	Method OnCreateBrowser:View() Override
-	
 		Return _browser
 	End
-	
-	Private
 
+	
+Private
 	Field _doc:TextDocument
 
 	Field _view:WonkeyDocumentView
@@ -503,22 +486,23 @@ Class WonkeyDocument Extends WideDocument
 	Field _debugLine:Int=-1
 End
 
+
 Class WonkeyDocumentType Extends WideDocumentType
 
-	Protected
+Protected
 	
 	Method New()
 		AddPlugin( Self )
 		
 		Extensions=New String[]( ".wx", ".monkey2" )
 	End
-	
+
+
 	Method OnCreateDocument:WideDocument( path:String ) Override
-	
 		Return New WonkeyDocument( path )
 	End
 	
-	Private
+Private
 	
 	Global _instance:=New WonkeyDocumentType
 	

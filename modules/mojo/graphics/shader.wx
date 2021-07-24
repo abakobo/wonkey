@@ -214,12 +214,10 @@ Class Shader
 	#rem wonkeydoc Creates a new shader.
 	#end
 	Method New( name:String,source:String,defs:String )
-	
 		_name=name
 		_source=source
 		
 		For Local def:=Eachin defs.Replace( ";","~n" ).Split( "~n" )
-		
 			def=def.Trim()
 			If Not def Continue
 
@@ -227,7 +225,7 @@ Class Shader
 			
 			_defs+="#define "+def+"~n"
 		Next
-		
+
 		EnumPasses()
 	End
 	
@@ -323,7 +321,7 @@ Class Shader
 '		Print "nm:"+nm 
 		Local tag := nm+";"+defs
 		
-		If _cache.Contains( tag ) Return _cache[tag]
+		If _cache.Contains( tag ) Then Return _cache[tag]
 		
 		local source:String = LoadString( name )
 		If not source Then
@@ -351,7 +349,7 @@ Class Shader
 	
 	Global _cache:=New StringMap<Shader>
 
-	Field _name:String	
+	Field _name:String
 	Field _source:String
 	Field _defs:String
 	
@@ -392,7 +390,7 @@ Class Shader
 	Method SplitSource:String[]( source:String )
 		
 		Local i0:=source.Find( "~n//@vertex" )
-		If i0=-1 
+		If i0=-1
 			Print "Shader source:~n"+source
 			RuntimeError( "Can't find //@vertex chunk" )
 		Endif
@@ -503,4 +501,61 @@ Class Shader
 		glCheck()
 	End
 
+'------------------------------------------------------------
+'jl new error checking for shaders \o/
+'in essence replicating the build but signalling back and not stopping ;)
+Public
+
+	method CheckForErrors:bool()
+		glCheck()
+		
+		Local chunks:=SplitSource( _source )
+		
+		Local cs:=_defs+chunks[0]
+		Local vs:=cs+chunks[1]
+		Local fs:=cs+chunks[2]
+		
+		For Local rpass:=Eachin _rpasses
+			Local defs:="#define WX_RENDERPASS "+rpass+"~n"
+			
+'			Print "~n~n*************** Vertex Shader ***************~n"+defs+vs
+'			Print "~n~n*************** Fragment Shader ****************~n"+defs+fs
+			
+			Local vshader:=glTestCompile( GL_VERTEX_SHADER,defs+vs )
+			Local fshader:=glTestCompile( GL_FRAGMENT_SHADER,defs+fs )
+			If vshader = -1 Or fshader = -1 Then Return False
+				
+			Local glprogram:=glCreateProgram()
+			
+			glAttachShader( glprogram,vshader )
+			glAttachShader( glprogram,fshader )
+			glDeleteShader( vshader )
+			glDeleteShader( fshader )
+				
+			glBindAttribLocation( glprogram,A_POSITION,"a_Position" )
+			glBindAttribLocation( glprogram,A_TEXCOORD0,"a_TexCoord0" )
+			glBindAttribLocation( glprogram,A_TEXCOORD1,"a_TexCoord1" )
+			glBindAttribLocation( glprogram,A_COLOR,"a_Color" )
+			glBindAttribLocation( glprogram,A_NORMAL,"a_Normal" )
+			glBindAttribLocation( glprogram,A_TANGENT,"a_Tangent" )
+			glBindAttribLocation( glprogram,A_WEIGHTS,"a_Weights" )
+			glBindAttribLocation( glprogram,A_BONES,"a_Bones" )
+
+'jl added
+'------------------------------------------------------------			
+			glBindAttribLocation( glprogram,A_COLOR2,"a_Color2" )
+			glBindAttribLocation( glprogram,A_COLOR3,"a_Color3" )
+			glBindAttribLocation( glprogram,A_XYZPOSITION,"a_XYZPosition" )
+'------------------------------------------------------------
+			
+			If Not glTestLink( glprogram ) Then Return False
+			
+			Local program:=New GLProgram( glprogram )
+			
+			_programs[rpass]=program
+		Next
+		
+		glCheck()
+		Return True
+	End method
 End

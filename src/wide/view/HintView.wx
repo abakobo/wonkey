@@ -3,7 +3,6 @@ Namespace wide
 
 
 Function ShowHint( hint:String,location:Vec2i,sender:View,durationMs:Int=3000 )
-
 	If Not _hint Then _hint=New HintView
 	
 	HideHint()
@@ -11,8 +10,8 @@ Function ShowHint( hint:String,location:Vec2i,sender:View,durationMs:Int=3000 )
 	NeedShow( hint,location,sender,durationMs )
 End
 
-Function HideHint()
 
+Function HideHint()
 	If Not _hint Return
 	_hint.Hide()
 	
@@ -28,18 +27,18 @@ Private
 Global _hint:HintView
 Global _timer:Timer
 
-Function NeedShow( hint:String,location:Vec2i,sender:View,duration:Float )
-	
+
+Function NeedShow( hint:String, location:Vec2i, sender:View, duration:Float )
 	_timer=New Timer( 1.8, Lambda()
-		_hint.Show( hint,location,sender )
+		_hint.Show( hint, location, sender )
 		_timer.Cancel()
 		_timer=Null
 		NeedHide( duration )
 	End )
 End
 
+
 Function NeedHide( duration:Float )
-	
 	Local hertz:=1.0/(duration/1000.0)
 	_timer=New Timer( hertz, Lambda()
 		If _hint Then _hint.Hide()
@@ -52,16 +51,15 @@ End
 Class HintView Extends TextView
 
 	Method New()
-		
 		Style=GetStyle( "Hint" )
 		ReadOnly=True
 		Visible=False
 		Layout="float"
 		Gravity=New Vec2f( 0,0 )
 	End
+
 	
 	Method Show( text:String,location:Vec2i,sender:View )
-		
 		Hide()
 		
 		Text=text
@@ -84,11 +82,10 @@ Class HintView Extends TextView
 			dy=-dy
 		Endif
 		Offset=location+dy
-		
 	End
+
 	
 	Method Hide()
-		
 		If Not Visible Return
 		
 		If Parent = MainWindow

@@ -1,0 +1,67 @@
+
+Namespace wide
+
+
+Class AsciiView Extends DockingView
+	field ascii:string[] = New string[]( "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "TAB", "LF", "VT", "FF", "CR", "SO", "SI", "DLE", "DC1",
+		"DC2", "DC3", "DC4", "NAK", "SYN", "ETB", "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US", "SP" )
+
+	 
+	Method New( docs:DocumentManager )
+		Super.New()
+	End
+
+	
+	Method Init()
+	End
+	
+
+	Method OnRender( canvas:Canvas ) Override
+		canvas.Color = MainWindow._theme.IDE[0]
+'		canvas.Color = Color.PicoBlack
+		canvas.DrawRect( 0,0, Width,Height)
+		
+		Local scale:float = App.Theme.Scale.x
+
+		local x:int
+		local y:int
+		local k:int
+		local yy:int = 0
+		For k = 0 To 127
+			If y + 16 * scale > Height Then
+				y = 0
+				yy = 0
+				x += 120 * scale
+			End If
+
+			If yy Mod 2 = 1 Then
+'				canvas.Color = Color.DarkGrey * 0.8
+				canvas.Color = GetNewColor( MainWindow._theme.IDE[0], 0.06 )
+				canvas.DrawRect( x,y, 110*scale,16*scale )
+			End If
+
+			canvas.Color = MainWindow._theme.IDE[1] * 0.85
+'			canvas.Color = Color.LightGrey * 0.85
+			canvas.DrawText( k, x,y )
+			canvas.Color = MainWindow._theme.IDE[1] * 0.7
+'			canvas.Color = Color.LightGrey * 0.7
+			canvas.DrawText( Hex(k), x+35*scale,y )
+			
+			canvas.Color = MainWindow._theme.IDE[1]
+'			canvas.Color = Color.LightGrey
+			If k < 33 Then
+				canvas.DrawText( ascii[k], x+65*scale,y )
+			Else If k = 127 Then
+				canvas.DrawText( "DEL", x+ 65*scale,y )
+			Else
+				canvas.DrawText( Chr(k), x+ 65*scale,y )
+			End If
+			
+			y += 16 * scale
+			yy += 1
+		Next
+	End method
+	
+	
+End
+
