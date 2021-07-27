@@ -1,12 +1,47 @@
 
 Namespace mojo.graphics
 
-'jl added
 '------------------------------------------------------------
-'
-' Note: jl math functions moved to wonkey.math
+'jl added
+const Pi180:double = Pi / 180
+#rem monkeydoc Converts degrees in angles. E.G. 90 degrees to radians
+Degrees start from 0 pointing East and then go counterclockwise.
+So:
+90 degrees is up (north)
+180 degrees is pointing left (west)
+280 degrees is pointing down (south)
+See Also [[RadianToDegrees]]
+#end
+function DegreesToRadian:float( degrees:float )
+	return degrees * Pi180' ) / 180.0
+End function
 
-#rem wonkeydoc Converts 4 byts or ints to a packed integer color
+#rem monkeydoc Converts radians to degrees in angles.
+Degrees start from 0 pointing East and then go counterclockwise.
+So:
+90 degrees is up (north)
+180 degrees is pointing left (west)
+280 degrees is pointing down (south)
+See Also [[DegreesToRadian]]
+#end
+function RadianToDegrees:float( radian:float )
+	return radian / Pi180
+End function
+
+
+#rem monkeydoc Liniear Interp
+#end
+function Lerp:Double( a:double, b:double, t:double )
+	return (1.0-t) * a + t*b
+End function
+
+#rem monkeydoc Linear Interp
+#end
+function Slerp:Double( a:double, b:double, t:double )
+	return (1.0-t) * a + t*b
+End function
+
+#rem monkeydoc Converts 4 byts or ints to a packed integer color
 Get an integer packed color from rgba inputs (0..255)
 #end
 function ICol:Uint( r:int, g:int, b:int, a:int = 255 )
@@ -16,10 +51,11 @@ function ICol:Uint( r:int, g:int, b:int, a:int = 255 )
 	a = Clamp(a, 0, 255)
 	Return UInt(a) Shl 24 | UInt(b) Shl 16 | UInt(g) Shl 8 | UInt(r)
 End function
+
 '------------------------------------------------------------
 
 
-#rem wonkeydoc Outline modes.
+#rem monkeydoc Outline modes.
 
 Outline modes are used with the [[Canvas.OutlineMode]] property and control the style
 of outline drawn.
@@ -37,7 +73,7 @@ Enum OutlineMode
 	Smooth=2
 End
 
-#rem wonkeydoc The Canvas class.
+#rem monkeydoc The Canvas class.
 
 Canvas objects are used to perform rendering to either a mojo [[View]] or an 'off screen' [[Image]].
 
@@ -55,97 +91,25 @@ Drawing does not occur immediately. Drawing commands are 'buffered' to reduce th
 
 #end
 Class Canvas
-	
-	#rem wonkeydoc Creates a canvas that renders to an image
-	#end
-	Method New( image:Image )
-		
-		Local rtarget:=New RenderTarget( New Texture[]( image.Texture ),Null )
-		
-		Init( rtarget,New GraphicsDevice )
-		
-		BeginRender( New Recti( 0,0,image.Rect.Size ),AffineMat3f.Translation( image.Rect.Origin ) )
-	End
 
-	#rem wonkeydoc @hidden Creates a canvas that renders to the backbuffer.
-	#end
-	Method New( width:Int,height:Int )
-		
-		Init( Null,New GraphicsDevice( width,height ) )
-	End
-
-	#rem wonkeydoc @hidden Resizes a canvas that renders to the backbuffer.
-	#end
-	Method Resize( size:Vec2i )
-		
-		_device.Resize( size )
-	End
-
-	#rem wonkeydoc @hidden
-	#end
-	Method BeginRender( bounds:Recti,matrix:AffineMat3f )
-	
-		Flush()
-		
-		_rmatrixStack.Push( _rmatrix )
-		_rboundsStack.Push( _rbounds )
-		
-		_rmatrix*=matrix
-		_rbounds&=TransformRecti( bounds,_rmatrix )
-
-		Viewport=bounds
-		Scissor=New Recti( 0,0,bounds.Size )
-		AmbientLight=Color.Black
-		BlendMode=BlendMode.Alpha
-		PointSize=0
-		LineWidth=0
-		LineSmoothing=False
-		
-'jl changed
-'------------------------------------------------------------
-'		TextureFilteringEnabled=True
-		TextureFilteringEnabled = _textureFilter2
-'------------------------------------------------------------
-		
-		OutlineMode=OutlineMode.None
-		OutlineColor=Color.Yellow
-		OutlineWidth=0
-		
-		ClearMatrix()
-	End
-	
-	#rem wonkeydoc @hidden
-	#end
-	Method EndRender()
-	
-		If _lighting EndLighting()
-		
-		Flush()
-		
-		_rbounds=_rboundsStack.Pop()
-		_rmatrix=_rmatrixStack.Pop()
-	End
-
-
-'jl added
 '------------------------------------------------------------
 	'start of jl jeanluc additions
 	Field RenderAmbient:void( device:GraphicsDevice )
 	
-	Method SetCol( color:UInt )
+	method SetCol( color:UInt )
 		_pmcolor = color
-	End
+	End method
 
-	Method SetCol( r:int, g:int, b:int, a:int = 255 )
+	method SetCol( r:int, g:int, b:int, a:int = 255 )
 		r = Clamp(r, 0, 255)
 		g = Clamp(g, 0, 255)
 		b = Clamp(b, 0, 255)
 		a = Clamp(a, 0, 255)
 		_pmcolor = UInt(a) Shl 24 | UInt(b) Shl 16 | UInt(g) Shl 8 | UInt(r)
-	End
+	End method
 
 
-	Method SetViewport( x:float, y:float, w:float, h:float )
+	method SetViewport( x:float, y:float, w:float, h:float )
 		If _lighting return
 
 		Flush()
@@ -153,7 +117,7 @@ Class Canvas
 		_viewport = New Rectf( x,y,x+w,y+h )
 		
 		_dirty |= Dirty.Viewport | Dirty.Scissor
-	End
+	End method
 	
 	
 	Method DrawTextVSize( text:String, tx:Float, ty:Float, xSize:float = 1, ySize:float = 1 )
@@ -277,7 +241,7 @@ Class Canvas
 			
 			i0=i1
 		Wend
-	End
+	End method
 
 
 	Method DrawTextBold( text:String, tx:Float, ty:Float )
@@ -285,7 +249,7 @@ Class Canvas
 
 		DrawText( text, tx, ty )
 		DrawText( text, tx+1, ty )
-	End
+	End method
 
 
 	Method DrawTextBold( text:String, tx:Float, ty:Float, bold:float, handleX:Float=0,handleY:Float=0 )
@@ -486,11 +450,11 @@ Class Canvas
 
 	End
 
-	#rem wonkeydoc Draws a grid of cells (made from lines).
+	#rem monkeydoc Draws a grid of cells (made from lines).
 	Draws a grid in the current [[Color]] using the current [[BlendMode]].
 	The rectangle vertex coordinates are also transform by the current [[Matrix]].
 	#end
-	Method DrawGrid( x:float, y:float, width:float, height:float, cell:float )
+	method DrawGrid( x:float, y:float, width:float, height:float, cell:float )
 		width -= 1
 		height -= 1
 		Local k:float
@@ -503,25 +467,16 @@ Class Canvas
 		Next
 		DrawLine( x, y+height, x+width, y+height )
 		DrawLine( x+width, y, x+width, y+height )
-	End
+	End method
 
 
 	Method DrawFrameCircle( x:Float, y:Float, width:Float )
 		DrawFrameOval( x, y, width, width )
-	End
-
+	End method
 	
-	#rem wonkeydoc Draws an frame around an oval.
-	Draws an framed oval in the current [[Color]] using the current [[BlendMode]].
-	The oval vertex coordinates are also transform by the current [[Matrix]].
-	@param x Center x coordinate for the oval.
-	@param y Center y coordinate for the oval.
-	@param xRadius X axis radius for the oval.
-	@param yRadius Y axis radius for the oval.
-	#end
-	Method DrawFrameOval( x:Float, y:Float, xRadius:Float, yRadius:Float )
-		Local xr := xRadius
-		Local yr := yRadius
+	Method DrawFrameOval( x:Float, y:Float, width:Float, height:Float )
+		Local xr := width'/2
+		local yr := height'/2
 		
 		Local dx_x := xr*_matrix.i.x
 		Local dx_y := xr*_matrix.i.y
@@ -532,8 +487,8 @@ Class Canvas
 
 		Local n := (Max( Int( dx+dy ),13 ) & ~3)
 		
-		Local x0 := x
-		local y0 := y
+		Local x0 := x'+xr
+		local y0 := y'+yr
 		
 		local th:float = .5*Pi*2/n
 		local px:float
@@ -541,111 +496,59 @@ Class Canvas
 		local pxo:float = x0+Cos( th ) * xr
 		local pyo:float = y0+Sin( th ) * yr
 		
+'		AddDrawOp( _shader, _material, _blendMode, n, 1 )
+		
 		For Local i:=1 to n
 			th = (i+.5)*Pi*2/n
 			px = x0+Cos( th ) * xr
 			py = y0+Sin( th ) * yr
+'			AddPointVertex( px,py,0,0 )
 			DrawLine( px, py, pxo, pyo )
 			pxo = px
 			pyo = py
 		Next
 	End
 
-
-	#rem wonkeydoc Draws an frame around an oval with a start and en angle IN RADIANS.
-	Draws an framed oval in the current [[Color]] using the current [[BlendMode]].
-	The oval vertex coordinates are also transform by the current [[Matrix]].
-	@param x Center x coordinate for the oval.
-	@param y Center y coordinate for the oval.
-	@param xRadius X axis radius for the oval.
-	@param yRadius Y axis radius for the oval.
-	@param fromAngle the start angle in radians.
-	@param toAngle the end angle in radians.
-	Pi2 is a complete circle. 0 is east, PiHalf is south, etc
-	radians run clockise
-	#end
-	Method DrawFrameOval( x:Float, y:Float, xRadius:Float, yRadius:Float, fromAngle:float, toAngle:float )
-		Local xr:float = xRadius
-		Local yr:float = yRadius
+	Method DrawFrameOval( x:Float, y:Float, width:Float, height:Float, fromAngle:float, toAngle:float )
+		Local xr := width'/2
+		local yr := height'/2
 		
-		Local dx_x:float = xr*_matrix.i.x
-		Local dx_y:float = xr*_matrix.i.y
-		Local dy_x:float = yr*_matrix.j.x
-		Local dy_y:float = yr*_matrix.j.y
-		Local dx:float = Sqrt( dx_x*dx_x+dx_y*dx_y )
-		Local dy:float = Sqrt( dy_x*dy_x+dy_y*dy_y )
+		Local dx_x := xr*_matrix.i.x
+		Local dx_y := xr*_matrix.i.y
+		Local dy_x := yr*_matrix.j.x
+		Local dy_y := yr*_matrix.j.y
+		Local dx := Sqrt( dx_x*dx_x+dx_y*dx_y )
+		Local dy := Sqrt( dy_x*dy_x+dy_y*dy_y )
 
-		Local n:int = (Max( Int( dx+dy ),13 ) & ~3)*0.2
-		local th:float = (toAngle - fromAngle) / n
+		Local n := (Max( Int( dx+dy ),13 ) & ~3)*0.2
 		
-		local pxo:float = x + Cos( fromAngle ) * xr
-		local pyo:float = y + Sin( fromAngle ) * yr
+		Local x0 := x'+xr
+		local y0 := y'+yr
+		
+		local th:float = .5*Pi*2/n
 		local px:float
 		local py:float
 		
-		local k:int
-		For k = 1 To n
-			fromAngle += th
-			px = x + Cos( fromAngle ) * xr
-			py = y + Sin( fromAngle ) * yr
-			
-			DrawLine( pxo,pyo, px,py )
+'		AddDrawOp( _shader, _material, _blendMode, n, 1 )
+		
+		local div:float = (toAngle - fromAngle) / n
+		th = fromAngle
+		local pxo:float = x0+Cos( th ) * xr
+		local pyo:float = y0+Sin( th ) * yr
+		th += div
+		For Local i:=1 to n
+			px = x0+Cos( th ) * xr
+			py = y0+Sin( th ) * yr
+			DrawLine( px, py, pxo, pyo )
 			pxo = px
 			pyo = py
+			th += div
 		Next
 	End
 
-
-	#rem wonkeydoc Draws a filled oval with a start and end angle IN RADIANS.
-	Draws a filled oval in the current [[Color]] using the current [[BlendMode]].
-	The oval vertex coordinates are also transform by the current [[Matrix]].
-	@param x Center x coordinate for the oval.
-	@param y Center y coordinate for the oval.
-	@param xRadius X axis radius for the oval.
-	@param yRadius Y axis radius for the oval.
-	@param fromAngle the start angle in radians.
-	@param toAngle the end angle in radians.
-	Pi2 is a complete circle. 0 is east, PiHalf is south, etc
-	radians run clockise
-	#end
-	Method DrawOval( x:Float, y:Float, xRadius:Float, yRadius:Float, fromAngle:float, toAngle:Float )
-		Local xr:float = xRadius
-		Local yr:float = yRadius
-		
-		Local dx_x:float = xr*_matrix.i.x
-		Local dx_y:float = xr*_matrix.i.y
-		Local dy_x:float = yr*_matrix.j.x
-		Local dy_y:float = yr*_matrix.j.y
-		Local dx:float = Sqrt( dx_x*dx_x+dx_y*dx_y )
-		Local dy:float = Sqrt( dy_x*dy_x+dy_y*dy_y )
-
-		Local n:int = (Max( Int( dx+dy ),13 ) & ~3)*0.2
-		local th:float = (toAngle - fromAngle) / n
-		
-		AddDrawOp( _shader, _material, _blendMode,  n+2, 1 )
-		AddPointVertex( x,y, 0,0 )
-
-		local pxo:float = x + Cos( fromAngle ) * xr
-		local pyo:float = y + Sin( fromAngle ) * yr
-		AddPointVertex( pxo,pyo, 0,0 )
-		
-		local k:int
-		For k = 1 To n
-			fromAngle += th
-			pxo = x + Cos( fromAngle ) * xr
-			pyo = y + Sin( fromAngle ) * yr
-			AddPointVertex( pxo,pyo, 0,0 )
-		Next
-
-		pxo = x + Cos( toAngle ) * xr
-		pyo = y + Sin( toAngle ) * yr
-		AddPointVertex( pxo,pyo, 0,0 )
-	End
-
-
-	Method DrawFrameOvalDepth( x:Float, y:Float, xRadius:Float, yRadius:Float, depth:float, scale:float )
-		Local xr := xRadius
-		Local yr := yRadius
+	Method DrawFrameOvalDepth( x:Float, y:Float, width:Float, height:Float, depth:float, scale:float )
+		Local xr := width
+		local yr := height
 		
 		Local dx_x := xr
 		Local dx_y := xr
@@ -685,13 +588,7 @@ Class Canvas
 	End
 
 
-	Method DrawRoundedRect( x:float, y:float, width:float, height:float, radius:float )
-		radius += 3
-		If radius < 3 Then
-			DrawRect( x, y, width, height )
-			Return
-		End If
-		
+	method DrawRoundedRect( x:float, y:float, width:float, height:float, radius:float )
 		Local n:float = radius * 0.75
 		local pointX:float[] = New float[n]
 		local pointY:float[] = New float[n]
@@ -706,7 +603,6 @@ Class Canvas
 		n -= 1
 		
 		local k:int
-		local k1:int
 		For k = 0 to n
 			pointX[k] = Cos( theta ) * radius
 			pointY[k] = Sin( theta ) * radius
@@ -718,37 +614,28 @@ Class Canvas
 		local y1:float = y + height
 		local y1r:float = y1 - radius
 
-		AddDrawOp( _shader, _material, _blendMode,  pointX.Length*4, 1 )
+		AddDrawOp( _shader, _material, _blendMode, n*4, 1 )
 
-		AddPointVertex( (x0+x1r)*0.5, (y0+y1r)*0.5, 0,0 )
-
-		For k = n To 1 Step -1
+		For k = 0 to n
 			AddPointVertex( x0+pointX[k], y0+pointY[k], 0,0 )
-		Next
-
-		For k = 1 To n
-			AddPointVertex( x0+pointX[k], y1r-pointY[k], 0,0 )
 		Next
 		
 		For k = n To 0 Step -1
-			AddPointVertex( x1r-pointX[k], y1r-pointY[k], 0,0 )
-		Next
-
-		For k = 0 To n
 			AddPointVertex( x1r-pointX[k], y0+pointY[k], 0,0 )
 		Next
 
-		AddPointVertex( x0+pointX[n], y0+pointY[n], 0,0 )
-	End
+		For k = 0 To n
+			AddPointVertex( x1r-pointX[k], y1r-pointY[k], 0,0 )
+		Next
+
+		For k = n to 0 Step -1
+			AddPointVertex( x0+pointX[k], y1r-pointY[k], 0,0 )
+		Next
+	End method
 
 	
-	Method DrawFrameRoundedRect( x:float, y:float, width:float, height:float, radius:float )
-		radius += 2
-		If radius < 2 Then
-			DrawFrame( x, y, width, height )
-			Return
-		End If
-
+	method DrawFrameRoundedRect( x:float, y:float, width:float, height:float, radius:float )
+'		canvas.DrawRect( x, y, width, height )
 		Local n:float = radius * 0.75
 		local pointX:float[] = New float[n]
 		local pointY:float[] = New float[n]
@@ -811,24 +698,24 @@ Class Canvas
 
 		k1 -= 1
 		DrawLine( x0+pointX[0], y1r-pointY[0], x0+pointX[0], y0-pointY[0] )
-	End
+	End method
 
 	
 	Method DrawChamferRect( x:Float, y:Float, w:Float, h:Float, c:float )
 		Local x0:float = x
-		Local y0:float = y
-		Local x1:float = x+w
-		Local y1:float = y+h
+		local y0:float = y
+		local x1:float = x+w
+		local y1:float = y+h
 		
-		Local cx0:float = x0 + c
-		Local cx1:float = x1 - c
-		Local cy0:float = y0 + c
-		Local cy1:float = y1 - c
+		local cx0:float = x0 + c
+		local cx1:float = x1 - c
+		local cy0:float = y0 + c
+		local cy1:float = y1 - c
 		
-		Local u0:float = w / c
-		Local v0:float = h / c
-		Local u1:float = w - u0
-		Local v1:float = h - v0
+		local u0:float = w / c
+		local v0:float = h / c
+		local u1:float = w - u0
+		local v1:float = h - v0
 		
 		AddDrawOp( _shader, _material, _blendMode, 8, 1 )
 		
@@ -849,14 +736,14 @@ Class Canvas
 
 	Method DrawFrameChamferRect( x:Float, y:Float, w:Float, h:Float, c:float )
 		Local x0:float = x
-		Local y0:float = y
-		Local x1:float = x+w
-		Local y1:float = y+h
+		local y0:float = y
+		local x1:float = x+w
+		local y1:float = y+h
 		
-		Local cx0:float = x0 + c
-		Local cx1:float = x1 - c
-		Local cy0:float = y0 + c
-		Local cy1:float = y1 - c
+		local cx0:float = x0 + c
+		local cx1:float = x1 - c
+		local cy0:float = y0 + c
+		local cy1:float = y1 - c
 		
 '		local u0:float = w / c
 '		local v0:float = h / c
@@ -928,14 +815,14 @@ Class Canvas
 	End
 
 	Method DrawTriangle( x:Float, y:Float, w:Float, angle:float = 0 )
-		Local x0:float = x + Sin(angle) * w
-		Local y0:float = y + Cos(angle) * w
+		local x0:float = x + Sin(angle) * w
+		local y0:float = y + Cos(angle) * w
 		angle += Pi * .666666
-		Local x1:float = x + Sin(angle) * w
-		Local y1:float = y + Cos(angle) * w
+		local x1:float = x + Sin(angle) * w
+		local y1:float = y + Cos(angle) * w
 		angle += Pi * .666666
-		Local x2:float = x + Sin(angle) * w
-		Local y2:float = y + Cos(angle) * w
+		local x2:float = x + Sin(angle) * w
+		local y2:float = y + Cos(angle) * w
 		
 		AddDrawOp( _shader, _material, _blendMode, 3, 1 )
 		AddVertex( x0,y0,0,0 )
@@ -944,14 +831,14 @@ Class Canvas
 	End
 
 	Method DrawFrameTriangle( x:Float, y:Float, w:Float, angle:float = 0 )
-		Local x0:float = x + Sin(angle) * w
-		Local y0:float = y + Cos(angle) * w
+		local x0:float = x + Sin(angle) * w
+		local y0:float = y + Cos(angle) * w
 		angle += Pi * .666666
-		Local x1:float = x + Sin(angle) * w
-		Local y1:float = y + Cos(angle) * w
+		local x1:float = x + Sin(angle) * w
+		local y1:float = y + Cos(angle) * w
 		angle += Pi * .666666
-		Local x2:float = x + Sin(angle) * w
-		Local y2:float = y + Cos(angle) * w
+		local x2:float = x + Sin(angle) * w
+		local y2:float = y + Cos(angle) * w
 		
 		DrawLine( x0, y0, x1, y1)
 		DrawLine( x1, y1, x2, y2)
@@ -1027,7 +914,7 @@ Class Canvas
 		DrawRect( x0, y0, w, w, srcImage, shader, material )
 	End
 
-	#rem wonkeydoc Draws a rectangle frame (made from lines).
+	#rem monkeydoc Draws a rectangle frame (made from lines).
 	Draws a rectangleline in the current [[Color]] using the current [[BlendMode]].
 	The rectangle vertex coordinates are also transform by the current [[Matrix]].
 	#end
@@ -1045,18 +932,18 @@ Class Canvas
 		DrawPoint(x1, y1)
 	End
 
-	Method DrawFrame3d( x:Float, y:Float, w:Float, h:Float, color1:Color=Color.White * 0.5, color2:Color=Color.Black * 0.5 )
+	Method DrawFrame3d( x:Float, y:Float, w:Float, h:Float )
 		Local x0 := x
 		Local y0 := y
 		Local x1 := x+w-1
 		Local y1 := y+h-1
 		
-		Local colStore:Color = _color
+		local colStore:Color = _color
 		
-		Color = color1
+		Color = Color.White * 0.5
 		DrawLine( x0, y0, x1, y0 )
 		DrawLine( x0, y0, x0, y1 )
-		Color = color2
+		Color = Color.Black * 0.5
 		DrawLine( x1, y0, x1, y1 )
 		DrawLine( x0, y1, x1, y1 )
 		DrawPoint(x1, y1)
@@ -1064,13 +951,13 @@ Class Canvas
 		Color = colStore
 	End
 
-	Method DrawColorRect( x:Float,y:Float,w:Float,h:Float, color1:Color=Color.Black, color2:Color=Color.White )
-		Local colStore:Color = _color
+	Method DrawColorRect( x:Float,y:Float,w:Float,h:Float )
+		local colStore:Color = _color
 
-		Color = color1
+		Color = Color.Black
 		DrawFrame( x, y, w, h )
 
-		Color = color2
+		Color = Color.White
 		DrawFrame( x+1, y+1, w-2, h-2 )
 
 		Color = colStore
@@ -1089,9 +976,9 @@ Class Canvas
 		AddDrawOp( _shader, _material, _blendMode,3,1 )
 
 '		local pmcolor:UInt = _pmcolor
-		Local col0:uint = UInt(color0.a*255) Shl 24 | UInt(color0.b*255) Shl 16 | UInt(color0.g*255) Shl 8 | UInt(color0.r*255)
-		Local col1:uint = UInt(color1.a*255) Shl 24 | UInt(color1.b*255) Shl 16 | UInt(color1.g*255) Shl 8 | UInt(color1.r*255)
-		Local col2:uint = UInt(color2.a*255) Shl 24 | UInt(color2.b*255) Shl 16 | UInt(color2.g*255) Shl 8 | UInt(color2.r*255)
+		local col0:uint = UInt(color0.a*255) Shl 24 | UInt(color0.b*255) Shl 16 | UInt(color0.g*255) Shl 8 | UInt(color0.r*255)
+		local col1:uint = UInt(color1.a*255) Shl 24 | UInt(color1.b*255) Shl 16 | UInt(color1.g*255) Shl 8 | UInt(color1.r*255)
+		local col2:uint = UInt(color2.a*255) Shl 24 | UInt(color2.b*255) Shl 16 | UInt(color2.g*255) Shl 8 | UInt(color2.r*255)
 
 		AddVertex( x0,y0, 0,0, col0 )
 		AddVertex( x1,y1, 1,0, col1 )
@@ -1277,7 +1164,7 @@ Class Canvas
 		_pmcolor = pmcolor
 	End
 
-	#rem wonkeydoc Draws a quad from a source image.
+	#rem monkeydoc Draws a quad from a source image.
 
 	The source image is used and drawn at the given quad position in the current [[Color]] using the current [[BlendMode]].
 	
@@ -1368,25 +1255,24 @@ Class Canvas
 	End
 
 	'line intersection
-	Field _iX:double
-	Field _iY:double
-	
-	Method LineIntersect( ax1:float, ay1:float, ax2:float, ay2:float, bx1:float, by1:float, bx2:float, by2:float )
-		Local dx:double = ax2 - ax1
-		Local dy:double = ay2 - ay1
+	field _iX:double
+	field _iY:double
+	method LineIntersect( ax1:float, ay1:float, ax2:float, ay2:float, bx1:float, by1:float, bx2:float, by2:float )
+		local dx:double = ax2 - ax1
+		local dy:double = ay2 - ay1
 		
-		Local m1:double = dy / dx
+		local m1:double = dy / dx
 		' y = mx + c
 		' intercept c = y - mx
-		Local c1:double = ay1 - m1 * ax1 ' which is same as y2 - slope * x2
+		local c1:double = ay1 - m1 * ax1 ' which is same as y2 - slope * x2
 		
 		dx = bx2 - bx1
 		dy = by2 - by1
 		
-		Local m2:double = dy / dx
-		Local c2:double = by2 - m2 * bx2 'which is same as y2 - slope * x2
+		local m2:double = dy / dx
+		local c2:double = by2 - m2 * bx2 'which is same as y2 - slope * x2
 
-		If m1 - m2 = 0 Then
+		if m1 - m2 = 0 Then
 			_iX = -1
 			_iY = -1
 '			Print "No Intersection between the lines"
@@ -1395,9 +1281,9 @@ Class Canvas
 			_iY = m1 * _iX + c1
 '			Print "intersection:"+ iX+" "+iY
 		End If
-	End
+	End method
 	
-	#rem wonkeydoc Draws a quad from a source image.
+	#rem monkeydoc Draws a quad from a source image.
 
 	The source image is used and drawn at the given quad position in the current [[Color]] using the current [[BlendMode]].
 	
@@ -1433,7 +1319,7 @@ Class Canvas
 	End
 
 	
-	#rem wonkeydoc Draws a quad from a source image slice.
+	#rem monkeydoc Draws a quad from a source image slice.
 
 	The source image is used and drawn at the given quad position in the current [[Color]] using the current [[BlendMode]].
 	
@@ -1443,7 +1329,7 @@ Class Canvas
 	Method DrawQuadImageSlice( x0:Float, y0:Float, x1:Float, y1:Float, x2:Float, y2:Float, x3:Float, y3:Float, srcVoxImage:ImageSlice, sliceNumber:Int, FrameNumber:Int )
 		If Not srcVoxImage Then Return
 		
-		If Not srcVoxImage._sliceLive[ FrameNumber, sliceNumber ] Then Return
+		If not srcVoxImage._sliceLive[ FrameNumber, sliceNumber ] Then return
 
 		
 '		Local tc:Rectf = srcVoxImage.Image.TexCoords
@@ -1471,10 +1357,12 @@ Class Canvas
 		AddVertex( x1, y1,	tc.max.x, tc.min.y )
 		AddVertex( x2, y2,	tc.max.x, tc.max.y )
 		AddVertex( x3, y3,	tc.min.x, tc.max.y )
+
+
 	End
 	
 
-	#rem wonkeydoc Draws an image icon frame.
+	#rem monkeydoc Draws an image icon frame.
 	Draws an image using the current [[Color]], [[BlendMode]] and [[Matrix]].
 
 	@param tx X coordinate to draw image at.
@@ -1610,7 +1498,7 @@ Class Canvas
 	End
 
 	Method DrawImageRect( x:Float, y:Float, x1:Float, y1:Float, srcImage:Image, srcX:Int, srcY:Int, srcX1:Int, srcY1:Int )
-		Local srcRect := New Recti( srcX, srcY, srcX1, srcY1 )
+		local srcRect := New Recti( srcX, srcY, srcX1, srcY1 )
 		Local s0 := Float( srcImage.Rect.min.x + srcRect.min.x ) / srcImage.Texture.Width
 		Local t0 := Float( srcImage.Rect.min.y + srcRect.min.y ) / srcImage.Texture.Height
 		Local s1 := Float( srcImage.Rect.min.x + srcRect.max.x ) / srcImage.Texture.Width
@@ -1630,10 +1518,10 @@ Class Canvas
 		Local wd:double = 1.0 / float(srcImage.Width)
 		Local ht:double = 1.0 / float(srcImage.Height)
 		
-		Local tx0:double = (wd * srcX) +inset
-		Local ty0:double = (ht * srcY) +inset
-		Local tx1:double = (wd * srcX1) -inset
-		Local ty1:double = (ht * srcY1) -inset
+		local tx0:double = (wd * srcX) +inset
+		local ty0:double = (ht * srcY) +inset
+		local tx1:double = (wd * srcX1) -inset
+		local ty1:double = (ht * srcY1) -inset
 		
 		AddDrawOp( srcImage.Shader, srcImage.Material, srcImage.BlendMode, 4,1 )
 
@@ -1648,10 +1536,10 @@ Class Canvas
 		Local wd:double = 1.0 / float(srcImage.Width)
 		Local ht:double = 1.0 / float(srcImage.Height)
 		
-		Local tx0:double = (wd * srcX) +inset
-		Local ty0:double = (ht * srcY) +inset
-		Local tx1:double = (wd * srcX1) -inset
-		Local ty1:double = (ht * srcY1) -inset
+		local tx0:double = (wd * srcX) +inset
+		local ty0:double = (ht * srcY) +inset
+		local tx1:double = (wd * srcX1) -inset
+		local ty1:double = (ht * srcY1) -inset
 		
 		AddDrawOp( shader, srcImage.Material, srcImage.BlendMode, 4,1 )
 
@@ -1670,10 +1558,10 @@ Class Canvas
 		Local wd:double = 1.0 / float(srcImage.Width)
 		Local ht:double = 1.0 / float(srcImage.Height)
 		
-		Local tx0:double = (wd * srcX) +inset
-		Local ty0:double = (ht * srcY) +inset
-		Local tx1:double = (wd * srcX1) -inset
-		Local ty1:double = (ht * srcY1) -inset
+		local tx0:double = (wd * srcX) +inset
+		local ty0:double = (ht * srcY) +inset
+		local tx1:double = (wd * srcX1) -inset
+		local ty1:double = (ht * srcY1) -inset
 		
 		AddDrawOp( shader, mat, srcImage.BlendMode, 4,1 )
 
@@ -1692,10 +1580,10 @@ Class Canvas
 		Local wd:double = 1.0 / float(srcImage.Width)
 		Local ht:double = 1.0 / float(srcImage.Height)
 		
-		Local tx0:double = (wd * srcX)
-		Local ty0:double = (ht * srcY)
-		Local tx1:double = (wd * srcX1)
-		Local ty1:double = (ht * srcY1)
+		local tx0:double = (wd * srcX)
+		local ty0:double = (ht * srcY)
+		local tx1:double = (wd * srcX1)
+		local ty1:double = (ht * srcY1)
 		
 		AddDrawOp( srcImage.Shader, srcImage.Material, srcImage.BlendMode, 4,1 )
 '		AddDrawOp( srcImage.Shader, srcImage.Material, srcImage.BlendMode, srcImage.TextureFilter, 4,1 )
@@ -1715,10 +1603,10 @@ Class Canvas
 		Local wd:double = 1.0 / float(srcImage.Width)
 		Local ht:double = 1.0 / float(srcImage.Height)
 		
-		Local tx0:double = (wd * srcX)
-		Local ty0:double = (ht * srcY)
-		Local tx1:double = (wd * srcX1)
-		Local ty1:double = (ht * srcY1)
+		local tx0:double = (wd * srcX)
+		local ty0:double = (ht * srcY)
+		local tx1:double = (wd * srcX1)
+		local ty1:double = (ht * srcY1)
 		
 		AddDrawOp( fx, srcImage.Material, srcImage.BlendMode, 4,1 )
 '		AddDrawOp( srcImage.Shader, srcImage.Material, srcImage.BlendMode, srcImage.TextureFilter, 4,1 )
@@ -1738,10 +1626,10 @@ Class Canvas
 		Local wd:double = 1.0 / float(srcImage.Width)
 		Local ht:double = 1.0 / float(srcImage.Height)
 		
-		Local tx0:double = (wd * srcX)
-		Local ty0:double = (ht * srcY)
-		Local tx1:double = (wd * srcX1)
-		Local ty1:double = (ht * srcY1)
+		local tx0:double = (wd * srcX)
+		local ty0:double = (ht * srcY)
+		local tx1:double = (wd * srcX1)
+		local ty1:double = (ht * srcY1)
 		
 		AddDrawOp( fx, mat, srcImage.BlendMode, 4,1 )
 '		AddDrawOp( srcImage.Shader, srcImage.Material, srcImage.BlendMode, srcImage.TextureFilter, 4,1 )
@@ -1761,54 +1649,117 @@ Class Canvas
 		_userUniformCallback = callback
 	End
 	
-	Method SetCol2( r:uint, g:uint, b:uint, a:uint = 255 )
+	method SetCol2( r:uint, g:uint, b:uint, a:uint = 255 )
 		_pmcolor2 = UInt(a) Shl 24 | UInt(b) Shl 16 | UInt(g) Shl 8 | UInt(r)
-	End
+	End method
 
-	Method SetCol2( color:Color )
+	method SetCol2( color:Color )
 		_pmcolor2 = UInt(_color2.a) Shl 24 | UInt(_color2.b) Shl 16 | UInt(_color2.g) Shl 8 | UInt(_color2.r)
-	End
+	End method
 
-	Method SetXYZ( x:float,	y:float,	z:float )
+	method SetXYZ( x:float,	y:float,	z:float )
 		_xyzPosition.x = x
 		_xyzPosition.y = y
 		_xyzPosition.z = z
-	End
+	End method
 	
 	
 	Property Color2:Color()
 		Return _color2
 	
 	Setter( color2:Color )
-		_color2=color2
+		_color2 = color2
 		
-		_pmcolor2=UInt(_color2.a) Shl 24 | UInt(_color2.b) Shl 16 | UInt(_color2.g) Shl 8 | UInt(_color2.r)
+		_pmcolor2 = UInt(_color2.a) Shl 24 | UInt(_color2.b) Shl 16 | UInt(_color2.g) Shl 8 | UInt(_color2.r)
 	End
 
 'end of jeanluc additions
 '------------------------------------------------------------
 
 	
-	#rem wonkeydoc The current render target.
+	#rem monkeydoc Creates a canvas that renders to an image
+	#end
+	Method New( image:Image )
+		
+		Local rtarget:=New RenderTarget( New Texture[]( image.Texture ),Null )
+		
+		Init( rtarget,New GraphicsDevice )
+		
+		BeginRender( New Recti( 0,0,image.Rect.Size ),AffineMat3f.Translation( image.Rect.Origin ) )
+	End
+
+	#rem monkeydoc @hidden Creates a canvas that renders to the backbuffer.
+	#end
+	Method New( width:Int,height:Int )
+		
+		Init( Null,New GraphicsDevice( width,height ) )
+	End
+
+	#rem monkeydoc @hidden Resizes a canvas that renders to the backbuffer.
+	#end
+	Method Resize( size:Vec2i )
+		
+		_device.Resize( size )
+	End
+
+
+	#rem monkeydoc @hidden
+	#end
+	Method BeginRender( bounds:Recti,matrix:AffineMat3f )
+		Flush()
+		
+		_rmatrixStack.Push( _rmatrix )
+		_rboundsStack.Push( _rbounds )
+		
+		_rmatrix*=matrix
+		_rbounds&=TransformRecti( bounds,_rmatrix )
+
+		Viewport=bounds
+		Scissor=New Recti( 0,0,bounds.Size )
+		AmbientLight=Color.Black
+		BlendMode=BlendMode.Alpha
+		PointSize=0
+		LineWidth=0
+		LineSmoothing=False
+
+		'jl changed
+'		TextureFilteringEnabled=True
+		TextureFilteringEnabled = _textureFilter2
+
+		OutlineMode=OutlineMode.None
+		OutlineColor=Color.Yellow
+		OutlineWidth=0
+		
+		ClearMatrix()
+	End
+
+	
+	#rem monkeydoc @hidden
+	#end
+	Method EndRender()
+		If _lighting EndLighting()
+		
+		Flush()
+		
+		_rbounds=_rboundsStack.Pop()
+		_rmatrix=_rmatrixStack.Pop()
+	End
+
+	
+	#rem monkeydoc The current render target.
 	#end
 	Property RenderTarget:RenderTarget()
-	
 		Return _rtarget
 	End
+
 	
-	#rem wonkeydoc The current viewport.
-	
+	#rem monkeydoc The current viewport.
 	The viewport describes the rect within the render target that rendering occurs in.
-	
 	All rendering is relative to the top-left of the viewport, and is clipped to the intersection of the viewport and scissor rects.
-	
 	This property must not be modified if the canvas is in lighting mode.
-		
 	#end
 	Property Viewport:Recti()
-	
 		Return _viewport
-	
 	Setter( viewport:Recti )
 		DebugAssert( Not _lighting,"Canvas.Viewport property cannot be modified while lighting" )
 		If _lighting return
@@ -1820,19 +1771,14 @@ Class Canvas
 		_dirty|=Dirty.Viewport|Dirty.Scissor
 	End
 
-	#rem wonkeydoc The current scissor rect.
-	
+
+	#rem monkeydoc The current scissor rect.
 	The scissor rect is a rect within the viewport that can be used for additional clipping.
-	
 	Scissor rect coordinates are relative to the current viewport rect, but are not affected by the current drawing matrix.
-	
 	This property must not be modified if the canvas is in lighting mode.
-		
 	#end
 	Property Scissor:Recti()
-	
 		Return _scissor
-	
 	Setter( scissor:Recti )
 		DebugAssert( Not _lighting,"Canvas.Scissor property cannot be modified while lighting" )
 		If _lighting return
@@ -1844,7 +1790,7 @@ Class Canvas
 		_dirty|=Dirty.Scissor
 	End
 	
-	#rem wonkeydoc Ambient light color for lighting mode.
+	#rem monkeydoc Ambient light color for lighting mode.
 	
 	Sets the ambient light color for lighting.
 	
@@ -1862,19 +1808,26 @@ Class Canvas
 		_ambientLight=ambient
 	End
 	
-	#rem wonkeydoc The current drawing blend mode.
+	#rem monkeydoc The current drawing blend mode.
 	#end
 	Property BlendMode:BlendMode()
-	
 		Return _blendMode
-	
 	Setter( blendMode:BlendMode )
-	
 		_blendMode=blendMode
 	End
 
-	
-	#rem wonkeydoc TODO! Texture filtering enabled state.
+
+	field _colorMask:ColorMask
+	#rem monkeydoc The current RGBA colormask used with blendmodes
+	#end
+	Property BlendColorMask:ColorMask()
+		Return _colorMask
+	Setter( value:ColorMask )
+		_colorMask = value
+	End
+
+
+	#rem monkeydoc TODO! Texture filtering enabled state.
 	
 	Set to true for normal behavior.
 	
@@ -1898,10 +1851,9 @@ Class Canvas
 		_device.RetroMode=rmode
 	End
 
-'jl added
 '------------------------------------------------------------
-	Field _textureFilter2:bool = True
-	
+'jl added
+	field _textureFilter2:bool = true
 	Property TextureFiltering:Bool()
 		Return _textureFilter2
 	Setter( enabled:Bool )
@@ -1910,7 +1862,7 @@ Class Canvas
 
 '------------------------------------------------------------
 	
-	#rem wonkeydoc The current point size for use with DrawPoint.
+	#rem monkeydoc The current point size for use with DrawPoint.
 	#end
 	Property PointSize:Float()
 	
@@ -1921,7 +1873,7 @@ Class Canvas
 		_pointSize=pointSize
 	End
 
-	#rem wonkeydoc The current line width for use with DrawLine.
+	#rem monkeydoc The current line width for use with DrawLine.
 	#end
 	Property LineWidth:Float()
 
@@ -1932,7 +1884,7 @@ Class Canvas
 		_lineWidth=lineWidth
 	End
 	
-	#rem wonkeydoc Smoothing enabled for DrawLine.
+	#rem monkeydoc Smoothing enabled for DrawLine.
 	#end
 	Property LineSmoothing:Bool()
 	
@@ -1943,7 +1895,7 @@ Class Canvas
 		_lineSmoothing=smoothing
 	End
 	
-	#rem wonkeydoc The current font for use with DrawText.
+	#rem monkeydoc The current font for use with DrawText.
 	
 	Set font to null to use the default mojo font.
 	
@@ -1959,7 +1911,7 @@ Class Canvas
 		_font=font
 	End
 	
-	#rem wonkeydoc The current drawing alpha level.
+	#rem monkeydoc The current drawing alpha level.
 	
 	Note that [[Alpha]] and the alpha component of [[Color]] are multiplied together to produce the final alpha value for rendering.
 	
@@ -1978,7 +1930,7 @@ Class Canvas
 		_pmcolor=UInt(a) Shl 24 | UInt(_color.b*a) Shl 16 | UInt(_color.g*a) Shl 8 | UInt(_color.r*a)
 	End
 	
-	#rem wonkeydoc The current drawing color.
+	#rem monkeydoc The current drawing color.
 	
 	Note that [[Alpha]] and the alpha component of [[Color]] are multiplied together to produce the final alpha value for rendering.
 	
@@ -1986,18 +1938,15 @@ Class Canvas
 
 	#end
 	Property Color:Color()
-	
 		Return _color
-	
 	Setter( color:Color )
-	
 		_color=color
 		
 		Local a:=_color.a * _alpha * 255.0
 		_pmcolor=UInt(a) Shl 24 | UInt(_color.b*a) Shl 16 | UInt(_color.g*a) Shl 8 | UInt(_color.r*a)
 	End
 	
-	#rem wonkeydoc The current drawing matrix.
+	#rem monkeydoc The current drawing matrix.
 	
 	All coordinates passed to draw methods are multiplied by this matrix for rendering.
 	
@@ -2013,7 +1962,7 @@ Class Canvas
 		_tanvec=_matrix.i.Normalize()
 	End
 	
-	#rem wonkeydoc The current outline mode.
+	#rem monkeydoc The current outline mode.
 	
 	Outline modes control the style of outlines drawn.
 	
@@ -2029,7 +1978,7 @@ Class Canvas
 		_outlineMode=mode
 	End
 	
-	#rem wonkeydoc The current outline color.
+	#rem monkeydoc The current outline color.
 	
 	#end
 	Property OutlineColor:Color()
@@ -2045,7 +1994,7 @@ Class Canvas
 		_outlinepmcolor=UInt(a) Shl 24 | UInt(_outlineColor.b*a) Shl 16 | UInt(_outlineColor.g*a) Shl 8 | UInt(_outlineColor.r*a)
 	End
 	
-	#rem wonkeydoc The current outline width.
+	#rem monkeydoc The current outline width.
 	
 	#end
 	Property OutlineWidth:Float()
@@ -2057,7 +2006,7 @@ Class Canvas
 		_outlineWidth=width
 	End
 	
-	#rem wonkeydoc Pushes the drawing matrix onto the internal matrix stack.
+	#rem monkeydoc Pushes the drawing matrix onto the internal matrix stack.
 	
 	#end
 	Method PushMatrix()
@@ -2065,7 +2014,7 @@ Class Canvas
 		_matrixStack.Push( _matrix )
 	End
 	
-	#rem wonkeydoc Pops the drawing matrix off the internal matrix stack.
+	#rem monkeydoc Pops the drawing matrix off the internal matrix stack.
 	
 	#end
 	Method PopMatrix()
@@ -2073,7 +2022,7 @@ Class Canvas
 		_matrix=_matrixStack.Pop()
 	End
 	
-	#rem wonkeydoc Clears the internal matrix stack and sets the drawing matrix to the identitity matrix.
+	#rem monkeydoc Clears the internal matrix stack and sets the drawing matrix to the identitity matrix.
 	#end
 	Method ClearMatrix()
 	
@@ -2081,7 +2030,7 @@ Class Canvas
 		_matrix=New AffineMat3f
 	End
 	
-	#rem wonkeydoc Translates the drawing matrix.
+	#rem monkeydoc Translates the drawing matrix.
 	
 	Translates the drawing matrix. This has the effect of translating all drawing coordinates by `tx` and `ty`.
 	
@@ -2102,7 +2051,7 @@ Class Canvas
 		Matrix=Matrix.Translate( tv )
 	End
 
-	#rem wonkeydoc Rotates the drawing matrix.
+	#rem monkeydoc Rotates the drawing matrix.
 	
 	Rotates the drawing matrix. This has the effect of rotating all drawing coordinates by the angle `rz'.
 	
@@ -2114,7 +2063,7 @@ Class Canvas
 		Matrix=Matrix.Rotate( rz )
 	End
 
-	#rem wonkeydoc Scales the drawing matrix.
+	#rem monkeydoc Scales the drawing matrix.
 	
 	Scales the drawing matrix. This has the effect of scaling all drawing coordinates by `sx` and `sy`.
 	
@@ -2135,7 +2084,7 @@ Class Canvas
 		Matrix=Matrix.Scale( sv )
 	End
 	
-	#rem wonkeydoc Draws a point.
+	#rem monkeydoc Draws a point.
 	
 	Draws a point in the current [[Color]] using the current [[BlendMode]].
 	
@@ -2168,7 +2117,7 @@ Class Canvas
 		DrawPoint( v.x,v.y )
 	End
 	
-	Private
+Private
 
 	Method DrawOutlineLine( x0:Float,y0:Float,x1:Float,y1:Float )
 		
@@ -2236,9 +2185,9 @@ Class Canvas
 		DrawOutlineLine( rect.min.x,rect.max.y,rect.min.x,rect.min.y )
 	End
 	
-	Public
+Public
 	
-	#rem wonkeydoc Draws a line.
+	#rem monkeydoc Draws a line.
 
 	Draws a line in the current [[Color]] using the current [[BlendMode]].
 	
@@ -2303,7 +2252,7 @@ Class Canvas
 		DrawLine( v0.x,v0.y,v1.x,v1.y )
 	End
 	
-	#rem wonkeydoc Draws a triangle.
+	#rem monkeydoc Draws a triangle.
 
 	Draws a triangle in the current [[Color]] using the current [[BlendMode]].
 	
@@ -2330,7 +2279,7 @@ Class Canvas
 		DrawTriangle( v0.x,v0.y,v1.x,v1.y,v2.x,v2.y )
 	End
 
-	#rem wonkeydoc Draws a quad.
+	#rem monkeydoc Draws a quad.
 
 	Draws a quad in the current [[Color]] using the current [[BlendMode]].
 	
@@ -2358,7 +2307,7 @@ Class Canvas
 		DrawQuad( v0.x,v0.y,v1.x,v1.y,v2.x,v2.y,v3.x,v3.y )
 	End
 
-	#rem wonkeydoc Draws a rectangle.
+	#rem monkeydoc Draws a rectangle.
 
 	Draws a rectangle in the current [[Color]] using the current [[BlendMode]].
 	
@@ -2382,6 +2331,7 @@ Class Canvas
 	End
 	
 	Method DrawRect( rect:Rectf )
+		
 		DrawRect( rect.X,rect.Y,rect.Width,rect.Height )
 	End
 	
@@ -2398,14 +2348,14 @@ Class Canvas
 		
 		DrawOutline( rect )
 	End
-
 	
 	Method DrawRect( x:Float,y:Float,width:Float,height:Float,srcImage:Image )
+		
 		DrawRect( New Rectf( x,y,x+width,y+height ),srcImage )
 	End
-
 	
 	Method DrawRect( rect:Rectf,srcImage:Image,srcRect:Recti )
+		
 		Local s0:=Float(srcImage.Rect.min.x+srcRect.min.x)/srcImage.Texture.Width
 		Local t0:=Float(srcImage.Rect.min.y+srcRect.min.y)/srcImage.Texture.Height
 		Local s1:=Float(srcImage.Rect.min.x+srcRect.max.x)/srcImage.Texture.Width
@@ -2422,29 +2372,35 @@ Class Canvas
 		
 		DrawOutline( rect )
 	End
-
 	
 	Method DrawRect( x:Float,y:Float,width:Float,height:Float,srcImage:Image,srcX:Int,srcY:Int )
+
 		DrawRect( New Rectf( x,y,x+width,y+height ),srcImage,New Recti( srcX,srcY,srcX+width,srcY+height ) )
 	End
-
 	
 	Method DrawRect( x:Float,y:Float,width:Float,height:Float,srcImage:Image,srcX:Int,srcY:Int,srcWidth:Int,srcHeight:Int )
+
 		DrawRect( New Rectf( x,y,x+width,y+height ),srcImage,New Recti( srcX,srcY,srcX+srcWidth,srcY+srcHeight ) )
 	End
-
 	
-	#rem wonkeydoc Draws an oval.
+	#rem monkeydoc Draws an oval.
+
 	Draws an oval in the current [[Color]] using the current [[BlendMode]].
+	
 	The oval vertex coordinates are also transform by the current [[Matrix]].
-	@param x Center x coordinate for the ellipse.
-	@param y Center y coordinate for the ellipse.
-	@param xRadius X axis radius for the ellipse.
-	@param yRadius Y axis radius for the ellipse.
+
+	@param x Top left x coordinate for the oval.
+
+	@param y Top left y coordinate for the oval.
+
+	@param width Width of the oval.
+
+	@param height Height of the oval.
+
 	#end
-	Method DrawOval( x:Float, y:Float, xRadius:Float, yRadius:Float )
-		Local xr:float = xRadius
-		Local yr:float = yRadius
+	Method DrawOval( x:Float,y:Float,width:Float,height:Float )
+	
+		Local xr:=width/2,yr:=height/2
 		
 		Local dx_x:=xr*_matrix.i.x
 		Local dx_y:=xr*_matrix.i.y
@@ -2455,8 +2411,7 @@ Class Canvas
 
 		Local n:=Max( Int( dx+dy ),12 ) & ~3
 		
-		Local x0:float = x
-		Local y0:float = y
+		Local x0:=x+xr,y0:=y+yr
 		
 		AddDrawOp( _shader,_material,_blendMode,n,1 )
 		
@@ -2470,6 +2425,7 @@ Class Canvas
 		If _outlineMode=OutlineMode.None Return
 		
 		For Local i:=0 until n
+
 			Local th0:=(i+.5)*TwoPi/n
 			Local px0:=x0+Cos( th0 ) * xr
 			Local py0:=y0+Sin( th0 ) * yr
@@ -2479,52 +2435,72 @@ Class Canvas
 			Local py1:=y0+Sin( th1 ) * yr
 			
 			DrawOutlineLine( px0,py0,px1,py1 )
+		
 		Next
+		
 	End
-
 	
-	#rem wonkeydoc Draws an ellipse.
+	#rem monkeydoc Draws an ellipse.
+
 	Draws an ellipse in the current [[Color]] using the current [[BlendMode]].
+	
 	The ellipse is also transformed by the current [[Matrix]].
+
 	@param x Center x coordinate for the ellipse.
+
 	@param y Center y coordinate for the ellipse.
+
 	@param xRadius X axis radius for the ellipse.
+
 	@param yRadius Y axis radius for the ellipse.
+
 	#end
 	Method DrawEllipse( x:Float,y:Float,xRadius:Float,yRadius:Float )
-		DrawOval( x,y, xRadius,yRadius )
+		
+		DrawOval( x-xRadius,y-yRadius,xRadius*2,yRadius*2 )
 	End
-
 	
-	#rem wonkeydoc Draws a circle.
+	#rem monkeydoc Draws a circle.
+
 	Draws a circle in the current [[Color]] using the current [[BlendMode]] and transformed by the current [[Matrix]].
+
 	@param x Center x coordinate for the circle.
+
 	@param y Center y coordinate for the circle.
+
 	@param radius The circle radius.
+
 	#end
 	Method DrawCircle( x:Float,y:Float,radius:Float )
-		DrawOval( x,y, radius,radius )
+		
+		DrawOval( x-radius,y-radius,radius*2,radius*2 )
 	End
 
+	#rem monkeydoc Draws a polygon.
 
-	#rem wonkeydoc Draws a polygon.
 	Draws a polygon using the current [[Color]], [[BlendMode]] and [[Matrix]].
+	
 	The `vertices` array must be at least 2 elements long
+
 	@param vertices Array of x/y vertex coordinate pairs.
+
 	#end
 	Method DrawPoly( vertices:Float[] )
+		
 		Local order:=vertices.Length/2
 		DebugAssert( order>=1,"Invalid polygon" )
 		
 		AddDrawOp( _shader,_material,_blendMode,order,1 )
 		
 		For Local i:=0 Until order*2 Step 2
+			
 			AddVertex( vertices[i],vertices[i+1],0,0 )
 		Next
 
 		If _outlineMode=OutlineMode.None Or order<3 Return
 		
 		For Local i:=0 Until order-1
+			
 			Local k:=i*2
 			DrawOutlineLine( vertices[k],vertices[k+1],vertices[k+2],vertices[k+3] )
 		Next
@@ -2532,27 +2508,35 @@ Class Canvas
 		Local kn:=(order-1)*2
 		DrawOutlineLine( vertices[kn],vertices[kn+1],vertices[0],vertices[1] )
 	End
-
 	
-	#rem wonkeydoc Draws a sequence of polygons.
+	#rem monkeydoc Draws a sequence of polygons.
+
 	Draws a sequence of polygons using the current [[Color]], [[BlendMode]] and [[Matrix]].
+
 	@param order The type of polygon: 3=triangles, 4=quads, >4=n-gons.
+
 	@param count The number of polygons.
+	
 	@param vertices Array of x/y vertex coordinate pairs.
+	
 	#end
 	Method DrawPolys( order:Int,count:Int,vertices:Float[] )
+		
 		DebugAssert( order>=1 And count>0 And order*count<=vertices.Length,"Invalid polyon" )
 
 		AddDrawOp( _shader,_material,_blendMode,order,count )
 		
 		For Local i:=0 Until order*count*2 Step 2
+			
 			AddVertex( vertices[i],vertices[i+1],0,0 )
 		Next
 		
 		If _outlineMode=OutlineMode.None Or order<3 Return
 		
 		For Local i:=0 Until count
+			
 			For Local j:=0 Until order-1
+				
 				Local k:=(i*order+j)*2
 				DrawOutlineLine( vertices[k],vertices[k+1],vertices[k+2],vertices[k+3] )
 			Next
@@ -2562,20 +2546,31 @@ Class Canvas
 		Next
 		
 	End
-
 	
-	#rem wonkeydoc Draws a sequence of primtives.
+	#rem monkeydoc Draws a sequence of primtives.
+
 	Draws a sequence of convex primtives using the current [[Color]], [[BlendMode]] and [[Matrix]].
+	
 	@param order The type of primitive: 1=points, 2=lines, 3=triangles, 4=quads, >4=n-gons.
+	
 	@param count The number of primitives to draw.
+	
 	@param vertices Pointer to the first vertex x,y pair.
+	
 	@param verticesPitch Number of bytes from one vertex x,y pair to the next. Set to 8 for 'tightly packed' vertices.
+	
 	@param texCoords Pointer to the first texCoord s,t pair. This can be null.
+	
 	@param texCoordsPitch Number of bytes from one texCoord s,y to the next. Set to 8 for 'tightly packed' texCoords.
+	
 	@param colors Pointer to the first RGBA uint color value. This can be null.
+	
 	@param colorsPitch Number of bytes from one RGBA color to the next. Set to 4 for 'tightly packed' colors.
+	
 	@param image Source image for rendering. This can be null.
+	
 	@param indices Pointer to sequence of integer indices for indexed drawing. This can by null for non-indexed drawing.
+	
 	#end
 	Method DrawPrimitives( order:Int,count:Int,vertices:Float Ptr,verticesPitch:Int,texCoords:Float Ptr,texCoordsPitch:Int,colors:UInt Ptr,colorsPitch:Int,image:Image,indices:Int Ptr )
 		DebugAssert( order>0 And count>0,"Illegal primitive" )
@@ -2646,10 +2641,10 @@ Class Canvas
 			Endif
 		Endif
 	End
-	
-'jl modified
+
 '------------------------------------------------------------
-	#rem wonkeydoc Draws an image.
+	'jl modified
+	#rem monkeydoc Draws an image.
 	Draws an image using the current [[Color]], [[BlendMode]] and [[Matrix]].
 	@param tx X coordinate to draw image at.
 	@param ty Y coordinate to draw image at.
@@ -2710,6 +2705,7 @@ Class Canvas
 		DrawImage( image, tv.x, tv.y, rz, sv.x, sv.y, shader )
 '		DrawImage( image, tv.x,tv.y,rz, sv.x,sv.y )
 	End
+'------------------------------------------------------------
 #rem
 	Method DrawImage( image:Image,tx:Float,ty:Float )
 	
@@ -2754,9 +2750,8 @@ Class Canvas
 		DrawImage( image,tv.x,tv.y,rz,sv.x,sv.y )
 	End
 #end rem
-'------------------------------------------------------------
-
-	#rem wonkeydoc Draws text.
+	
+	#rem monkeydoc Draws text.
 
 	Draws text using the current [[Color]], [[BlendMode]] and [[Matrix]].
 
@@ -2839,7 +2834,7 @@ Class Canvas
 
 	End
 	
-	#rem wonkeydoc Adds a light to the canvas.
+	#rem monkeydoc Adds a light to the canvas.
 	
 	This method must only be called while the canvas is in lighting mode, ie: between calls to [[BeginLighting]] and [[EndLighting]].
 	
@@ -2897,7 +2892,7 @@ Class Canvas
 		AddLight( light,tv.x,tv.y,rz,sv.x,sv.y )
 	End
 	
-	#rem wonkeydoc Adds a shadow caster to the canvas.
+	#rem monkeydoc Adds a shadow caster to the canvas.
 	
 	This method must only be called while the canvas is in lighting mode, ie: between calls to [[BeginLighting]] and [[EndLighting]].
 	
@@ -2948,7 +2943,7 @@ Class Canvas
 		AddShadowCaster( caster,tv.x,tv.y,rz,sv.x,sv.y )
 	End
 	
-	#rem wonkeydoc Copies a pixmap from the rendertarget.
+	#rem monkeydoc Copies a pixmap from the rendertarget.
 
 	This method must not be called while the canvas is in lighting mode.
 
@@ -2966,7 +2961,7 @@ Class Canvas
 		Return pixmap
 	End
 	
-	#rem wonkeydoc Copies a rectangular region of pixels to a pixmap.
+	#rem monkeydoc Copies a rectangular region of pixels to a pixmap.
 	#end
 	Method CopyPixels( rect:Recti,pixmap:Pixmap,dstx:Int=0,dsty:Int=0 )
 		DebugAssert( Not _lighting,"Canvas.CopyPixels() cannot be used while lighting" )
@@ -2979,7 +2974,7 @@ Class Canvas
 		_device.CopyPixels( rect,pixmap,dstx,dsty )
 	End
 	
-	#rem wonkeydoc Gets a pixel color.
+	#rem monkeydoc Gets a pixel color.
 	
 	Returns the color of the pixel at the given coordinates.
 	
@@ -2993,7 +2988,7 @@ Class Canvas
 		Return _tmpPixmap1x1.GetPixel( 0,0 )
 	End
 	
-	#rem wonkeydoc Gets a pixel color.
+	#rem monkeydoc Gets a pixel color.
 	
 	Returns the ARGB color of the pixel at the given coordinates.
 	
@@ -3007,7 +3002,7 @@ Class Canvas
 		Return _tmpPixmap1x1.GetPixelARGB( 0,0 )
 	End
 	
-	#rem wonkeydoc Clears the viewport.
+	#rem monkeydoc Clears the viewport.
 	
 	Clears the current viewport to `color`.
 	
@@ -3029,7 +3024,7 @@ Class Canvas
 		_drawOp=New DrawOp
 	End
 	
-	#rem wonkeydoc Flushes drawing commands.
+	#rem monkeydoc Flushes drawing commands.
 	
 	Flushes any outstanding drawing commands in the draw buffer.
 	
@@ -3081,14 +3076,14 @@ Class Canvas
 		_drawOp=New DrawOp
 	End
 	
-	#rem wonkeydoc True if canvas is in lighting mode.
+	#rem monkeydoc True if canvas is in lighting mode.
 	#end
 	Property IsLighting:Bool()
 	
 		Return _lighting
 	End
 	
-	#rem wonkeydoc Puts the canvas into lighting mode.
+	#rem monkeydoc Puts the canvas into lighting mode.
 	
 	While in lighting mode, you can add lights and shadow casters to the cavas using [[AddLight]] and [[AddShadowCaster]]. Lights and shadows
 	are later rendered by calling [[EndLighting]].
@@ -3144,7 +3139,7 @@ Class Canvas
 		_device.RenderTarget=_rtarget
 	End
 	
-	#rem wonkeydoc Renders lighting and ends lighting mode.
+	#rem monkeydoc Renders lighting and ends lighting mode.
 	
 	Renders any lights and shadows casters added to the canvas through calls to [[AddLight]] and [[AddShadowCaster]] and ends lighting mode.
 	
@@ -3177,7 +3172,7 @@ Class Canvas
 	
 	'***** INTERNAL *****
 	
-	#rem wonkeydoc @hidden
+	#rem monkeydoc @hidden
 	#end
 	Property GraphicsDevice:GraphicsDevice()
 		
@@ -3188,14 +3183,14 @@ Class Canvas
 		Return _device
 	End
 
-	#rem wonkeydoc @hidden
+	#rem monkeydoc @hidden
 	#end
 	Property RenderMatrix:AffineMat3f()
 		
 		Return _rmatrix
 	End
 	
-	#rem wonkeydoc @hidden
+	#rem monkeydoc @hidden
 	#end
 	Property RenderBounds:Recti()
 		
@@ -3241,7 +3236,7 @@ Class Canvas
 	Global _gbuffers:=New Texture[2]
 	Global _gbrtargets:=New RenderTarget[2]
 
-'jl added
+	'jl added
 '------------------------------------------------------------
 	Field _userUniformCallback:Void(canvas:Canvas, uniform:UniformBlock)
 	Field _pmcolor2:UInt=~0
@@ -3386,12 +3381,10 @@ Class Canvas
 		_outlineColor=Color.Yellow
 		_outlinepmcolor=$ffffffff
 		_outlineWidth=0
-
-'jl added
-'------------------------------------------------------------
+		
+		'jl added
 		_color2=Color.White
 		_pmcolor2=$ffffffff
-'------------------------------------------------------------
 
 		_matrix=New AffineMat3f
 	End
@@ -3411,7 +3404,7 @@ Class Canvas
 	End
 	#end
 
-	Method AddVertex( tx:Float,ty:Float,s0:Float,t0:Float,s1:Float,t1:Float,color:UInt )
+	Method AddVertex( tx:Float,ty:Float, s0:Float,t0:Float, s1:Float,t1:Float, color:UInt )
 		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
 		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
 		_vp->texCoord0.x=s0
@@ -3420,7 +3413,7 @@ Class Canvas
 		_vp->texCoord1.y=t1
 		_vp->color=color
 
-'jl added
+		'jladded
 '------------------------------------------------------------
 		_vp->color2 = _pmcolor2
 		_vp->xyzPosition = _xyzPosition
@@ -3428,7 +3421,7 @@ Class Canvas
 		_vp+=1
 	End
 
-	Method AddVertex( tx:Float,ty:Float,s0:Float,t0:Float,color:UInt )
+	Method AddVertex( tx:Float,ty:Float, s0:Float,t0:Float, color:UInt )
 		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
 		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
 		_vp->texCoord0.x=s0
@@ -3437,7 +3430,7 @@ Class Canvas
 		_vp->texCoord1.y=_tanvec.y
 		_vp->color=color
 
-'jl added
+		'jladded
 '------------------------------------------------------------
 		_vp->color2 = _pmcolor2
 		_vp->xyzPosition = _xyzPosition
@@ -3446,7 +3439,79 @@ Class Canvas
 		_vp+=1
 	End
 
-	Method AddVertex( tx:Float,ty:Float,s0:Float,t0:Float )
+'jl added
+'------------------------------------------------------------
+	Method AddVertex( tx:Float,ty:Float, s0:Float,t0:Float, color:UInt, xp:float, yp:float, zp:float )
+		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
+		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
+		_vp->texCoord0.x=s0
+		_vp->texCoord0.y=t0
+		_vp->texCoord1.x=_tanvec.x
+		_vp->texCoord1.y=_tanvec.y
+		_vp->color=color
+		'jladded
+		_vp->color2 = _pmcolor2
+		_vp->xyzPosition.x = xp
+		_vp->xyzPosition.y = yp
+		_vp->xyzPosition.z = zp
+		_vp+=1
+	End
+
+	Method AddVertexNormal( tx:Float,ty:Float,s0:Float,t0:Float, color:UInt, xp:float, yp:float, zp:float, nx:float, ny:float, nz:float )
+		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
+		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
+		_vp->texCoord0.x=s0
+		_vp->texCoord0.y=t0
+		_vp->texCoord1.x=s0
+		_vp->texCoord1.y=t0
+		_vp->color=color
+		'jladded
+		_vp->color2 = _pmcolor2
+		_vp->xyzPosition.x = xp
+		_vp->xyzPosition.y = yp
+		_vp->xyzPosition.z = zp
+		_vp->Normal.x = nx
+		_vp->Normal.y = ny
+		_vp->Normal.z = nz
+		_vp+=1
+	End
+
+	Method AddVertexNormal2( tx:Float,ty:Float,s0:Float,t0:Float, s1:float, t1:float, color:UInt, xp:float, yp:float, zp:float, nx:float, ny:float, nz:float )
+		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
+		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
+		_vp->texCoord0.x=s0
+		_vp->texCoord0.y=t0
+		_vp->texCoord1.x=s1
+		_vp->texCoord1.y=t1
+		_vp->color=color
+		'jladded
+		_vp->color2 = _pmcolor2
+		_vp->xyzPosition.x = xp
+		_vp->xyzPosition.y = yp
+		_vp->xyzPosition.z = zp
+		_vp->Normal.x = nx
+		_vp->Normal.y = ny
+		_vp->Normal.z = nz
+		_vp+=1
+	End
+'------------------------------------------------------------
+	
+	Method AddPointVertex( tx:Float,ty:Float,s0:Float,t0:Float )
+		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x + .5
+		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y + .5
+		_vp->texCoord0.x=s0
+		_vp->texCoord0.y=t0
+		_vp->color=_pmcolor
+
+		'jladded
+'------------------------------------------------------------
+		_vp->color2 = _pmcolor2
+		_vp->xyzPosition = _xyzPosition
+'------------------------------------------------------------
+		_vp+=1
+	End
+	
+	Method AddVertex( tx:Float,ty:Float, s0:Float,t0:Float )
 		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
 		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
 		_vp->texCoord0.x=s0
@@ -3454,7 +3519,7 @@ Class Canvas
 		_vp->texCoord1.x=_tanvec.x
 		_vp->texCoord1.y=_tanvec.y
 		_vp->color=_pmcolor
-'jladded
+		'jladded
 '------------------------------------------------------------
 		_vp->color2 = _pmcolor2
 		_vp->xyzPosition = _xyzPosition
@@ -3477,79 +3542,7 @@ Class Canvas
 		_vp+=1
 	End
 '------------------------------------------------------------
-
-'jl added
-'------------------------------------------------------------
-	Method AddVertex( tx:Float,ty:Float, s0:Float,t0:Float, color:UInt, xp:float, yp:float, zp:float )
-		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
-		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
-		_vp->texCoord0.x=s0
-		_vp->texCoord0.y=t0
-		_vp->texCoord1.x=_tanvec.x
-		_vp->texCoord1.y=_tanvec.y
-		_vp->color=color
-'jl added
-		_vp->color2 = _pmcolor2
-		_vp->xyzPosition.x = xp
-		_vp->xyzPosition.y = yp
-		_vp->xyzPosition.z = zp
-		_vp+=1
-	End
-
-	Method AddVertexNormal( tx:Float,ty:Float,s0:Float,t0:Float, color:UInt, xp:float, yp:float, zp:float, nx:float, ny:float, nz:float )
-		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
-		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
-		_vp->texCoord0.x=s0
-		_vp->texCoord0.y=t0
-		_vp->texCoord1.x=s0
-		_vp->texCoord1.y=t0
-		_vp->color=color
-'jl added
-		_vp->color2 = _pmcolor2
-		_vp->xyzPosition.x = xp
-		_vp->xyzPosition.y = yp
-		_vp->xyzPosition.z = zp
-		_vp->Normal.x = nx
-		_vp->Normal.y = ny
-		_vp->Normal.z = nz
-		_vp+=1
-	End
-
-	Method AddVertexNormal2( tx:Float,ty:Float,s0:Float,t0:Float, s1:float, t1:float, color:UInt, xp:float, yp:float, zp:float, nx:float, ny:float, nz:float )
-		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
-		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
-		_vp->texCoord0.x=s0
-		_vp->texCoord0.y=t0
-		_vp->texCoord1.x=s1
-		_vp->texCoord1.y=t1
-		_vp->color=color
-'jl added
-		_vp->color2 = _pmcolor2
-		_vp->xyzPosition.x = xp
-		_vp->xyzPosition.y = yp
-		_vp->xyzPosition.z = zp
-		_vp->Normal.x = nx
-		_vp->Normal.y = ny
-		_vp->Normal.z = nz
-		_vp+=1
-	End
-'------------------------------------------------------------
-
-	Method AddPointVertex( tx:Float,ty:Float,s0:Float,t0:Float )
-		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x + .5
-		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y + .5
-		_vp->texCoord0.x=s0
-		_vp->texCoord0.y=t0
-		_vp->color=_pmcolor
-
-'jladded
-'------------------------------------------------------------
-		_vp->color2 = _pmcolor2
-		_vp->xyzPosition = _xyzPosition
-'------------------------------------------------------------
-		_vp+=1
-	End
-
+	
 	'Drawing
 	'
 	Method AddDrawOp( shader:Shader,material:UniformBlock,blendMode:BlendMode,primOrder:int,primCount:Int )
@@ -3615,9 +3608,9 @@ Class Canvas
 			
 			_device.Viewport=_rviewport
 		Endif
-
-'jl added
+		
 '------------------------------------------------------------
+'jl added
 		If Not UserUniforms.Empty
 			For Local useruniform:=Eachin UserUniforms
 				useruniform.callback(useruniform, _uniforms)
